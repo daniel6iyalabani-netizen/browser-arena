@@ -1,41 +1,30 @@
 # Browser Arena
 
-A first-person 3D browser shooter prototype built with Three.js and a Node.js / Socket.IO server.
+A first-person browser shooter prototype built with Three.js and a Node.js / Socket.IO server.
 
 ## Features
-
-- First-person mouse-look, WASD movement, sprint, and pointer-lock controls
-- Stylized fictional rifle model with recoil, muzzle flash, ammo, and reload timing
-- Training arena with cover, bot movement, bot health, respawns, and player health
-- Optional Socket.IO online player presence and movement synchronization
+- First-person mouse-look, WASD movement, sprint and pointer lock
+- Three selectable fictional weapons: pulse pistol (1), arena rifle (2), burst scatter (3)
+- Weapon-specific fire rates, damage, range, spread, magazines and reload times
+- Smarter local training bots that pursue, strafe, retreat toward their patrol area and attack on cooldown
+- Online player movement, server-checked line-of-sight-style hit rays, shared health, kills/deaths, respawns and TAB scoreboard
 - Responsive HUD and menu
 
 ## Run locally
-
 Requires Node.js 18 or newer.
-
 ```bash
 npm install
 npm start
-``
-
-Open [http://localhost:3000](http://localhost:3000). Choose **Train vs Bots** for offline practice. Click inside the game to lock the mouse; press Escape to unlock it.
+```
+Open http://localhost:3000 and choose **Train vs Bots**. Click the game to lock the mouse; press Escape to unlock.
 
 ## Online multiplayer
-
-Deploy the Node server to a host that supports persistent WebSocket connections (for example, a Node-compatible app host). Set its `PORT` environment variable if required. Open the game page and enter the deployed server's base URL in **Multiplayer Server URL**, then choose **Join Online**.
-
-For a separate static frontend host, the page must be served over HTTP(S), and `/socket.io/socket.io.js` will not exist on that static host. In that setup, update the frontend to load the Socket.IO client from the deployed server URL and configure the server's `CLIENT_ORIGIN` environment variable to your frontend origin(s).
+Deploy the Node server to a host that supports persistent WebSocket connections. Enter the deployed server's base URL in the menu and choose **Join Online**. If the frontend is on a separate static host, it loads the Socket.IO browser client from the server URL. Set `CLIENT_ORIGIN` to allowed frontend origin(s) for a tighter CORS policy.
 
 ## Controls
+- WASD move; mouse aim; left click fire
+- R reload; Shift sprint; 1/2/3 select weapon
+- TAB toggle online scoreboard; Escape release mouse
 
-- **W / A / S / D** — move
-- **Mouse** — aim
-- **Left click** — fire
-- **R** — reload
-- **Shift** — sprint
-- **Escape** — release mouse
-
-## Current prototype limitations
-
-This is an early playable prototype, not a production competitive shooter. Multiplayer currently synchronizes player positions and visual shot events. Damage and eliminations are not authoritative on the server yet, and bots are local to each browser. Add server-side movement validation, authoritative hit detection, room management, rate limiting, and persistence before public competitive deployment. Three.js is loaded from a CDN, so an internet connection is needed to load the 3D engine.
+## Prototype notes
+Server-side hit checks validate shot origin against the server-known player position, apply weapon cooldowns, and own damage, eliminations, deaths and respawns. This remains an early prototype: player movement and aim are still client-reported and should receive stronger server-side simulation, collision checks, anti-cheat controls and load testing before public competitive use. Three.js loads from a CDN, so the game needs internet access for the 3D engine.
