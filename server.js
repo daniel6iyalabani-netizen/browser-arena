@@ -40,7 +40,7 @@ io.on('connection',socket=>{
   const dmg=w.damage*(wi===2?Math.max(1,Math.round(w.pellets*.45)):1);
   victim.p.health=Math.max(0,victim.p.health-dmg);
   io.emit('combat',{type:'hit',target:victim.id,attacker:socket.id,attackerName:p.name,health:victim.p.health,damage:dmg});
-  if(victim.p.health<=0){victim.p.deaths++;p.kills++;io.emit('combat',{type:'elimination',killer:socket.id,target:victim.id,kills:p.kills});setTimeout(()=>{const current=players.get(victim.id);if(current){respawn(current);broadcast();notice(io.sockets.sockets.get(victim.id),'Respawned — back in the arena');}},1800);}
+  if(victim.p.health<=0){victim.p.deaths++;p.kills++;io.emit('combat',{type:'elimination',killer:socket.id,target:victim.id,kills:p.kills});setTimeout(()=>{const current=players.get(victim.id);if(current){respawn(current);broadcast();const targetSocket=io.sockets.sockets.get(victim.id);if(targetSocket)notice(targetSocket,'Respawned — back in the arena');}},1800);}
   broadcast();
  });
  socket.on('disconnect',()=>{players.delete(socket.id);broadcast();});
