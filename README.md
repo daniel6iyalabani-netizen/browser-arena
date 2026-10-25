@@ -19,7 +19,14 @@ npm start
 Open http://localhost:3000 and choose **Train vs Bots**. Click the game to lock the mouse; press Escape to unlock.
 
 ## Online multiplayer
-Deploy the Node server to a host that supports persistent WebSocket connections. Enter the deployed server's base URL in the menu and choose **Join Online**. If the frontend is on a separate static host, it loads the Socket.IO browser client from the server URL. Set `CLIENT_ORIGIN` to allowed frontend origin(s) for a tighter CORS policy.
+The multiplayer server must be running on a public host for friends on different networks. This repository includes `render.yaml` for deployment to Render:
+1. Sign in to Render and choose **New + → Blueprint**.
+2. Connect this GitHub repository and deploy the blueprint.
+3. Wait for the service to finish deploying, then copy its public HTTPS URL (for example, `https://your-service.onrender.com`).
+4. Open the game, paste that URL into **Multiplayer Server URL**, choose a map and team mode, then select **Join Online**. Friends use the same URL and must choose the same map and mode to enter the same lobby.
+5. If connection fails, open `https://your-service.onrender.com/health` in a browser. A healthy server responds with JSON containing `\"ok\":true`.
+
+You can also use the same server URL from a separately hosted frontend. Set `CLIENT_ORIGIN` to allowed frontend origin(s) for a tighter CORS policy. Local `http://localhost:3000` only makes the game available on your Chromebook unless you deploy the server or configure network access.
 
 ## Controls
 - WASD move; mouse aim; left click fire
