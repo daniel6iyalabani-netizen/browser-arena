@@ -1,0 +1,18 @@
+{
+  "name": "browser-arena",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A first-person browser arena prototype with AI bots and Socket.IO multiplayer.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "socket.io": "^4.8.1"
+  }
+}
