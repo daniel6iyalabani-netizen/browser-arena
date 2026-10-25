@@ -1,39 +1,13 @@
 <!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#101820">
-  <title>Browser Arena — FPS</title>
-  <link rel="stylesheet" href="./style.css">
-  <script type="importmap">
-    {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.166.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.166.1/examples/jsm/"}}
-  </script>
-</head>
-<body>
-  <div id="game-root"></div>
-  <div id="hud">
-    <div class="topline"><div class="brand">BROWSER <b>ARENA</b></div><div id="connection" class="pill">OFFLINE TRAINING</div></div>
-    <div class="stats"><span>HEALTH <b id="health">100</b></span><span>ELIMS <b id="kills">0</b></span><span>AMMO <b id="ammo">30 / 120</b></span></div>
-    <div id="crosshair"><i></i><i></i><i></i><i></i></div>
-    <div id="hitmarker">✕</div>
-    <div id="message"></div>
-    <div id="bottom-help">WASD move · Mouse aim · Click fire · R reload · Shift sprint · Esc unlock mouse</div>
-  </div>
-  <section id="start-screen" class="overlay">
-    <div class="panel">
-      <div class="eyebrow">FIRST-PERSON COMBAT PROTOTYPE</div>
-      <h1>BROWSER <span>ARENA</span></h1>
-      <p>Train against bots or join an online room with friends.</p>
-      <label for="player-name">CALLSIGN</label>
-      <input id="player-name" maxlength="18" value="Rookie" autocomplete="nickname">
-      <label for="server-url">MULTIPLAYER SERVER URL <small>(optional)</small></label>
-      <input id="server-url" placeholder="https://your-server.example">
-      <div class="actions"><button id="play-offline">TRAIN VS BOTS</button><button id="play-online" class="secondary">JOIN ONLINE</button></div>
-      <p class="fineprint">Online play requires a running server. This prototype uses stylized, fictional weapons and game-only effects.</p>
-    </div>
-  </section>
-  <script src="/socket.io/socket.io.js"></script>
-  <script type="module" src="./game.js"></script>
-</body>
-</html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101820"><title>Browser Arena — FPS</title><link rel="stylesheet" href="./style.css"><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.166.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.166.1/examples/jsm/"}}</script></head>
+<body><div id="game-root"></div>
+<div id="hud"><div class="topline"><div class="brand">BROWSER <b>ARENA</b></div><div id="connection" class="pill">OFFLINE TRAINING</div></div>
+<div class="stats"><span>HEALTH <b id="health">100</b></span><span>ELIMS <b id="kills">0</b></span><span>AMMO <b id="ammo">30 / 120</b></span><span>WEAPON <b id="weapon-name">ARENA RIFLE</b></span></div>
+<div id="crosshair"><i></i><i></i><i></i><i></i></div><div id="hitmarker">✕</div><div id="message"></div><div id="scoreboard">BOT TRAINING</div>
+<div id="score-panel"><strong>ARENA SCOREBOARD</strong><div id="score-list"></div><small>Press TAB to close</small></div>
+<div id="bottom-help">WASD move · Mouse aim · Click fire · R reload · 1/2/3 weapons · Shift sprint · TAB scoreboard · Esc unlock mouse</div></div>
+<section id="start-screen" class="overlay"><div class="panel"><div class="eyebrow">FIRST-PERSON COMBAT PROTOTYPE</div><h1>BROWSER <span>ARENA</span></h1><p>Fight smarter bots, choose your loadout, or join an online room with friends.</p>
+<label for="player-name">CALLSIGN</label><input id="player-name" maxlength="18" value="Rookie" autocomplete="nickname">
+<label for="server-url">MULTIPLAYER SERVER URL <small>(optional)</small></label><input id="server-url" placeholder="https://your-server.example">
+<div class="actions"><button id="play-offline">TRAIN VS BOTS</button><button id="play-online" class="secondary">JOIN ONLINE</button></div><p class="fineprint">Online combat uses server-checked hit detection and shared player scores. This is still a prototype, not a cheat-proof competitive server.</p></div></section>
+<script src="/socket.io/socket.io.js"></script><script type="module" src="./game.js"></script></body></html>
