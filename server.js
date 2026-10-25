@@ -41,11 +41,11 @@ io.on('connection',socket=>{
   for(const [id,target] of players){if(id===socket.id||target.health<=0||target.room!==p.room||target.team===p.team)continue;const hit=distanceToRay({x:ox,y:oy,z:oz},{x:dx,y:dy,z:dz},{x:target.x,z:target.z});if(hit.t>0&&hit.t<bestT&&hit.dist<.85){bestT=hit.t;victim={id,p:target};}}
   if(!victim)return;
   const dmg=w.damage*(wi===2?Math.max(1,Math.round(w.pellets*.45)):1);
-  victim.p.health=Math.max(0,victim.p.health-dmg);
-  io.emit('combat',{type:'hit',target:victim.id,attacker:socket.id,attackerName:p.name,health:victim.p.health,damage:dmg});
-  if(victim.p.health<=0){victim.p.deaths++;p.kills++;p.cash+=150;io.emit('combat',{type:'elimination',killer:socket.id,target:victim.id,kills:p.kills});setTimeout(()=>{const current=players.get(victim.id);if(current){respawn(current);broadcast();const targetSocket=io.sockets.sockets.get(victim.id);if(targetSocket)notice(targetSocket,'Respawned — back in the arena');}},1800);}
-  broadcast();
+  const absorbed=Math.min(victim.p.shield,dmg);victim.p.shield-=absorbed;victim.p.health=Math.max(0,victim.p.health-(dmg-absorbed));
+  io.to(p.room).emit('combat',{type:'hit',target:victim.id,attacker:socket.id,attackerName:p.name,health:victim.p.health,shield:victim.p.shield,damage:dmg});
+  if(victim.p.health<=0){victim.p.deaths++;p.kills++;p.cash+=150;io.to(p.room).emit('combat',{type:'elimination',killer:socket.id,target:victim.id,kills:p.kills,cash:p.cash});setTimeout(()=>{const current=players.get(victim.id);if(current){respawn(current);broadcast(current.room);const targetSocket=io.sockets.sockets.get(victim.id);if(targetSocket)notice(targetSocket,'Respawned — HP 100 / Shield 100');}},1800);}
+  broadcast(p.room);
  });
- socket.on('disconnect',()=>{players.delete(socket.id);broadcast();});
+ socket.on('disconnect',()=>{const p=players.get(socket.id);const room=p?.room;players.delete(socket.id);if(room)broadcast(room);});
 });
 server.listen(PORT,'0.0.0.0',()=>console.log('Browser Arena listening on port '+PORT));
