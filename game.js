@@ -94,6 +94,7 @@ function updateHud(){
  $('connection').textContent=online?'ONLINE · '+(socket?.connected?'CONNECTED':'CONNECTING'):'OFFLINE TRAINING';
 }
 function startGame(useOnline){
+ playerName = ($('player-name').value.trim() || 'Rookie').slice(0,18);
  online=useOnline; running=true;
  $('start-screen').classList.add('hidden'); $('hud').style.display='block';
  if(useOnline) connectOnline();
@@ -143,29 +144,36 @@ function shoot(){
  if(online&&socket) socket.emit('shot',{x:camera.position.x,y:camera.position.y,z:camera.position.z,dx:direction.x,dz:direction.z});
 }
 function connectOnline(){
- if(typeof window.io!=='function'){setMessage('Socket.IO client unavailable. Run the server and refresh.',3000);return;}
  const url=$('server-url').value.trim().replace(/\/$/,'');
- socket=window.io(url,{transports:['websocket','polling']});
- socket.on('connect',()=>{socket.emit('join',{name:playerName});updateHud();setMessage('CONNECTED TO ARENA');});
- socket.on('disconnect',()=>updateHud());
- socket.on('state',state=>{
-  const seen=new Set();
-  for(const p of state.players||[]){
-   if(p.id===socket.id)continue; seen.add(p.id);
-   let item=remotePlayers.get(p.id);
-   if(!item){
-    const mesh=new THREE.Mesh(new THREE.CapsuleGeometry(.35,.85,4,8),new THREE.MeshStandardMaterial({color:0x64dcb0,roughness:.65}));
-    mesh.position.y=1;mesh.castShadow=true;mesh.userData.playerId=p.id;scene.add(mesh);item={mesh,name:p.name||'Player'};remotePlayers.set(p.id,item);
+ if(!url){setMessage('Enter your deployed multiplayer server URL.',2500);return;}
+ const initSocket = () => {
+  if(typeof window.io!=='function'){setMessage('Could not load Socket.IO client from server.',3000);return;}
+  socket=window.io(url,{transports:['websocket','polling']});
+  socket.on('connect',()=>{socket.emit('join',{name:playerName});updateHud();setMessage('CONNECTED TO ARENA');});
+  socket.on('disconnect',()=>updateHud());
+  socket.on('state',state=>{
+   const seen=new Set();
+   for(const p of state.players||[]){
+    if(p.id===socket.id)continue; seen.add(p.id);
+    let item=remotePlayers.get(p.id);
+    if(!item){
+     const mesh=new THREE.Mesh(new THREE.CapsuleGeometry(.35,.85,4,8),new THREE.MeshStandardMaterial({color:0x64dcb0,roughness:.65}));
+     mesh.position.y=1;mesh.castShadow=true;mesh.userData.playerId=p.id;scene.add(mesh);item={mesh,name:p.name||'Player'};remotePlayers.set(p.id,item);
+    }
+    item.mesh.position.set(p.x,1,p.z);item.mesh.rotation.y=p.yaw||0;item.name=p.name||item.name;
    }
-   item.mesh.position.set(p.x,1,p.z);item.mesh.rotation.y=p.yaw||0;item.name=p.name||item.name;
-  }
-  for(const [id,item] of remotePlayers)if(!seen.has(id)){scene.remove(item.mesh);remotePlayers.delete(id);}
-  if(typeof state.kills==='object'&&state.kills[socket.id]!=null)kills=Math.max(kills,state.kills[socket.id]);
-  updateHud();
- });
- socket.on('notice',msg=>setMessage(String(msg).slice(0,100),2000));
- socket.on('playerShot',()=>{});
- socket.on('connect_error',()=>{ $('connection').textContent='ONLINE · CONNECTION FAILED'; });
+   for(const [id,item] of remotePlayers)if(!seen.has(id)){scene.remove(item.mesh);remotePlayers.delete(id);}
+   updateHud();
+  });
+  socket.on('notice',msg=>setMessage(String(msg).slice(0,100),2000));
+  socket.on('connect_error',()=>{ $('connection').textContent='ONLINE · CONNECTION FAILED';setMessage('Could not connect. Check the server URL.',2500); });
+ };
+ if(typeof window.io==='function'){initSocket();return;}
+ const script=document.createElement('script');
+ script.src=url+'/socket.io/socket.io.js';
+ script.onload=initSocket;
+ script.onerror=()=>setMessage('Socket.IO client failed to load from that server URL.',3000);
+ document.head.appendChild(script);
 }
 function movePlayer(dt){
  if(!controls.isLocked)return;
