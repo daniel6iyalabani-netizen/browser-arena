@@ -6,7 +6,8 @@ const app=express(),server=http.createServer(app);
 const io=new Server(server,{cors:{origin:process.env.CLIENT_ORIGIN?process.env.CLIENT_ORIGIN.split(','):'*'},maxHttpBufferSize:1e5});
 const PORT=Number(process.env.PORT||3000),MAX_PLAYERS=24;
 const players=new Map();
-const WEAPON_COSTS=[0,400,700];\nconst WEAPONS=[
+const WEAPON_COSTS=[0,400,700];
+const WEAPONS=[
  {mag:12,delay:260,damage:42,range:42,pellets:1,spread:.008},
  {mag:30,delay:115,damage:34,range:65,pellets:1,spread:.012},
  {mag:8,delay:520,damage:18,range:24,pellets:6,spread:.075}
@@ -25,7 +26,9 @@ io.on('connection',socket=>{
  if(players.size>=MAX_PLAYERS){notice(socket,'Room is full. Try again later.');socket.disconnect(true);return;}
  players.set(socket.id,{name:'Player',x:0,z:8,yaw:0,health:100,kills:0,deaths:0,cash:300,weapons:[0],lastMove:0,lastShot:0});
  socket.on('join',data=>{const p=players.get(socket.id);if(!p)return;p.name=cleanName(data?.name);notice(socket,'Welcome to Browser Arena, '+p.name+'!');broadcast();});
- socket.on('buy',data=>{const p=players.get(socket.id);if(!p)return;const wi=Math.round(clamp(data?.weapon,0,WEAPON_COSTS.length-1,-1));if(wi<1||wi>=WEAPON_COSTS.length)return;if(p.weapons.includes(wi)){socket.emit('notice','You already own that weapon');return;}const cost=WEAPON_COSTS[wi];if(p.cash<cost){socket.emit('notice','Not enough cash for that weapon');return;}p.cash-=cost;p.weapons.push(wi);p.weapons.sort();socket.emit('purchased',{cash:p.cash,weapons:p.weapons,weapon:wi,message:'Purchased '+['Pulse Pistol','Arena Rifle','Burst Scatter'][wi]});broadcast();});\n socket.on('equip',data=>{const p=players.get(socket.id);const wi=Math.round(clamp(data?.weapon,0,WEAPONS.length-1,-1));if(!p||wi<0||!p.weapons.includes(wi))return;p.weapon=wi;});\n socket.on('move',data=>{const p=players.get(socket.id);if(!p||!data||Date.now()-p.lastMove<30)return;p.lastMove=Date.now();p.x=clamp(data.x,-24,24);p.z=clamp(data.z,-22,22);p.yaw=clamp(data.yaw,-Math.PI,Math.PI);broadcast();});
+ socket.on('buy',data=>{const p=players.get(socket.id);if(!p)return;const wi=Math.round(clamp(data?.weapon,0,WEAPON_COSTS.length-1,-1));if(wi<1||wi>=WEAPON_COSTS.length)return;if(p.weapons.includes(wi)){socket.emit('notice','You already own that weapon');return;}const cost=WEAPON_COSTS[wi];if(p.cash<cost){socket.emit('notice','Not enough cash for that weapon');return;}p.cash-=cost;p.weapons.push(wi);p.weapons.sort();socket.emit('purchased',{cash:p.cash,weapons:p.weapons,weapon:wi,message:'Purchased '+['Pulse Pistol','Arena Rifle','Burst Scatter'][wi]});broadcast();});
+ socket.on('equip',data=>{const p=players.get(socket.id);const wi=Math.round(clamp(data?.weapon,0,WEAPONS.length-1,-1));if(!p||wi<0||!p.weapons.includes(wi))return;p.weapon=wi;});
+ socket.on('move',data=>{const p=players.get(socket.id);if(!p||!data||Date.now()-p.lastMove<30)return;p.lastMove=Date.now();p.x=clamp(data.x,-24,24);p.z=clamp(data.z,-22,22);p.yaw=clamp(data.yaw,-Math.PI,Math.PI);broadcast();});
  socket.on('shoot',data=>{
   const p=players.get(socket.id);if(!p||!data||Date.now()-p.lastShot<80)return;
   const wi=Math.round(clamp(data.weapon,0,WEAPONS.length-1,0)),w=WEAPONS[wi],now=Date.now();if(!p.weapons.includes(wi)){notice(socket,'Buy that weapon in the armory first');return;}
