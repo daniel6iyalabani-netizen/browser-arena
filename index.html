@@ -28,7 +28,15 @@
       <aside class="lobby-console">
         <div class="console-heading"><div><span class="console-overline">PLAYER TERMINAL / 01</span><h2>Enter the arena</h2></div><span class="console-step">01 <i>/</i> 03</span></div>
         <div class="callsign-wrap"><label for="player-name">YOUR CALLSIGN</label><input id="player-name" maxlength="18" value="Rookie" autocomplete="nickname" placeholder="Enter callsign"><span class="input-hint">THIS IS HOW OTHER PLAYERS SEE YOU</span></div>
-        <div class="queue-heading"><span>SELECT YOUR QUEUE</span><span>CHOOSE A MODE</span></div>
+        
+        <section class="progress-card" aria-label="Player progression">
+          <div class="progress-card-head"><span>YOUR CAREER</span><button id="reset-progress" type="button" title="Reset local progression">RESET</button></div>
+          <div class="progress-identity"><div class="level-emblem"><span>LVL</span><b id="profile-level">01</b></div><div class="progress-identity-copy"><b id="profile-rank">ROOKIE</b><small id="profile-xp-label">0 XP EARNED</small></div><div class="progress-total"><b id="profile-total-xp">0</b><small>TOTAL XP</small></div></div>
+          <div class="xp-track" role="progressbar" aria-label="Progress to next level" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="profile-xp-fill"></span></div>
+          <div class="xp-caption"><span id="profile-xp-current">0 / 100 XP</span><span id="profile-next-level">100 XP TO LEVEL 2</span></div>
+          <div class="career-stats"><div><b id="profile-matches">0</b><small>MATCHES</small></div><div><b id="profile-minutes">0m</b><small>TIME PLAYED</small></div><div><b id="profile-streak">0</b><small>CAREER DAYS</small></div></div>
+          <p class="progress-note">Earn XP by completing matches. Progress saves on this device.</p>
+        </section>\n        <div class="queue-heading"><span>SELECT YOUR QUEUE</span><span>CHOOSE A MODE</span></div>
         <div class="queue-cards">
           <button type="button" class="queue-card selected" data-queue="online" aria-pressed="true"><span class="queue-icon">↗</span><span class="queue-card-text"><b>QUICK PLAY</b><small>Find real players online</small></span><span class="queue-radio"></span></button>
           <button type="button" class="queue-card" data-queue="training" aria-pressed="false"><span class="queue-icon">◈</span><span class="queue-card-text"><b>TRAINING</b><small>Practice against bots</small></span><span class="queue-radio"></span></button>
