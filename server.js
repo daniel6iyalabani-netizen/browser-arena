@@ -9,14 +9,15 @@ const players=new Map(),bots=new Map(),queues=new Map(),matches=new Map();let bo
 function lobbyInfo(room){const m=matches.get(room);if(!m)return;const members=[...players.entries()].filter(([,p])=>p.room===room);for(const [id] of members){const s=io.sockets.sockets.get(id);if(s)s.emit('mapLobby',{mode:m.mode,players:members.map(([pid,p])=>({id:pid,name:p.name,team:p.team})),maps:[{id:0,name:'INDUSTRIAL YARD'},{id:1,name:'DESERT OUTPOST'},{id:2,name:'FROST DEPOT'},{id:3,name:'ABANDONED WORKS'},{id:4,name:'OVERGROWN RUINS'}],votes:Object.fromEntries(m.votes)});}}
 function beginMatch(room){const m=matches.get(room);if(!m||m.started)return;m.started=true;const members=[...players.entries()].filter(([,p])=>p.room===room);const counts=[0,0];for(const [id,p] of members){p.map=m.map;p.health=100;p.shield=100*(1+(p.armor||0)*.03);p.x=(Math.random()-.5)*12;p.z=p.team===0?-12-Math.random()*4:12+Math.random()*4;while(positionBlocked(p.x,p.z,p.map,.6)){p.x=(Math.random()-.5)*10;p.z=p.team===0?-12-Math.random()*3:12+Math.random()*3;}const s=io.sockets.sockets.get(id);if(s)s.emit('matchStart',{map:m.map,mode:m.mode,team:p.team,x:p.x,z:p.z});counts[p.team]++;}syncBots(room);broadcast(room);}
 function queuePlayer(id,mode){const p=players.get(id);if(!p)return;let q=queues.get(mode);if(!q){q=[];queues.set(mode,q);}if(!q.includes(id))q.push(id);p.mode=mode;p.room='queue:'+mode;const needed=(MODE_SIZES[mode]||1)*2;const waiting=q.map(pid=>players.get(pid)).filter(Boolean);for(const pid of q){const s=io.sockets.sockets.get(pid);if(s)s.emit('queueStatus',{mode,waiting:waiting.length,needed,message:'Waiting for '+needed+' real players to join '+mode+'.'});}if(waiting.length>=needed){const ids=q.splice(0,needed);const room='match:'+(++matchSeq);const m={room,mode,started:false,map:0,votes:new Map(),timer:null};matches.set(room,m);ids.forEach((pid,i)=>{const player=players.get(pid);if(!player)return;player.room=room;player.team=i%2;player.map=0;const s=io.sockets.sockets.get(pid);if(s){s.leave('queue:'+mode);s.join(room);}});lobbyInfo(room);m.timer=setTimeout(()=>{const tally=[0,0,0,0,0];for(const v of m.votes.values())tally[v]++;m.map=tally.indexOf(Math.max(...tally));beginMatch(room);},30000);}}
-const WEAPON_COSTS=[0,300,900,400,650,700];
+const WEAPON_COSTS=[0,300,900,400,650,700,1200];
 const WEAPONS=[
  {mag:12,delay:190,damage:38,range:38,pellets:1,spread:.01},
  {mag:8,delay:300,damage:54,range:40,pellets:1,spread:.006},
  {mag:30,delay:82,damage:19,range:62,pellets:1,spread:.018},
  {mag:30,delay:115,damage:32,range:65,pellets:1,spread:.012},
  {mag:6,delay:620,damage:15,range:23,pellets:8,spread:.09},
- {mag:8,delay:460,damage:17,range:25,pellets:6,spread:.075}
+ {mag:8,delay:460,damage:17,range:25,pellets:6,spread:.075},
+ {mag:5,delay:950,damage:65,range:90,pellets:1,spread:.001}
 ];
 app.use(express.static(path.join(__dirname)));
 app.get('/health',(_req,res)=>res.json({ok:true,players:players.size}));
@@ -78,11 +79,11 @@ io.on('connection',socket=>{
   if(Math.hypot(ox-p.x,oz-p.z)>3.5)return;
   let dx=clamp(data.dx,-1,1),dy=clamp(data.dy,-1,1),dz=clamp(data.dz,-1,1),len=Math.hypot(dx,dy,dz)||1;dx/=len;dy/=len;dz/=len;
   let victim=null,bestT=w.range;
-  for(const [id,target] of players){if(id===socket.id||target.health<=0||target.room!==p.room||target.team===p.team)continue;const hit=distanceToRay({x:ox,y:oy,z:oz},{x:dx,y:dy,z:dz},{x:target.x,z:target.z});if(hit.t>0&&hit.t<bestT&&hit.dist<.85&&!rayBlocked(ox,oy,oz,dx,dy,dz,hit.t,p.map)){bestT=hit.t;victim={id,p:target};}}
+  for(const [id,target] of players){if(id===socket.id||target.health<=0||target.room!==p.room||target.team===p.team)continue;const hit=distanceToRay({x:ox,y:oy,z:oz},{x:dx,y:dy,z:dz},{x:target.x,z:target.z});if(hit.t>0&&hit.t<bestT&&hit.dist<.85&&!rayBlocked(ox,oy,oz,dx,dy,dz,hit.t,p.map)){bestT=hit.t;const hitY=oy+dy*hit.t;victim={id,p:target,headshot:wi===6&&hitY>=1.48&&hitY<=1.95};}}
   if(!victim)return;
-  const dmg=w.damage*(w.pellets>1?Math.max(1,Math.round(w.pellets*.45)):1);
+  const dmg=victim.headshot?250:w.damage*(w.pellets>1?Math.max(1,Math.round(w.pellets*.45)):1);
   const absorbed=Math.min(victim.p.shield,dmg);victim.p.shield-=absorbed;victim.p.health=Math.max(0,victim.p.health-(dmg-absorbed));
-  io.to(p.room).emit('combat',{type:'hit',target:victim.id,attacker:socket.id,attackerName:p.name,health:victim.p.health,shield:victim.p.shield,damage:dmg});
+  io.to(p.room).emit('combat',{type:'hit',target:victim.id,attacker:socket.id,attackerName:p.name,health:victim.p.health,shield:victim.p.shield,damage:dmg,headshot:!!victim.headshot});
   if(victim.p.health<=0){victim.p.deaths++;p.kills++;p.cash+=150;io.to(p.room).emit('combat',{type:'elimination',killer:socket.id,target:victim.id,kills:p.kills,cash:p.cash});if(victim.p.isBot)victim.p.respawnAt=Date.now()+1800;else setTimeout(()=>{const current=players.get(victim.id);if(current){respawn(current);broadcast(current.room);const targetSocket=io.sockets.sockets.get(victim.id);if(targetSocket)notice(targetSocket,'Respawned — HP 100 / Shield 100');}},1800);}
   broadcast(p.room);
  });
