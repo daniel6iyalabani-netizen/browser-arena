@@ -59,6 +59,8 @@ html{background:#081218}
 #touch-actions button{pointer-events:auto;touch-action:none;min-width:76px;min-height:44px;border:1px solid #b5ffe088;border-radius:14px;background:#071016bb;color:#eafff5;font-size:10px;font-weight:900;letter-spacing:.1em;backdrop-filter:blur(8px)}
 
 #touch-actions #touch-sprint{background:#76d8ff33}
+#touch-actions #touch-jump{background:#80e9bd2b;border-color:#80e9bd99}
+#touch-actions #touch-slide{background:#ffcf782b;border-color:#ffcf7899}
 @media(pointer:fine){#touch-controls.touch-enabled{display:none}}
 @media(max-width:650px){.audio-toggle{float:none;margin:0 0 8px auto;display:block}#bottom-help{display:none}#weapon-selector{bottom:178px}#match-score{top:48px}#map-name{top:174px}#target-status{top:208px}}
 @media(prefers-reduced-motion:reduce){#touch-nub{transition:none}}
@@ -190,3 +192,9 @@ html{background:#081218}
 .results-footnote{text-align:center;margin:17px 0 0;color:#64877a;font-size:8px;letter-spacing:1px}
 @media(max-width:480px){#results-screen{padding:12px}.results-shell{padding:18px}.results-hero{padding:21px 0 16px}.results-xp-card{padding:13px}.results-actions{grid-template-columns:1fr}.results-actions button{min-height:42px}.results-topline{font-size:7px}}
 @media(prefers-reduced-motion:reduce){.results-xp-track span,.results-actions button{transition:none}}
+
+
+/* Sprint stamina meter */
+#sprint-stamina{position:fixed;left:50%;bottom:82px;transform:translateX(-50%);width:min(230px,48vw);z-index:8;color:#dff9ee;font:800 9px/1.2 system-ui,sans-serif;letter-spacing:1.3px;text-shadow:0 1px 5px #000;pointer-events:none}
+#sprint-stamina>div:first-child{display:flex;justify-content:space-between;gap:12px;margin-bottom:6px}#sprint-stamina-label{color:#a0f9d1;font-variant-numeric:tabular-nums}#sprint-stamina-track{height:6px;border:1px solid #b9ffe044;background:#071218cc;overflow:hidden;border-radius:6px}#sprint-stamina-fill{display:block;width:100%;height:100%;background:linear-gradient(90deg,#45c99a,#b7ffe0);box-shadow:0 0 9px #80e9bd70;transition:width .08s linear}
+@media(max-width:650px){#sprint-stamina{bottom:148px;width:180px}}
