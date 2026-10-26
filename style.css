@@ -141,3 +141,23 @@ html{background:#081218}
 @media(max-width:700px){#start-screen.lobby-screen{padding:0}.lobby-shell{padding:15px 14px 12px;gap:15px}.lobby-topbar{align-items:flex-start;padding-bottom:13px}.lobby-mark{font-size:10px;gap:8px}.mark-glyph{width:34px;height:34px}.lobby-top-meta{gap:7px;flex-wrap:wrap;justify-content:flex-end;font-size:7px;max-width:48%}.lobby-top-meta>b{display:none}.lobby-top-meta .audio-toggle{margin-left:0;padding:7px 8px;font-size:8px}.lobby-main-grid{grid-template-columns:1fr;gap:20px}.lobby-showcase{padding:7px 0 0}.title-index{margin-top:20px}.showcase-title h1{font-size:clamp(52px,15vw,82px);margin:14px 0}.showcase-copy{font-size:11px;margin-bottom:17px}.arena-preview{height:165px}.showcase-foot{margin-top:13px;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.showcase-foot>div{padding-left:7px}.showcase-foot b{font-size:8px}.showcase-foot .foot-label{font-size:6px}.showcase-foot>div:last-child{display:flex}.lobby-console{padding:19px 16px}.console-heading{margin-bottom:19px}.console-heading h2{font-size:24px}.queue-card{padding:11px 8px;gap:7px}.queue-card-text b{font-size:8px}.queue-card-text small{font-size:7px}.queue-icon{width:28px;height:28px}.lobby-bottom{flex-wrap:wrap;font-size:6px}.lobby-bottom span:nth-child(2){display:none}}
 @media(max-width:390px){.lobby-top-meta>span:not(.live-dot){display:none}.queue-cards{grid-template-columns:1fr}.showcase-foot{grid-template-columns:1fr 1fr}.showcase-foot>div:nth-child(2){display:none}.console-options{gap:10px 8px}}
 @media(prefers-reduced-motion:reduce){.queue-card,.launch-primary,.launch-secondary,.drawer-plus{transition:none}}
+
+
+/* Career progression panel */
+.progress-card{margin:14px 0 18px;padding:14px 15px;border:1px solid rgba(119,232,198,.23);background:linear-gradient(135deg,rgba(16,35,34,.94),rgba(10,21,27,.88));box-shadow:inset 0 1px rgba(255,255,255,.025);color:#e8f4ee}
+.progress-card-head,.progress-identity,.xp-caption{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.progress-card-head{font-size:9px;letter-spacing:1.6px;color:#84b8a7;font-weight:800}
+.progress-card-head button{border:0;background:transparent;color:#78968d;font-size:8px;letter-spacing:1px;cursor:pointer;padding:4px}
+.progress-card-head button:hover{color:#ffb5a9}
+.progress-identity{justify-content:flex-start;margin:12px 0 10px}
+.level-emblem{width:48px;height:48px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px solid #72e7bd;background:rgba(90,220,174,.08);clip-path:polygon(16% 0,84% 0,100% 25%,100% 75%,84% 100%,16% 100%,0 75%,0 25%)}
+.level-emblem span{font-size:7px;letter-spacing:1px;color:#91c9b7}.level-emblem b{font-size:20px;line-height:1.05;color:#a2ffda}
+.progress-identity-copy{display:flex;flex-direction:column;gap:4px;min-width:0}.progress-identity-copy b{font-size:12px;letter-spacing:1.1px}.progress-identity-copy small,.progress-total small{font-size:8px;letter-spacing:.7px;color:#82a69a}
+.progress-total{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:3px}.progress-total b{font-size:19px;color:#a2ffda;font-variant-numeric:tabular-nums}
+.xp-track{height:6px;background:#243b38;overflow:hidden;border-radius:8px}.xp-track span{display:block;height:100%;width:0;background:linear-gradient(90deg,#50cfa4,#b5ffe1);box-shadow:0 0 10px rgba(93,240,187,.35);transition:width .35s ease}
+.xp-caption{font-size:8px;color:#92b4a8;margin-top:7px;letter-spacing:.3px}
+.career-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:13px;padding-top:12px;border-top:1px solid rgba(140,195,175,.15)}
+.career-stats>div{display:flex;flex-direction:column;gap:4px}.career-stats b{font-size:17px;font-variant-numeric:tabular-nums}.career-stats small{font-size:7px;letter-spacing:.7px;color:#78998e}
+.progress-note{font-size:9px;line-height:1.5;color:#79968d;margin:11px 0 0}
+@media(max-width:900px){.progress-card{margin:12px 0;padding:12px}.career-stats b{font-size:15px}}
+@media(prefers-reduced-motion:reduce){.xp-track span{transition:none}}
