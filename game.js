@@ -243,5 +243,64 @@ function updateBots(dt,now){
    }
   }
  }
-}function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.04),now=performance.now();if(reloading&&now>=reloadUntil){const w=weapons[weaponIndex],amount=Math.min(w.mag-ammo,reserve);ammo+=amount;reserve-=amount;reloading=false;updateHud();}updateBotShotEffects(now);if(running){movePlayer(dt);if(!online)updateBots(dt,now);if(firing&&ammo>0&&!reloading&&controls.isLocked)shoot();}recoil=Math.max(0,recoil-dt*.42);weapon.rotation.x=-recoil;flash.visible=now-lastShot<65;muzzle.intensity=flash.visible?3.5:0;renderer.render(scene,camera);}
+}
+// Browser Arena 2.0: atmospheric set dressing, optional audio, and touch-friendly controls.
+const v2Decor=new THREE.Group();scene.add(v2Decor);
+const v2Motes=[],v2Lights=[];
+function buildV2Atmosphere(){
+ while(v2Decor.children.length){const o=v2Decor.children.pop();if(o.geometry)o.geometry.dispose();if(o.material){if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}}
+ v2Motes.length=0;v2Lights.length=0;
+ const colors=[0x80e9bd,0x76d8ff,0xffd18a,0xc77be8];
+ for(let i=0;i<42;i++){
+  const x=(Math.random()-.5)*72,z=(Math.random()-.5)*62,y=.5+Math.random()*7;
+  const geo=new THREE.SphereGeometry(.035+Math.random()*.035,6,6);
+  const mat=new THREE.MeshBasicMaterial({color:colors[i%colors.length],transparent:true,opacity:.25+Math.random()*.35});
+  const mote=new THREE.Mesh(geo,mat);mote.position.set(x,y,z);mote.userData={baseY:y,phase:Math.random()*Math.PI*2,speed:.25+Math.random()*.5};v2Decor.add(mote);v2Motes.push(mote);
+ }
+ // Four illuminated pylons give each arena a strong, readable skyline.
+ for(const [x,z,col] of [[-35,-29,0x80e9bd],[35,-29,0x76d8ff],[-35,29,0xc77be8],[35,29,0xffd18a]]){
+  const base=new THREE.Mesh(new THREE.CylinderGeometry(.55,.8,5.5,8),new THREE.MeshStandardMaterial({color:0x24363a,metalness:.6,roughness:.38}));
+  base.position.set(x,2.75,z);base.castShadow=true;v2Decor.add(base);
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(.72,.09,8,24),new THREE.MeshBasicMaterial({color:col}));
+  ring.rotation.x=Math.PI/2;ring.position.set(x,4.9,z);v2Decor.add(ring);
+  const lamp=new THREE.PointLight(col,1.6,13,2);lamp.position.set(x,4.8,z);v2Decor.add(lamp);v2Lights.push({lamp,ring,phase:Math.random()*6});
+ }
+ // Low luminous guide rails around the centre, kept non-solid so existing collision stays unchanged.
+ for(const [x,z,sx,sz,col] of [[0,-31,30,.1,0x76d8ff],[0,31,30,.1,0x80e9bd],[-38,0,.1,24,0xc77be8],[38,0,.1,24,0xffd18a]]){
+  const rail=new THREE.Mesh(new THREE.BoxGeometry(sx,.045,sz),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.72}));
+  rail.position.set(x,.08,z);v2Decor.add(rail);
+ }
+}
+function animateV2(dt,now){
+ for(const m of v2Motes){m.position.y=m.userData.baseY+Math.sin(now*.001*m.userData.speed+m.userData.phase)*.32;m.rotation.y+=dt*.18;}
+ for(const l of v2Lights){const pulse=.75+Math.sin(now*.0014+l.phase)*.25;l.lamp.intensity=1.15+pulse*.8;l.ring.rotation.z+=dt*.25;}
+ if(v2Audio&&v2Audio.ctx&&v2Audio.ctx.state==='running'&&v2Audio.enabled&&now-v2Audio.lastAmbient>9000){v2Audio.lastAmbient=now;v2Tone(110,.055,.012,'sine');}
+}
+let v2Audio={ctx:null,enabled:false,lastAmbient:0};
+function v2Tone(freq=440,duration=.07,volume=.025,type='sine'){
+ if(!v2Audio.enabled)return;
+ try{const Ctx=window.AudioContext||window.webkitAudioContext;if(!v2Audio.ctx)v2Audio.ctx=new Ctx();if(v2Audio.ctx.state==='suspended')v2Audio.ctx.resume();const o=v2Audio.ctx.createOscillator(),gain=v2Audio.ctx.createGain();o.type=type;o.frequency.value=freq;gain.gain.setValueAtTime(volume,v2Audio.ctx.currentTime);gain.gain.exponentialRampToValueAtTime(.0001,v2Audio.ctx.currentTime+duration);o.connect(gain);gain.connect(v2Audio.ctx.destination);o.start();o.stop(v2Audio.ctx.currentTime+duration);}catch{}
+}
+function setupV2Touch(){
+ const controlsEl=$('touch-controls'),stick=$('touch-stick'),nub=$('touch-nub'),look=$('touch-look');
+ if(!controlsEl||!stick||!nub||!look)return;
+ const touchMode=()=>matchMedia('(pointer:coarse)').matches||innerWidth<800;
+ function sync(){controlsEl.classList.toggle('touch-enabled',touchMode());}
+ sync();addEventListener('resize',sync);
+ let stickId=null,lookId=null,origin=null,lastLook=null;
+ const setKey=(code,on)=>{if(on)keys.add(code);else keys.delete(code);};
+ stick.addEventListener('pointerdown',e=>{if(!touchMode())return;stickId=e.pointerId;stick.setPointerCapture(stickId);const r=stick.getBoundingClientRect();origin={x:r.left+r.width/2,y:r.top+r.height/2};moveStick(e);});
+ function moveStick(e){if(e.pointerId!==stickId||!origin)return;const dx=e.clientX-origin.x,dy=e.clientY-origin.y,len=Math.hypot(dx,dy),scale=Math.min(1,len/40),x=len?dx/len*scale:0,y=len?dy/len*scale:0;nub.style.transform='translate('+x*34+'px,'+y*34+'px)';setKey('KeyA',x<-.22);setKey('KeyD',x>.22);setKey('KeyW',y<-.22);setKey('KeyS',y>.22);}
+ stick.addEventListener('pointermove',moveStick);
+ function releaseStick(e){if(e.pointerId!==stickId)return;stickId=null;origin=null;nub.style.transform='translate(0,0)';['KeyA','KeyD','KeyW','KeyS'].forEach(k=>setKey(k,false));}
+ stick.addEventListener('pointerup',releaseStick);stick.addEventListener('pointercancel',releaseStick);
+ look.addEventListener('pointerdown',e=>{if(!touchMode()||e.target.closest('button,#touch-stick'))return;lookId=e.pointerId;lastLook={x:e.clientX,y:e.clientY};look.setPointerCapture(lookId);});
+ look.addEventListener('pointermove',e=>{if(e.pointerId!==lookId||!lastLook||!running)return;const dx=e.clientX-lastLook.x,dy=e.clientY-lastLook.y;lastLook={x:e.clientX,y:e.clientY};const yaw=controls.getObject();yaw.rotation.y-=dx*.0042;camera.rotation.x=THREE.MathUtils.clamp(camera.rotation.x-dy*.0042,-Math.PI/2,Math.PI/2);});
+ const endLook=e=>{if(e.pointerId===lookId){lookId=null;lastLook=null;}};look.addEventListener('pointerup',endLook);look.addEventListener('pointercancel',endLook);
+$('touch-sprint')?.addEventListener('pointerdown',()=>setKey('ShiftLeft',true));['pointerup','pointercancel','pointerleave'].forEach(ev=>$('touch-sprint')?.addEventListener(ev,()=>setKey('ShiftLeft',false)));
+ $('audio-toggle')?.addEventListener('click',()=>{v2Audio.enabled=!v2Audio.enabled;$('audio-toggle').textContent=v2Audio.enabled?'SOUND: ON':'SOUND: OFF';if(v2Audio.enabled)v2Tone(660,.12,.035,'sine');});
+}
+buildV2Atmosphere();setupV2Touch();
+
+function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.04),now=performance.now();if(reloading&&now>=reloadUntil){const w=weapons[weaponIndex],amount=Math.min(w.mag-ammo,reserve);ammo+=amount;reserve-=amount;reloading=false;updateHud();}updateBotShotEffects(now);animateV2(dt,now);if(running){movePlayer(dt);if(!online)updateBots(dt,now);if(firing&&ammo>0&&!reloading&&controls.isLocked)shoot();}recoil=Math.max(0,recoil-dt*.42);weapon.rotation.x=-recoil;flash.visible=now-lastShot<65;muzzle.intensity=flash.visible?3.5:0;renderer.render(scene,camera);}
 animate();applyWeapon();updateWeaponSelector();applyMap(0);$('gun-color').addEventListener('input',e=>bodyMat.color.set(e.target.value));$('hair-color').addEventListener('input',e=>{hairColor=e.target.value;for(const item of remotePlayers.values())if(item.hair)item.hair.material.color.set(hairColor);});addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setPixelRatio(Math.min(devicePixelRatio,innerWidth<700?1.25:1.75));renderer.setSize(innerWidth,innerHeight);});window.addEventListener('beforeunload',()=>socket?.disconnect());
