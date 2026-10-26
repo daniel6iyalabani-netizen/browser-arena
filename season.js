@@ -2,7 +2,7 @@
  const $=id=>document.getElementById(id);
  const KEY='browserArenaSeasonV1',DAY=new Date().toISOString().slice(0,10);
  const fresh=()=>({day:DAY,matches:0,kills:0,wins:0,rating:1000,completed:[],unlocks:[]});
- function load(){try{const v=JSON.parse(localStorage.getItem(KEY)||'null');return v&&v.day===DAY?{...fresh(),...v}:fresh();}catch{return fresh();}}
+ function load(){try{const v=JSON.parse(localStorage.getItem(KEY)||'null');return v&&typeof v==='object'?{...fresh(),rating:Number(v.rating)||1000,...(v.day===DAY?v:{})}:fresh();}catch{return fresh();}}
  let data=load();
  const challenges=[{id:'matches',title:'Drop In',description:'Complete 3 matches today',goal:3},{id:'kills',title:'Elimination Run',description:'Earn 5 eliminations today',goal:5},{id:'wins',title:'Claim Victory',description:'Win 1 match today',goal:1}];
  const skins=[{level:2,name:'Solar Gold',value:'#b6a52f'},{level:4,name:'Plasma Violet',value:'#9e69d1'},{level:6,name:'Arctic Silver',value:'#dce5e8'},{level:8,name:'Volt Blue',value:'#2b9ce8'}];
