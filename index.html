@@ -59,7 +59,7 @@
           </div>
           <div class="option-field server-field"><label for="server-url">MULTIPLAYER SERVER <small>(connected automatically)</small></label><input id="server-url" value="https://browser-arena-cw84.onrender.com" placeholder="Server connects automatically"></div>
         </details>
-        <div class="launch-actions"><button id="play-online" class="launch-primary"><span>ENTER MATCH</span><b>↗</b></button><button id="play-offline" class="launch-secondary">TRAIN VS BOTS <span>→</span></button></div>
+        <div class="launch-actions"><button id="open-tutorial" class="launch-secondary" type="button">HOW TO PLAY <span>?</span></button><button id="play-online" class="launch-primary"><span>ENTER MATCH</span><b>↗</b></button><button id="play-offline" class="launch-secondary">TRAIN VS BOTS <span>→</span></button></div>
         <div class="console-footer"><span><i class="footer-lock">◇</i> MULTIPLAYER ENABLED</span><span>NO ACCOUNT REQUIRED</span></div>
       </aside>
     </div>
@@ -67,7 +67,20 @@
   </div>
 </section>
 
-<section id="results-screen" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="results-title">
+
+<section id="tutorial-overlay" class="tutorial-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="tutorial-title">
+  <div class="tutorial-card">
+    <div class="tutorial-kicker">FIELD GUIDE / FIRST DEPLOYMENT <span id="tutorial-step-count">01 / 06</span></div>
+    <div class="tutorial-progress"><span id="tutorial-progress-fill"></span></div>
+    <div class="tutorial-icon" id="tutorial-icon">⌨</div>
+    <h2 id="tutorial-title">Move with purpose.</h2>
+    <p id="tutorial-copy">Learn the controls before your first match.</p>
+    <div class="tutorial-tip" id="tutorial-tip">Tip: you can reopen this guide from the lobby.</div>
+    <div class="tutorial-controls"><button id="tutorial-skip" class="results-secondary" type="button">SKIP GUIDE</button><div><button id="tutorial-back" class="results-secondary" type="button">BACK</button><button id="tutorial-next" class="results-primary" type="button">NEXT STEP →</button></div></div>
+    <label class="tutorial-dont-show"><input id="tutorial-dont-show" type="checkbox" checked> Don’t auto-open next time</label>
+  </div>
+</section>
+\n<section id="results-screen" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="results-title">
   <div class="results-shell">
     <div class="results-topline"><span><i class="results-live-dot"></i> MATCH REPORT / CAREER UPDATE</span><span id="results-match-type">OFFLINE TRAINING</span></div>
     <div class="results-hero"><div class="results-eyebrow" id="results-eyebrow">MATCH COMPLETE</div><h2 id="results-title">ROUND<br><span>COMPLETE.</span></h2><p id="results-subtitle">Your next match starts here.</p></div>
@@ -81,4 +94,22 @@
 
 <section id="map-lobby" class="overlay hidden"><div class="panel lobby-panel"><div class="eyebrow">ONLINE MATCHMAKING</div><h1 id="lobby-title">FINDING PLAYERS</h1><p id="lobby-status">Waiting for players…</p><div id="map-votes"></div><div id="lobby-players"></div><p class="fineprint">All real players in this match vote together. Training bots do not use the map-voting lobby.</p></div></section><script>
 document.querySelectorAll('[data-queue]').forEach(function(btn){btn.addEventListener('click',function(){document.querySelectorAll('[data-queue]').forEach(function(other){var active=other===btn;other.classList.toggle('selected',active);other.setAttribute('aria-pressed',String(active));});var online=btn.dataset.queue==='online';var primary=document.getElementById('play-online');primary.classList.toggle('launch-emphasis',online);document.getElementById('play-offline').classList.toggle('launch-emphasis',!online);primary.querySelector('span').textContent=online?'ENTER MATCH':'START TRAINING';});});document.getElementById('play-online').addEventListener('click',function(event){var selected=document.querySelector('[data-queue].selected');if(selected&&selected.dataset.queue==='training'){event.preventDefault();event.stopImmediatePropagation();document.getElementById('play-offline').click();}},true);
-</script><script src="/socket.io/socket.io.js"></script><script type="module" src="./game.js"></script><script src="./stats.js" defer></script></body></html>
+</script>
+<script>
+(function(){
+ const steps=[
+  {icon:'⌨',title:'Move with purpose.',copy:'Use W A S D to move around the arena. Move your mouse to aim. Click or tap to fire. On a phone or tablet, use the on-screen joystick and look area.',tip:'Keep moving while you aim — standing still makes you an easier target.'},
+  {icon:'⇧',title:'Sprint to reposition.',copy:'Hold Shift while moving to sprint. Sprint uses stamina, shown by the meter at the top of the screen. Let go to recover stamina.',tip:'Use sprint to cross open ground or escape a bad position.'},
+  {icon:'↟',title:'Jump over danger.',copy:'Press Space to jump on keyboard. The touch control is labelled JUMP. Jumping can help you change your movement and clear small gaps.',tip:'Don’t jump constantly — mix up your movement.'},
+  {icon:'⇢',title:'Slide into a fight.',copy:'Move forward and press C to slide on keyboard. On touch devices, use the SLIDE button. Sliding has a cooldown, so watch your timing.',tip:'Try sprinting toward cover, then slide to change your approach.'},
+  {icon:'◎',title:'Aim, reload and swap.',copy:'Aim with the mouse and click to shoot. Press R to reload. Press 1–8 or use the mouse wheel to change weapons. Earn cash from eliminations and press B to open the armory.',tip:'The crosshair shows your aim point; watch ammo before pushing.'},
+  {icon:'✦',title:'Choose your first match.',copy:'Quick Play looks for real players online. Training lets you practise against bots. Start in Training if you want to learn the map and weapons safely.',tip:'Press K during a match to open the scoreboard. Have fun and play fair.'}
+ ];let step=0;const overlay=document.getElementById('tutorial-overlay');
+ function render(){const s=steps[step];document.getElementById('tutorial-icon').textContent=s.icon;document.getElementById('tutorial-title').textContent=s.title;document.getElementById('tutorial-copy').textContent=s.copy;document.getElementById('tutorial-tip').textContent=s.tip;document.getElementById('tutorial-step-count').textContent=String(step+1).padStart(2,'0')+' / '+String(steps.length).padStart(2,'0');document.getElementById('tutorial-progress-fill').style.width=((step+1)/steps.length*100)+'%';document.getElementById('tutorial-back').disabled=step===0;document.getElementById('tutorial-next').textContent=step===steps.length-1?'LET’S PLAY ↗':'NEXT STEP →';}
+ function open(){step=0;render();overlay.classList.remove('hidden');}
+ function close(){overlay.classList.add('hidden');if(document.getElementById('tutorial-dont-show').checked){try{localStorage.setItem('browserArenaTutorialSeen','1');}catch{}}}
+ document.getElementById('open-tutorial').addEventListener('click',open);document.getElementById('tutorial-next').addEventListener('click',()=>{if(step<steps.length-1){step++;render();}else close();});document.getElementById('tutorial-back').addEventListener('click',()=>{if(step>0){step--;render();}});document.getElementById('tutorial-skip').addEventListener('click',close);
+ try{if(!localStorage.getItem('browserArenaTutorialSeen'))open();}catch{open();}
+})();
+</script>
+<script src="/socket.io/socket.io.js"></script><script type="module" src="./game.js"></script><script src="./stats.js" defer></script></body></html>
