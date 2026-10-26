@@ -20,9 +20,44 @@ const WEAPONS=[
  {mag:5,delay:950,damage:65,range:90,pellets:1,spread:.001},
  {mag:36,delay:68,damage:14,range:42,pellets:1,spread:.026}
 ];
-app.use(express.static(path.join(__dirname)));
+
+const leaderboardMemory=new Map();
+const leaderboardRate=new Map();
+const hasSupabase=()=>!!(process.env.SUPABASE_URL&&process.env.SUPABASE_SERVICE_ROLE_KEY);
+async function supabaseRequest(path,options={}){
+ const base=process.env.SUPABASE_URL.replace(/\\/$/,'');
+ const response=await fetch(base+'/rest/v1/'+path,{...options,headers:{apikey:process.env.SUPABASE_SERVICE_ROLE_KEY,Authorization:'Bearer '+process.env.SUPABASE_SERVICE_ROLE_KEY,'Content-Type':'application/json',Prefer:'return=representation',...(options.headers||{})}});
+ if(!response.ok)throw new Error('Leaderboard database request failed: '+response.status);
+ return response.status===204?[]:response.json();
+}
+function rankRows(rows){return rows.sort((a,b)=>(b.score-a.score)||(b.wins-a.wins)||(b.kills-a.kills)||a.name.localeCompare(b.name)).slice(0,50).map((p,i)=>({...p,rank:i+1}));}
+async function getLeaderboard(){
+ if(hasSupabase()){
+  const rows=await supabaseRequest('browser_arena_leaderboard?select=name,score,kills,wins,updated_at&order=score.desc,wins.desc,kills.desc&limit=50');
+  return rankRows(rows.map(p=>({name:cleanName(p.name),score:Number(p.score)||0,kills:Number(p.kills)||0,wins:Number(p.wins)||0,updatedAt:p.updated_at||null})));
+ }
+ return rankRows([...leaderboardMemory.values()].map(p=>({...p})));
+}
+\napp.use(express.json({limit:'8kb'}));\napp.use(express.static(path.join(__dirname)));
 app.get('/health',(_req,res)=>res.json({ok:true,players:players.size}));
 app.get('/api/status',(_req,res)=>res.json({game:'Browser Arena',players:players.size,maxPlayers:MAX_PLAYERS}));
+app.get('/api/leaderboard',async(_req,res)=>{try{res.set('Cache-Control','no-store');res.json({entries:await getLeaderboard(),persistent:hasSupabase()});}catch(err){console.error(err.message);res.status(503).json({error:'Leaderboard temporarily unavailable'});}});
+app.post('/api/leaderboard',async(req,res)=>{
+ const ip=String(req.headers['x-forwarded-for']||req.socket.remoteAddress||'unknown').split(',')[0].trim(),now=Date.now(),last=leaderboardRate.get(ip)||0;
+ if(now-last<1500)return res.status(429).json({error:'Please wait before submitting again.'});
+ leaderboardRate.set(ip,now);
+ const name=cleanName(req.body?.name),score=Math.round(clamp(req.body?.score,0,1000000,0)),kills=Math.round(clamp(req.body?.kills,0,100000,0)),wins=Math.round(clamp(req.body?.wins,0,100000,0));
+ if(!req.body||typeof req.body!=='object')return res.status(400).json({error:'Invalid score.'});
+ try{
+  if(hasSupabase()){
+   await supabaseRequest('browser_arena_leaderboard?on_conflict=name',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=representation'},body:JSON.stringify({name,score,kills,wins,updated_at:new Date().toISOString()})});
+  }else{
+   const prev=leaderboardMemory.get(name)||{name,score:0,kills:0,wins:0};
+   leaderboardMemory.set(name,{name,score:Math.max(prev.score,score),kills:Math.max(prev.kills,kills),wins:Math.max(prev.wins,wins),updatedAt:new Date().toISOString()});
+  }
+  res.json({ok:true,entries:await getLeaderboard(),persistent:hasSupabase()});
+ }catch(err){console.error(err.message);res.status(503).json({error:'Could not save score. Check database configuration.'});}
+});
 function cleanName(v){return String(v||'Player').replace(/[^a-zA-Z0-9 _-]/g,'').trim().slice(0,18)||'Player';}
 function clamp(v,min,max,fallback=0){const n=Number(v);return Number.isFinite(n)?Math.max(min,Math.min(max,n)):fallback;}
 
