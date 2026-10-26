@@ -282,12 +282,18 @@ function updateBots(dt,now){
    continue;
   }
   const dx=p.x-b.group.position.x,dz=p.z-b.group.position.z,dist=Math.hypot(dx,dz);b.phase+=dt;
-  const level={easy:{cool:1750,accuracy:.48,damage:5,speed:.85},medium:{cool:1320,accuracy:.63,damage:7,speed:1.05},hard:{cool:980,accuracy:.76,damage:9,speed:1.25}}[difficulty]||{cool:1320,accuracy:.63,damage:7,speed:1.05};
+  const level={easy:{cool:1650,accuracy:.5,damage:5,speed:.9,strafe:.35},medium:{cool:1180,accuracy:.67,damage:7,speed:1.12,strafe:.62},hard:{cool:850,accuracy:.8,damage:9,speed:1.32,strafe:.9}}[difficulty]||{cool:1180,accuracy:.67,damage:7,speed:1.12,strafe:.62};
+  if(b.lastPlayerX!==undefined){const pvx=(p.x-b.lastPlayerX)/Math.max(dt,.001),pvz=(p.z-b.lastPlayerZ)/Math.max(dt,.001);b.playerVx=THREE.MathUtils.clamp(pvx,-8,8);b.playerVz=THREE.MathUtils.clamp(pvz,-8,8);}
+  b.lastPlayerX=p.x;b.lastPlayerZ=p.z;
   // Each bot owns a different lane and preferred range, so they fan out instead of piling onto the player.
-  const lane=b.laneAngle+b.phase*.025,ring=b.preferredRange;
+  const lane=b.laneAngle+Math.sin(b.phase*.31+b.index)*.55+b.phase*.045,ring=b.preferredRange;
   const tx=p.x+Math.cos(lane)*ring,tz=p.z+Math.sin(lane)*ring;
   let mx=tx-b.group.position.x,mz=tz-b.group.position.z,md=Math.hypot(mx,mz)||1;
   let vx=mx/md, vz=mz/md;
+  const lateral=dist<25?level.strafe:level.strafe*.25;
+  vx+=(-dz/(dist||1))*Math.sin(b.phase*2.4+b.index)*lateral;
+  vz+=(dx/(dist||1))*Math.sin(b.phase*2.4+b.index)*lateral;
+  if(now-lastShot<260){vx+=(-dz/(dist||1))*b.strafe*.85;vz+=(dx/(dist||1))*b.strafe*.85;}
   // Keep a little distance from nearby bots and make their paths less synchronized.
   for(const other of targets){if(other===b||!other.alive)continue;const sx=b.group.position.x-other.group.position.x,sz=b.group.position.z-other.group.position.z,sd=Math.hypot(sx,sz);if(sd>0&&sd<4.8){vx+=sx/sd*(4.8-sd)*.32;vz+=sz/sd*(4.8-sd)*.32;}}
   const vl=Math.hypot(vx,vz)||1;vx/=vl;vz/=vl;
@@ -310,10 +316,11 @@ function updateBots(dt,now){
   if(!online&&dist<42&&now>b.fireAt&&now-lastHitTime>160){
    const muzzleOrigin=b.botGun.getWorldPosition(new THREE.Vector3());const toPlayer=new THREE.Vector3(p.x,p.y-.12,p.z).sub(muzzleOrigin);const sightDistance=toPlayer.length();toPlayer.normalize();raycaster.set(muzzleOrigin,toPlayer);raycaster.far=Math.max(0,sightDistance-.35);const hasCover=raycaster.intersectObjects(solidMeshes,false).length>0;raycaster.far=Infinity;if(hasCover){b.fireAt=now+260+Math.random()*320;continue;}
    b.fireAt=now+level.cool+Math.random()*level.cool*.45;
-   const targetPoint=new THREE.Vector3(p.x,p.y-.12,p.z);
-   const accuracy=Math.max(.24,level.accuracy-dist*.006);
+   const lead=Math.min(.42,sightDistance/65);
+   const targetPoint=new THREE.Vector3(p.x+(b.playerVx||0)*lead,p.y-.12,p.z+(b.playerVz||0)*lead);
+   const accuracy=Math.max(.22,level.accuracy-dist*.0055);
    const hit=Math.random()<accuracy;
-   if(!hit){targetPoint.x+=(Math.random()-.5)*(4+dist*.24);targetPoint.y+=(Math.random()-.5)*(2+dist*.08);targetPoint.z+=(Math.random()-.5)*(4+dist*.24);}
+   if(!hit){targetPoint.x+=(Math.random()-.5)*(3.2+dist*.2);targetPoint.y+=(Math.random()-.5)*(1.6+dist*.065);targetPoint.z+=(Math.random()-.5)*(3.2+dist*.2);}
    spawnBotShot(b,targetPoint,now);
    if(hit){
     let damage=level.damage;const absorbed=Math.min(shield,damage);shield-=absorbed;damage-=absorbed;health=Math.max(0,health-damage);lastHitTime=now;
