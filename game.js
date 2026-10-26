@@ -113,9 +113,37 @@ function makeBot(x,z,index){
  group.userData.bot=bot;targets.push(bot);return bot;
 }
 for(let i=0;i<9;i++)makeBot((Math.random()-.5)*62,-5-Math.random()*28,i);
-function setMessage(text,ms=1300){$('message').textContent=text;setTimeout(()=>{if($('message').textContent===text)$('message').textContent='';},ms);}
+
+const PROGRESSION_KEY='browserArenaCareerV1';
+const rankNames=['ROOKIE','RECRUIT','CONTENDER','SPECIALIST','VANGUARD','ELITE','CHAMPION','LEGEND'];
+const freshCareer=()=>({xp:0,matches:0,minutes:0,careerDays:0,lastPlayedDay:''});
+function loadCareer(){try{const raw=JSON.parse(localStorage.getItem(PROGRESSION_KEY)||'null');return raw&&typeof raw==='object'?{...freshCareer(),...raw}:freshCareer();}catch{return freshCareer();}}
+let career=loadCareer(),matchStartedAt=0,matchRecorded=false;
+function careerLevel(xp=career.xp){return Math.floor(Math.max(0,xp)/100)+1;}
+function updateProgressUI(){
+ const level=careerLevel(),inLevel=career.xp%100,rank=rankNames[Math.min(rankNames.length-1,Math.floor((level-1)/2))];
+ const put=(id,value)=>{const el=$(id);if(el)el.textContent=String(value);};
+ put('profile-level',String(level).padStart(2,'0'));put('profile-rank',rank);put('profile-xp-label',career.xp+' XP EARNED');put('profile-total-xp',career.xp.toLocaleString());put('profile-xp-current',inLevel+' / 100 XP');put('profile-next-level',(100-inLevel)+' XP TO LEVEL '+(level+1));put('profile-matches',career.matches);put('profile-minutes',Math.floor(career.minutes)+'m');put('profile-streak',career.careerDays);
+ const fill=$('profile-xp-fill'),track=fill?.parentElement;if(fill)fill.style.width=inLevel+'%';if(track)track.setAttribute('aria-valuenow',String(inLevel));
+}
+function saveCareer(){try{localStorage.setItem(PROGRESSION_KEY,JSON.stringify(career));}catch{}updateProgressUI();}
+function beginCareerMatch(){matchStartedAt=Date.now();matchRecorded=false;}
+function completeCareerMatch(){
+ if(matchRecorded||!matchStartedAt)return;
+ matchRecorded=true;
+ const minutes=Math.max(0,(Date.now()-matchStartedAt)/60000);
+ const timeBonus=Math.min(20,Math.floor(minutes));
+ const earned=100+timeBonus;
+ const day=new Date().toISOString().slice(0,10);
+ career.xp+=earned;career.matches+=1;career.minutes=Math.round((career.minutes+minutes)*10)/10;
+ if(career.lastPlayedDay!==day){career.careerDays+=1;career.lastPlayedDay=day;}
+ const before=careerLevel(career.xp-earned),after=careerLevel();
+ saveCareer();
+ setMessage((after>before?'LEVEL UP! LEVEL '+after+' · ':'MATCH COMPLETE · ')+'+'+earned+' XP',3200);
+}
+\nfunction setMessage(text,ms=1300){$('message').textContent=text;setTimeout(()=>{if($('message').textContent===text)$('message').textContent='';},ms);}
 function updateHud(){$('health').textContent=Math.max(0,Math.round(health));$('shield').textContent=Math.max(0,Math.round(shield));const selected=targets.find(b=>targetBot>0&&b.index===targetBot-1);$('target-status').textContent=selected?('BOT '+targetBot+' · HP '+Math.round(selected.hp)+' / SHIELD '+Math.round(selected.shield)):'TARGET: ANY BOT';$('kills').textContent=kills;$('cash').textContent='$'+cash;$('ammo').textContent=reloading?'RELOADING':ammo+' / '+reserve;$('connection').textContent=online?'ONLINE · '+(socket?.connected?'CONNECTED':'CONNECTING'):'OFFLINE TRAINING';$('scoreboard').textContent=online?[...remotePlayers.values()].length+1+' PLAYERS':'BOT TRAINING';updateShop();}
-function startGame(useOnline){playerName=($('player-name').value.trim()||'Rookie').slice(0,18);online=useOnline;difficulty=$('difficulty').value;targetBot=Number($('bot-target').value);for(const b of targets)b.targetRing.visible=targetBot>0&&b.index===targetBot-1;mapIndex=0;matchMode=$('match-mode').value;hairColor=$('hair-color').value;gunColor=$('gun-color').value;uniformColor=$('uniform-color').value;skinColor=$('skin-color').value;shoeColor=$('shoe-color').value;armorLevel=Number($('armor-color').value)||0;playerRoundScore=0;botRoundScore=0;matchOver=false;$('player-round-score').textContent='0';$('bot-round-score').textContent='0';health=100;shield=100*(1+armorLevel*.03);bodyMat.color.set(gunColor);for(const b of targets){b.group.visible=!useOnline;b.hp=100;b.shield=100;}$('start-screen').classList.add('hidden');if(useOnline){running=false;$('hud').style.display='none';$('map-lobby').classList.remove('hidden');$('lobby-title').textContent='FINDING PLAYERS';$('lobby-status').textContent='Connecting to matchmaking…';$('map-votes').innerHTML='';connectOnline();}else{running=true;applyMap(mapIndex);$('map-lobby').classList.add('hidden');$('hud').style.display='block';controls.lock();}updateHud();}
+function startGame(useOnline){beginCareerMatch();playerName=($('player-name').value.trim()||'Rookie').slice(0,18);online=useOnline;difficulty=$('difficulty').value;targetBot=Number($('bot-target').value);for(const b of targets)b.targetRing.visible=targetBot>0&&b.index===targetBot-1;mapIndex=0;matchMode=$('match-mode').value;hairColor=$('hair-color').value;gunColor=$('gun-color').value;uniformColor=$('uniform-color').value;skinColor=$('skin-color').value;shoeColor=$('shoe-color').value;armorLevel=Number($('armor-color').value)||0;playerRoundScore=0;botRoundScore=0;matchOver=false;$('player-round-score').textContent='0';$('bot-round-score').textContent='0';health=100;shield=100*(1+armorLevel*.03);bodyMat.color.set(gunColor);for(const b of targets){b.group.visible=!useOnline;b.hp=100;b.shield=100;}$('start-screen').classList.add('hidden');if(useOnline){running=false;$('hud').style.display='none';$('map-lobby').classList.remove('hidden');$('lobby-title').textContent='FINDING PLAYERS';$('lobby-status').textContent='Connecting to matchmaking…';$('map-votes').innerHTML='';connectOnline();}else{running=true;applyMap(mapIndex);$('map-lobby').classList.add('hidden');$('hud').style.display='block';controls.lock();}updateHud();}
 $('bot-target').addEventListener('change',e=>{targetBot=Number(e.target.value);for(const b of targets)b.targetRing.visible=targetBot>0&&b.index===targetBot-1;});$('play-offline').addEventListener('click',()=>startGame(false));$('play-online').addEventListener('click',()=>{if(!$('server-url').value.trim())$('server-url').value=DEFAULT_SERVER_URL;startGame(true);});
 controls.addEventListener('unlock',()=>{if(running)setMessage('CLICK THE GAME TO CAPTURE THE MOUSE',2200);});
 renderer.domElement.addEventListener('click',()=>{if(running&&!controls.isLocked)controls.lock();});
@@ -183,7 +211,7 @@ function movePlayer(dt){
  bob+=dt*(delta.lengthSq()>.001?speed*.9:1.4);weapon.position.y=-.3+Math.sin(bob*2)*.006*(delta.lengthSq()>.001?1:0);
  if(online&&socket?.connected&&performance.now()-lastSync>50){lastSync=performance.now();const f=camera.getWorldDirection(new THREE.Vector3());socket.emit('move',{x:p.x,yaw:Math.atan2(f.x,-f.z),z:p.z});}
 }
-function dieAndRestart(){if(!running)return;health=0;shield=0;firing=false;reloading=false;if(!online){botRoundScore++;$('bot-round-score').textContent=String(botRoundScore);if(botRoundScore>=5){matchOver=true;running=false;updateHud();controls.unlock();$('start-screen').classList.remove('hidden');setMessage('BOTS WIN · FIRST TO 5 · PLAY AGAIN',4000);return;}health=100;shield=100*(1+armorLevel*.03);const p=controls.getObject().position;p.set((Math.random()-.5)*10,1.7,Math.random()<.5?-12:12);lastHitTime=performance.now();updateHud();setMessage('RESPAWN · BOTS '+botRoundScore+' / 5',1500);return;}running=false;updateHud();controls.unlock();$('start-screen').classList.remove('hidden');setMessage('YOU DIED · CHOOSE A MODE TO RESTART',3000);}
+function dieAndRestart(){if(!running)return;health=0;shield=0;firing=false;reloading=false;if(!online){botRoundScore++;$('bot-round-score').textContent=String(botRoundScore);if(botRoundScore>=5){completeCareerMatch();matchOver=true;running=false;updateHud();controls.unlock();$('start-screen').classList.remove('hidden');setMessage('BOTS WIN · FIRST TO 5 · PLAY AGAIN',4000);return;}health=100;shield=100*(1+armorLevel*.03);const p=controls.getObject().position;p.set((Math.random()-.5)*10,1.7,Math.random()<.5?-12:12);lastHitTime=performance.now();updateHud();setMessage('RESPAWN · BOTS '+botRoundScore+' / 5',1500);return;}completeCareerMatch();running=false;updateHud();controls.unlock();$('start-screen').classList.remove('hidden');setMessage('YOU DIED · CHOOSE A MODE TO RESTART',3000);}
 function spawnBotShot(b,target,now){
  const origin=b.botGun.getWorldPosition(new THREE.Vector3());origin.y+=.02;
  const end=target.clone();end.y=Math.max(1.15,end.y);
@@ -300,7 +328,7 @@ function setupV2Touch(){
 $('touch-sprint')?.addEventListener('pointerdown',()=>setKey('ShiftLeft',true));['pointerup','pointercancel','pointerleave'].forEach(ev=>$('touch-sprint')?.addEventListener(ev,()=>setKey('ShiftLeft',false)));
  $('audio-toggle')?.addEventListener('click',()=>{v2Audio.enabled=!v2Audio.enabled;$('audio-toggle').textContent=v2Audio.enabled?'SOUND: ON':'SOUND: OFF';if(v2Audio.enabled)v2Tone(660,.12,.035,'sine');});
 }
-buildV2Atmosphere();setupV2Touch();
+buildV2Atmosphere();setupV2Touch();\n$('reset-progress')?.addEventListener('click',()=>{if(confirm('Reset your local XP and career stats? This cannot be undone.')){career=freshCareer();saveCareer();setMessage('CAREER RESET',1400);}});updateProgressUI();
 
 function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.04),now=performance.now();if(reloading&&now>=reloadUntil){const w=weapons[weaponIndex],amount=Math.min(w.mag-ammo,reserve);ammo+=amount;reserve-=amount;reloading=false;updateHud();}updateBotShotEffects(now);animateV2(dt,now);if(running){movePlayer(dt);if(!online)updateBots(dt,now);if(firing&&ammo>0&&!reloading&&controls.isLocked)shoot();}recoil=Math.max(0,recoil-dt*.42);weapon.rotation.x=-recoil;flash.visible=now-lastShot<65;muzzle.intensity=flash.visible?3.5:0;renderer.render(scene,camera);}
 animate();applyWeapon();updateWeaponSelector();applyMap(0);$('gun-color').addEventListener('input',e=>bodyMat.color.set(e.target.value));$('hair-color').addEventListener('input',e=>{hairColor=e.target.value;for(const item of remotePlayers.values())if(item.hair)item.hair.material.color.set(hairColor);});addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setPixelRatio(Math.min(devicePixelRatio,innerWidth<700?1.25:1.75));renderer.setSize(innerWidth,innerHeight);});window.addEventListener('beforeunload',()=>socket?.disconnect());
