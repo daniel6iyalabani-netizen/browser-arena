@@ -149,6 +149,7 @@ function completeCareerMatch(){
 function showMatchResults(resultLabel,detail){
  const summary=completeCareerMatch();
  if(!summary)return;
+ window.dispatchEvent(new CustomEvent('browserarena:matchresult',{detail:{name:playerName,kills:summary.kills,wins:resultLabel.toLowerCase().includes('victory')?1:0}}));
  running=false;firing=false;toggleShop(false);$('score-panel')?.classList.remove('visible');
  controls.unlock();$('hud').style.display='none';$('map-lobby').classList.add('hidden');$('start-screen').classList.add('hidden');
  const el=(id)=>$(id);
