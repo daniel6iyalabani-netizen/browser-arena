@@ -59,6 +59,8 @@ html{background:#081218}
 #touch-actions button{pointer-events:auto;touch-action:none;min-width:76px;min-height:44px;border:1px solid #b5ffe088;border-radius:14px;background:#071016bb;color:#eafff5;font-size:10px;font-weight:900;letter-spacing:.1em;backdrop-filter:blur(8px)}
 
 #touch-actions #touch-sprint{background:#76d8ff33}
+#touch-actions #touch-jump{background:#80e9bd2b;border-color:#80e9bd99}
+#touch-actions #touch-slide{background:#ffcf782b;border-color:#ffcf7899}
 @media(pointer:fine){#touch-controls.touch-enabled{display:none}}
 @media(max-width:650px){.audio-toggle{float:none;margin:0 0 8px auto;display:block}#bottom-help{display:none}#weapon-selector{bottom:178px}#match-score{top:48px}#map-name{top:174px}#target-status{top:208px}}
 @media(prefers-reduced-motion:reduce){#touch-nub{transition:none}}
