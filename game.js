@@ -189,7 +189,13 @@ function updateBots(dt,now){
   for(const other of targets){if(other===b||!other.alive)continue;const sx=b.group.position.x-other.group.position.x,sz=b.group.position.z-other.group.position.z,sd=Math.hypot(sx,sz);if(sd>0&&sd<4.8){vx+=sx/sd*(4.8-sd)*.32;vz+=sz/sd*(4.8-sd)*.32;}}
   const vl=Math.hypot(vx,vz)||1;vx/=vl;vz/=vl;
   const moveSpeed=(md>1.8?level.speed*(md>8?1.15:.75):.18);
-  b.group.position.x+=vx*moveSpeed*dt;b.group.position.z+=vz*moveSpeed*dt;
+  // Bots collide with cover instead of walking through it; try sliding along one axis to find a route around it.
+  const nextX=b.group.position.x+vx*moveSpeed*dt,nextZ=b.group.position.z+vz*moveSpeed*dt;
+  const blockedAt=(x,z)=>{const point=new THREE.Vector3(x,.95,z);return colliders.some(c=>c.clone().expandByVector(new THREE.Vector3(.38,.95,.38)).containsPoint(point));};
+  if(!blockedAt(nextX,nextZ)){b.group.position.x=nextX;b.group.position.z=nextZ;}
+  else if(!blockedAt(nextX,b.group.position.z)){b.group.position.x=nextX;}
+  else if(!blockedAt(b.group.position.x,nextZ)){b.group.position.z=nextZ;}
+  else {b.strafe*=-1;b.group.position.x+=Math.cos(b.phase*2)*moveSpeed*dt*.35;b.group.position.z+=Math.sin(b.phase*2)*moveSpeed*dt*.35;}
   // Turn toward the player; the rifle points along the character's local -Z axis.
   b.group.rotation.y=Math.atan2(-dx,-dz);
   b.botGun.rotation.x=THREE.MathUtils.clamp((1.35-p.y)*.12,-.12,.12);
