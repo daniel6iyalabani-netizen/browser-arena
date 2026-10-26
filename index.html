@@ -38,6 +38,7 @@
           <div class="career-stats"><div><b id="profile-matches">0</b><small>MATCHES</small></div><div><b id="profile-minutes">0m</b><small>TIME PLAYED</small></div><div><b id="profile-streak">0</b><small>CAREER DAYS</small></div></div>
           <p class="progress-note">Earn XP by completing matches. Progress saves on this device.</p>
         </section>
+        <section class="global-leaderboard" aria-label="Global leaderboard"><div class="global-leaderboard-head"><div><span>ARENA NETWORK</span><h3>Global leaderboard</h3></div><button id="leaderboard-refresh" type="button" aria-label="Refresh leaderboard">REFRESH</button></div><div class="leaderboard-columns"><span>RANK / PLAYER</span><span>SCORE</span><span>WINS</span></div><ol id="global-leaderboard-list"><li class="leaderboard-empty">Loading global rankings...</li></ol><div id="leaderboard-status" class="leaderboard-status">Connecting to leaderboard...</div></section>
         <div class="queue-heading"><span>SELECT YOUR QUEUE</span><span>CHOOSE A MODE</span></div>
         <div class="queue-cards">
           <button type="button" class="queue-card selected" data-queue="online" aria-pressed="true"><span class="queue-icon">↗</span><span class="queue-card-text"><b>QUICK PLAY</b><small>Find real players online</small></span><span class="queue-radio"></span></button>
@@ -112,4 +113,4 @@ document.querySelectorAll('[data-queue]').forEach(function(btn){btn.addEventList
  try{if(!localStorage.getItem('browserArenaTutorialSeen'))open();}catch{open();}
 })();
 </script>
-<script src="/socket.io/socket.io.js"></script><script type="module" src="./game.js"></script><script src="./stats.js" defer></script></body></html>
+<script src="/socket.io/socket.io.js"></script><script type="module" src="./game.js"></script><script src="./stats.js" defer></script><script src="./leaderboard.js" defer></script></body></html>
