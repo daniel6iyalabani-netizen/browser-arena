@@ -46,3 +46,19 @@ html{background:#081218}
 @media(prefers-reduced-motion:reduce){
  *,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}
 }
+
+/* Browser Arena 2.0: new touch layout, sound toggle, and clearer HUD hierarchy */
+.audio-toggle{float:right;margin-top:-5px;border:1px solid #80e9bd55;background:#142a2c;color:#a9f8d6;border-radius:999px;padding:7px 11px;font-size:9px;letter-spacing:.12em;font-weight:800;cursor:pointer}
+#touch-controls{display:none}
+#touch-controls.touch-enabled{display:block;position:fixed;inset:0;z-index:2;pointer-events:none;touch-action:none}
+#touch-look{position:absolute;inset:0;pointer-events:auto;touch-action:none}
+#touch-stick{position:absolute;left:20px;bottom:38px;width:124px;height:124px;border:1px solid #c9fff577;border-radius:50%;background:radial-gradient(circle,#80e9bd22,#07101666);box-shadow:0 0 28px #80e9bd15 inset;touch-action:none}
+#touch-stick:before{content:"";position:absolute;left:50%;top:50%;width:4px;height:4px;border-radius:50%;background:#80e9bd;transform:translate(-50%,-50%)}
+#touch-nub{position:absolute;left:50%;top:50%;width:46px;height:46px;border-radius:50%;background:#80e9bd55;border:1px solid #b5ffe0;transform:translate(0,0);margin:-23px 0 0 -23px;box-shadow:0 0 18px #80e9bd33;pointer-events:none}
+#touch-actions{position:absolute;right:16px;bottom:34px;display:flex;flex-direction:column;gap:10px;align-items:flex-end}
+#touch-actions button{pointer-events:auto;touch-action:none;min-width:76px;min-height:44px;border:1px solid #b5ffe088;border-radius:14px;background:#071016bb;color:#eafff5;font-size:10px;font-weight:900;letter-spacing:.1em;backdrop-filter:blur(8px)}
+#touch-actions #touch-fire{min-width:92px;min-height:68px;background:#80e9bdde;color:#071411;border-color:#d0ffea;font-size:12px}
+#touch-actions #touch-sprint{background:#76d8ff33}
+@media(pointer:fine){#touch-controls.touch-enabled{display:none}}
+@media(max-width:650px){.audio-toggle{float:none;margin:0 0 8px auto;display:block}#bottom-help{display:none}#weapon-selector{bottom:178px}#match-score{top:48px}#map-name{top:174px}#target-status{top:208px}}
+@media(prefers-reduced-motion:reduce){#touch-nub{transition:none}}
