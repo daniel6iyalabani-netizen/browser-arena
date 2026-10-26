@@ -161,3 +161,32 @@ html{background:#081218}
 .progress-note{font-size:9px;line-height:1.5;color:#79968d;margin:11px 0 0}
 @media(max-width:900px){.progress-card{margin:12px 0;padding:12px}.career-stats b{font-size:15px}}
 @media(prefers-reduced-motion:reduce){.xp-track span{transition:none}}
+
+
+/* Post-match results experience */
+#results-screen{z-index:30;overflow-y:auto;align-items:center;justify-content:center;padding:22px;background:radial-gradient(ellipse at 50% 12%,rgba(58,140,112,.19),transparent 56%),rgba(5,11,13,.94);backdrop-filter:blur(12px)}
+.results-shell{width:min(100%,570px);margin:auto;padding:clamp(18px,4vw,32px);border:1px solid rgba(117,228,190,.3);background:linear-gradient(150deg,rgba(15,31,31,.99),rgba(7,16,22,.99));box-shadow:0 28px 100px rgba(0,0,0,.48),inset 0 1px rgba(255,255,255,.04);color:#e8f5ef;position:relative}
+.results-topline{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:8px;letter-spacing:1.35px;color:#8fb5a6;font-weight:800}
+.results-live-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#78f0bd;box-shadow:0 0 10px #78f0bd;margin-right:7px}
+.results-hero{padding:27px 0 20px;border-bottom:1px solid rgba(140,195,175,.15)}
+.results-eyebrow{font-size:9px;letter-spacing:2.5px;color:#91e7c1;font-weight:800}
+.results-hero h2{font-size:clamp(39px,8vw,63px);line-height:.91;letter-spacing:-2px;margin:13px 0 12px;font-weight:950}
+.results-hero h2 span{color:#9bf5ce}
+.results-hero p{font-size:12px;line-height:1.6;color:#94b0a5;margin:0}
+.results-outcome{display:flex;align-items:center;gap:12px;padding:16px 0;border-bottom:1px solid rgba(140,195,175,.15)}
+.results-outcome-icon{width:38px;height:38px;display:grid;place-items:center;border:1px solid rgba(117,228,190,.4);color:#a0f9d1;font-size:20px;background:rgba(78,191,146,.09)}
+.results-outcome>div:nth-child(2){display:flex;flex-direction:column;gap:5px}.results-outcome small,.results-stats small{font-size:8px;letter-spacing:1px;color:#84a89b}.results-outcome b{font-size:12px;letter-spacing:.8px}
+.results-elims{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:3px}.results-elims b{font-size:25px;color:#a0f9d1;font-variant-numeric:tabular-nums}
+.results-xp-card{margin:16px 0;padding:16px;border:1px solid rgba(117,228,190,.22);background:linear-gradient(115deg,rgba(61,129,103,.13),rgba(24,52,50,.22))}
+.results-xp-heading,.results-xp-caption{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:8px;letter-spacing:1px;color:#92b5a8}
+.results-xp-total{display:flex;align-items:baseline;gap:8px;margin:9px 0 13px}.results-xp-total b{font-size:34px;letter-spacing:-1px;color:#a0f9d1}.results-xp-total span{font-size:9px;letter-spacing:1.5px;color:#a0c5b6}
+.results-xp-track{height:7px;background:#253d38;border-radius:8px;overflow:hidden}.results-xp-track span{display:block;height:100%;width:0;background:linear-gradient(90deg,#4dcea1,#b6ffe1);box-shadow:0 0 14px rgba(93,240,187,.35);transition:width .5s ease}
+.results-xp-caption{margin-top:8px;font-size:8px;letter-spacing:.3px}
+.results-level-up{margin-top:13px;padding:9px;border:1px solid rgba(117,228,190,.25);color:#a0f9d1;font-size:9px;font-weight:900;letter-spacing:1.1px;text-align:center}
+.results-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:19px 0 22px}
+.results-stats>div{display:flex;flex-direction:column;gap:7px;min-width:0}.results-stats b{font-size:clamp(16px,4vw,22px);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.results-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}.results-actions button{min-height:46px;padding:12px;border:1px solid #76e8be;font-size:9px;letter-spacing:1px;font-weight:900;cursor:pointer;transition:transform .15s ease,background .15s ease}.results-actions button:hover{transform:translateY(-1px)}
+.results-primary{background:#a0f9d1;color:#0b1b16}.results-primary span{float:right}.results-secondary{background:transparent;color:#d8e9e1;border-color:rgba(148,192,173,.3)!important}
+.results-footnote{text-align:center;margin:17px 0 0;color:#64877a;font-size:8px;letter-spacing:1px}
+@media(max-width:480px){#results-screen{padding:12px}.results-shell{padding:18px}.results-hero{padding:21px 0 16px}.results-xp-card{padding:13px}.results-actions{grid-template-columns:1fr}.results-actions button{min-height:42px}.results-topline{font-size:7px}}
+@media(prefers-reduced-motion:reduce){.results-xp-track span,.results-actions button{transition:none}}

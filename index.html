@@ -66,6 +66,19 @@
     <footer class="lobby-bottom"><span>© BROWSER ARENA <b>·</b> NEON FRONTIER</span><span>PLAY FAIR. PLAY SMART. PLAY TOGETHER.</span><span>V2.0 <i>●</i> ALL SYSTEMS STANDING BY</span></footer>
   </div>
 </section>
+
+<section id="results-screen" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="results-title">
+  <div class="results-shell">
+    <div class="results-topline"><span><i class="results-live-dot"></i> MATCH REPORT / CAREER UPDATE</span><span id="results-match-type">OFFLINE TRAINING</span></div>
+    <div class="results-hero"><div class="results-eyebrow" id="results-eyebrow">MATCH COMPLETE</div><h2 id="results-title">ROUND<br><span>COMPLETE.</span></h2><p id="results-subtitle">Your next match starts here.</p></div>
+    <div class="results-outcome"><div class="results-outcome-icon" id="results-outcome-icon">✦</div><div><small>FINAL RESULT</small><b id="results-outcome-label">MATCH COMPLETE</b></div><div class="results-elims"><b id="results-eliminations">0</b><small>ELIMINATIONS</small></div></div>
+    <div class="results-xp-card"><div class="results-xp-heading"><span>CAREER REWARD</span><span id="results-level-change">LEVEL 01</span></div><div class="results-xp-total"><b id="results-earned-xp">+100</b><span>XP EARNED</span></div><div class="results-xp-track"><span id="results-xp-fill"></span></div><div class="results-xp-caption"><span id="results-xp-progress">0 / 100 XP</span><span id="results-xp-next">100 XP TO LEVEL 2</span></div><div id="results-level-up" class="results-level-up hidden">LEVEL UP! NEW RANK UNLOCKED</div></div>
+    <div class="results-stats"><div><small>MATCH TIME</small><b id="results-time">0:00</b></div><div><small>CAREER LEVEL</small><b id="results-level">01</b></div><div><small>TOTAL CAREER XP</small><b id="results-total-xp">0</b></div></div>
+    <div class="results-actions"><button id="results-rematch" class="results-primary">PLAY AGAIN <span>↗</span></button><button id="results-lobby" class="results-secondary">RETURN TO LOBBY</button></div>
+    <p class="results-footnote">CAREER PROGRESS SAVED ON THIS DEVICE</p>
+  </div>
+</section>
+
 <section id="map-lobby" class="overlay hidden"><div class="panel lobby-panel"><div class="eyebrow">ONLINE MATCHMAKING</div><h1 id="lobby-title">FINDING PLAYERS</h1><p id="lobby-status">Waiting for players…</p><div id="map-votes"></div><div id="lobby-players"></div><p class="fineprint">All real players in this match vote together. Training bots do not use the map-voting lobby.</p></div></section><script>
 document.querySelectorAll('[data-queue]').forEach(function(btn){btn.addEventListener('click',function(){document.querySelectorAll('[data-queue]').forEach(function(other){var active=other===btn;other.classList.toggle('selected',active);other.setAttribute('aria-pressed',String(active));});var online=btn.dataset.queue==='online';var primary=document.getElementById('play-online');primary.classList.toggle('launch-emphasis',online);document.getElementById('play-offline').classList.toggle('launch-emphasis',!online);primary.querySelector('span').textContent=online?'ENTER MATCH':'START TRAINING';});});document.getElementById('play-online').addEventListener('click',function(event){var selected=document.querySelector('[data-queue].selected');if(selected&&selected.dataset.queue==='training'){event.preventDefault();event.stopImmediatePropagation();document.getElementById('play-offline').click();}},true);
 </script><script src="/socket.io/socket.io.js"></script><script type="module" src="./game.js"></script></body></html>
