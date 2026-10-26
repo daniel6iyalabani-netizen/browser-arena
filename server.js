@@ -43,17 +43,17 @@ app.use(express.json({limit:'8kb'}));
 app.use(express.static(path.join(__dirname)));
 
 const supabaseAuthEnabled=()=>!!(process.env.SUPABASE_URL&&process.env.SUPABASE_ANON_KEY);
-app.get('/api/config',(_req,res)=>res.json({accountsEnabled:supabaseAuthEnabled(),supabaseUrl:supabaseAuthEnabled()?process.env.SUPABASE_URL.replace(/\\/+$/,''):null,supabaseAnonKey:supabaseAuthEnabled()?process.env.SUPABASE_ANON_KEY:null}));
+app.get('/api/config',(_req,res)=>res.json({accountsEnabled:supabaseAuthEnabled(),supabaseUrl:supabaseAuthEnabled()?process.env.SUPABASE_URL.replace(/\/+$/,''):null,supabaseAnonKey:supabaseAuthEnabled()?process.env.SUPABASE_ANON_KEY:null}));
 async function supabaseAuth(path,options={}){
  if(!supabaseAuthEnabled())throw new Error('Accounts are not configured on this server.');
- const response=await fetch(process.env.SUPABASE_URL.replace(/\\/+$/,'')+'/auth/v1/'+path,{...options,headers:{apikey:process.env.SUPABASE_ANON_KEY,'Content-Type':'application/json',...(options.headers||{})}});
+ const response=await fetch(process.env.SUPABASE_URL.replace(/\/+$/,'')+'/auth/v1/'+path,{...options,headers:{apikey:process.env.SUPABASE_ANON_KEY,'Content-Type':'application/json',...(options.headers||{})}});
  const data=await response.json().catch(()=>({}));
  if(!response.ok)throw new Error(data.msg||data.message||data.error_description||data.error||'Authentication request failed.');
  return data;
 }
 app.post('/api/auth/signup',async(req,res)=>{try{const email=String(req.body?.email||'').trim().slice(0,254),password=String(req.body?.password||'');if(!email||password.length<8||password.length>128)return res.status(400).json({error:'Enter a valid email and password of at least 8 characters.'});res.json(await supabaseAuth('signup',{method:'POST',body:JSON.stringify({email,password,data:{callsign:cleanName(req.body?.name)}})}));}catch(err){res.status(400).json({error:err.message});}});
 app.post('/api/auth/login',async(req,res)=>{try{const email=String(req.body?.email||'').trim().slice(0,254),password=String(req.body?.password||'');if(!email||!password)return res.status(400).json({error:'Enter your email and password.'});res.json(await supabaseAuth('token?grant_type=password',{method:'POST',body:JSON.stringify({email,password})}));}catch(err){res.status(401).json({error:err.message});}});
-app.get('/api/auth/me',async(req,res)=>{try{const token=String(req.headers.authorization||'').replace(/^Bearer\\s+/i,'');if(!token)return res.status(401).json({error:'Sign in required.'});const user=await supabaseAuth('user',{headers:{Authorization:'Bearer '+token}});res.json({id:user.id,email:user.email,callsign:cleanName(user.user_metadata?.callsign||user.email?.split('@')[0])});}catch(err){res.status(401).json({error:'Session expired or invalid. Sign in again.'});}});
+app.get('/api/auth/me',async(req,res)=>{try{const token=String(req.headers.authorization||'').replace(/^Bearer\s+/i,'');if(!token)return res.status(401).json({error:'Sign in required.'});const user=await supabaseAuth('user',{headers:{Authorization:'Bearer '+token}});res.json({id:user.id,email:user.email,callsign:cleanName(user.user_metadata?.callsign||user.email?.split('@')[0])});}catch(err){res.status(401).json({error:'Session expired or invalid. Sign in again.'});}});
 io.use(async(socket,next)=>{const token=String(socket.handshake.auth?.accessToken||'');if(!token){socket.data.authUser=null;return next();}try{const user=await supabaseAuth('user',{headers:{Authorization:'Bearer '+token}});socket.data.authUser={id:user.id,email:user.email,callsign:cleanName(user.user_metadata?.callsign||user.email?.split('@')[0])};next();}catch{next(new Error('Account session is invalid. Sign in again or continue as guest.'));}});
 
 app.get('/health',(_req,res)=>res.json({ok:true,players:players.size}));
