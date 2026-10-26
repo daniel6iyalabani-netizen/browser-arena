@@ -2,3 +2,47 @@
 #map-votes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:18px 0}#map-votes .map-vote{min-height:48px;padding:10px;border:1px solid #80e9bd66;border-radius:8px;background:#152b2b;color:#e9fbf4;font-weight:800;font-size:11px;cursor:pointer}#map-votes .map-vote:hover{background:#234744}#lobby-players{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:12px}.lobby-player{padding:8px;border-radius:6px;background:#ffffff0c;color:#c9dcda;font-size:11px}.lobby-panel h1{font-size:clamp(26px,5vw,40px)}@media(max-width:500px){#map-votes{grid-template-columns:1fr}.lobby-panel{max-height:90vh;overflow:auto}}
 
 #match-score{position:absolute;top:18px;left:50%;transform:translateX(-50%);padding:10px 18px;border:1px solid #ffffff38;border-radius:10px;background:linear-gradient(110deg,#102b3be8,#111c22ed);box-shadow:0 8px 28px #0007;font-size:12px;font-weight:900;letter-spacing:.1em;white-space:nowrap;text-shadow:0 2px 6px #000}#match-score #player-round-score{color:#76d8ff;font-size:20px}#match-score #bot-round-score{color:#ff8b75;font-size:20px}#match-score small{display:block;margin-top:3px;text-align:center;color:#bdcfce;font-size:8px;letter-spacing:.18em}@media(max-width:650px){#match-score{top:52px;padding:6px 10px;font-size:10px}#match-score #player-round-score,#match-score #bot-round-score{font-size:16px}}
+
+
+/* Browser Arena 2.0 interface polish */
+:root{color-scheme:dark;--arena-mint:#80e9bd;--arena-cyan:#76d8ff;--arena-panel:rgba(7,16,22,.88)}
+html{background:#081218}
+#game-root canvas{display:block;outline:none}
+.topline .brand{font-size:14px;text-shadow:0 2px 16px #0008}
+.topline .brand b{display:inline-block;text-shadow:0 0 18px #80e9bd35}
+.pill{backdrop-filter:blur(12px);box-shadow:0 8px 28px #0002}
+.stats span{padding:9px 11px;border:1px solid #ffffff16;border-radius:9px;background:linear-gradient(135deg,#08151bd9,#0b1c22b8);backdrop-filter:blur(8px);min-width:66px}
+.stats b{font-variant-numeric:tabular-nums}
+#map-name,#target-status,#scoreboard{border:1px solid #ffffff20;backdrop-filter:blur(9px);box-shadow:0 5px 20px #0002}
+#match-score{border-color:#80e9bd45;backdrop-filter:blur(12px)}
+#crosshair i{box-shadow:0 0 5px #061218,0 0 12px #80e9bd35}
+#message{padding:10px 15px;border:1px solid #80e9bd36;border-radius:9px;background:#071016bb;backdrop-filter:blur(8px)}
+.overlay{background:radial-gradient(ellipse at 50% 28%,#24534bd9 0%,#0b171df2 48%,#050a0ff7 100%)}
+.panel{border-color:#80e9bd3b;background:linear-gradient(145deg,#102128f7,#091217f5);box-shadow:0 28px 100px #0009,0 0 0 1px #ffffff06 inset}
+.panel h1{letter-spacing:-.055em;text-wrap:balance}
+.panel h1 span{text-shadow:0 0 28px #80e9bd22}
+.panel input,.panel select{transition:border-color .18s,background .18s,box-shadow .18s}
+.panel input:focus,.panel select:focus{border-color:#80e9bd;box-shadow:0 0 0 3px #80e9bd18}
+.actions button{transition:transform .16s,filter .16s,box-shadow .16s}
+.actions button:hover{transform:translateY(-1px);box-shadow:0 8px 24px #80e9bd20}
+.actions button:active{transform:translateY(0)}
+.actions .secondary:hover{background:#304b4b}
+#shop-panel,#score-panel{backdrop-filter:blur(16px);border-color:#80e9bd55}
+.shop-item{transition:background .15s;padding-left:8px;padding-right:8px}
+.shop-item:hover{background:#ffffff07}
+#map-votes .map-vote{transition:transform .15s,border-color .15s,background .15s}
+#map-votes .map-vote:hover{transform:translateY(-1px);border-color:#80e9bd}
+.lobby-player{border:1px solid #ffffff0c}
+#bottom-help{padding:0 14px;box-sizing:border-box}
+@media(max-width:650px){
+ .stats{right:12px;gap:6px;max-width:calc(100vw - 24px)}
+ .stats span{padding:7px 8px;min-width:54px;font-size:9px}
+ .stats b{font-size:13px}
+ #target-status{top:188px;left:12px}
+ #map-name{top:154px;left:12px}
+ #weapon-selector{max-width:calc(100vw - 24px)}
+ .panel{max-height:88dvh;padding:24px 20px}
+}
+@media(prefers-reduced-motion:reduce){
+ *,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}
+}
