@@ -25,7 +25,7 @@ const leaderboardMemory=new Map();
 const leaderboardRate=new Map();
 const hasSupabase=()=>!!(process.env.SUPABASE_URL&&process.env.SUPABASE_SERVICE_ROLE_KEY);
 async function supabaseRequest(path,options={}){
- const base=process.env.SUPABASE_URL.replace(/\\/$/,'');
+ const base=process.env.SUPABASE_URL.replace(/\/+$/,'');
  const response=await fetch(base+'/rest/v1/'+path,{...options,headers:{apikey:process.env.SUPABASE_SERVICE_ROLE_KEY,Authorization:'Bearer '+process.env.SUPABASE_SERVICE_ROLE_KEY,'Content-Type':'application/json',Prefer:'return=representation',...(options.headers||{})}});
  if(!response.ok)throw new Error('Leaderboard database request failed: '+response.status);
  return response.status===204?[]:response.json();
@@ -38,7 +38,9 @@ async function getLeaderboard(){
  }
  return rankRows([...leaderboardMemory.values()].map(p=>({...p})));
 }
-\napp.use(express.json({limit:'8kb'}));\napp.use(express.static(path.join(__dirname)));
+
+app.use(express.json({limit:'8kb'}));
+app.use(express.static(path.join(__dirname)));
 app.get('/health',(_req,res)=>res.json({ok:true,players:players.size}));
 app.get('/api/status',(_req,res)=>res.json({game:'Browser Arena',players:players.size,maxPlayers:MAX_PLAYERS}));
 app.get('/api/leaderboard',async(_req,res)=>{try{res.set('Cache-Control','no-store');res.json({entries:await getLeaderboard(),persistent:hasSupabase()});}catch(err){console.error(err.message);res.status(503).json({error:'Leaderboard temporarily unavailable'});}});
