@@ -7,7 +7,7 @@ const io=new Server(server,{cors:{origin:process.env.CLIENT_ORIGIN?process.env.C
 const PORT=Number(process.env.PORT||3000),MAX_PLAYERS=24;const MODE_SIZES={'1v1':1,'2v2':2,'3v3':3,'4v4':4,'5v5':5};
 const players=new Map(),bots=new Map(),queues=new Map(),matches=new Map();let botSeq=0,matchSeq=0;
 function lobbyInfo(room){const m=matches.get(room);if(!m)return;const members=[...players.entries()].filter(([,p])=>p.room===room);for(const [id] of members){const s=io.sockets.sockets.get(id);if(s)s.emit('mapLobby',{mode:m.mode,players:members.map(([pid,p])=>({id:pid,name:p.name,team:p.team})),maps:[{id:0,name:'NEON MEADOW'},{id:1,name:'DESERT CIRCUIT'},{id:2,name:'FROST YARD'},{id:3,name:'LAVA WORKS'},{id:4,name:'JUNGLE RUINS'}],votes:Object.fromEntries(m.votes)});}}
-function beginMatch(room){const m=matches.get(room);if(!m||m.started)return;m.started=true;const members=[...players.entries()].filter(([,p])=>p.room===room);const counts=[0,0];for(const [id,p] of members){p.map=m.map;p.health=100;p.shield=100*(1+(p.armor||0)*.03);p.x=(Math.random()-.5)*12;p.z=p.team===0?-12-Math.random()*4:12+Math.random()*4;const s=io.sockets.sockets.get(id);if(s)s.emit('matchStart',{map:m.map,mode:m.mode,team:p.team});counts[p.team]++;}syncBots(room);broadcast(room);}
+function beginMatch(room){const m=matches.get(room);if(!m||m.started)return;m.started=true;const members=[...players.entries()].filter(([,p])=>p.room===room);const counts=[0,0];for(const [id,p] of members){p.map=m.map;p.health=100;p.shield=100*(1+(p.armor||0)*.03);p.x=(Math.random()-.5)*12;p.z=p.team===0?-12-Math.random()*4:12+Math.random()*4;while(positionBlocked(p.x,p.z,p.map,.6)){p.x=(Math.random()-.5)*10;p.z=p.team===0?-12-Math.random()*3:12+Math.random()*3;}const s=io.sockets.sockets.get(id);if(s)s.emit('matchStart',{map:m.map,mode:m.mode,team:p.team,x:p.x,z:p.z});counts[p.team]++;}syncBots(room);broadcast(room);}
 function queuePlayer(id,mode){const p=players.get(id);if(!p)return;let q=queues.get(mode);if(!q){q=[];queues.set(mode,q);}if(!q.includes(id))q.push(id);p.mode=mode;p.room='queue:'+mode;const needed=(MODE_SIZES[mode]||1)*2;const waiting=q.map(pid=>players.get(pid)).filter(Boolean);for(const pid of q){const s=io.sockets.sockets.get(pid);if(s)s.emit('queueStatus',{mode,waiting:waiting.length,needed,message:'Waiting for '+needed+' real players to join '+mode+'.'});}if(waiting.length>=needed){const ids=q.splice(0,needed);const room='match:'+(++matchSeq);const m={room,mode,started:false,map:0,votes:new Map(),timer:null};matches.set(room,m);ids.forEach((pid,i)=>{const player=players.get(pid);if(!player)return;player.room=room;player.team=i%2;player.map=0;const s=io.sockets.sockets.get(pid);if(s){s.leave('queue:'+mode);s.join(room);}});lobbyInfo(room);m.timer=setTimeout(()=>{const tally=[0,0,0,0,0];for(const v of m.votes.values())tally[v]++;m.map=tally.indexOf(Math.max(...tally));beginMatch(room);},30000);}}
 const WEAPON_COSTS=[0,300,900,400,650,700];
 const WEAPONS=[
@@ -23,6 +23,36 @@ app.get('/health',(_req,res)=>res.json({ok:true,players:players.size}));
 app.get('/api/status',(_req,res)=>res.json({game:'Browser Arena',players:players.size,maxPlayers:MAX_PLAYERS}));
 function cleanName(v){return String(v||'Player').replace(/[^a-zA-Z0-9 _-]/g,'').trim().slice(0,18)||'Player';}
 function clamp(v,min,max,fallback=0){const n=Number(v);return Number.isFinite(n)?Math.max(min,Math.min(max,n)):fallback;}
+
+const MAP_LAYOUTS=[
+ [[-18,-15,3.4,1.8,2.4],[18,-15,3.4,1.8,2.4],[-18,15,3.4,1.8,2.4],[18,15,3.4,1.8,2.4],[0,-24,1.2,3.2,1.2],[0,24,1.2,3.2,1.2],[-29,0,1.2,2.6,5],[29,0,1.2,2.6,5]],
+ [[-25,-20,5,1.2,2],[-12,-10,2,2.5,2],[12,10,2,2.5,2],[25,20,5,1.2,2],[-25,20,2,2,5],[25,-20,2,2,5],[0,-27,8,1.1,1.2],[0,27,8,1.1,1.2]],
+ [[-22,-22,2.5,2.4,2.5],[22,-22,2.5,2.4,2.5],[-22,22,2.5,2.4,2.5],[22,22,2.5,2.4,2.5],[-10,0,1.2,3.4,6],[10,0,1.2,3.4,6],[0,-28,5,1.1,1.2],[0,28,5,1.1,1.2]],
+ [[-28,-24,4,2.2,2],[28,-24,4,2.2,2],[-28,24,4,2.2,2],[28,24,4,2.2,2],[-14,0,2,3.2,2],[14,0,2,3.2,2],[0,-18,1.2,3.4,7],[0,18,1.2,3.4,7]],
+ [[-24,-22,3,2.8,3],[24,-22,3,2.8,3],[-24,22,3,2.8,3],[24,22,3,2.8,3],[-15,-8,2,2.4,5],[15,8,2,2.4,5],[-15,8,2,2.4,5],[15,-8,2,2.4,5]]
+];
+function mapObstacles(map){
+ const id=Math.max(0,Math.min(4,Number(map)||0));
+ const boxes=[[-0, -36,82,4,1],[0,36,82,4,1],[-41,0,1,4,72],[41,0,1,4,72]];
+ for(const [x,z,w,h,d] of MAP_LAYOUTS[id])boxes.push([x,z,w,h,d]);
+ for(const [x,z,w,h,d] of [[-14,-5,1.5,8,13],[14,5,1.5,8,13],[-3,-19,12,6.5,1.5],[3,19,12,6.5,1.5],[-31,0,1.5,7,12],[31,0,1.5,7,12]])boxes.push([x,z,w,h,d]);
+ for(const [x,z] of [[-22,-12],[22,12],[-22,12],[22,-12]])boxes.push([x,z,3,5.6,3]);
+ for(const [x,z,w,h,d] of [[-9,-22,3.8,2.2,1.25],[9,-22,3.8,2.2,1.25],[-9,22,3.8,2.2,1.25],[9,22,3.8,2.2,1.25],[-29,-8,1.4,2.4,4.2],[29,8,1.4,2.4,4.2],[-6,-7,2.4,1.8,1.4],[6,7,2.4,1.8,1.4],[-6,7,2.4,1.8,1.4],[6,-7,2.4,1.8,1.4],[-18,0,3.2,1.4,1.2],[18,0,3.2,1.4,1.2],[-34,10,2.4,1.8,1.6],[34,-10,2.4,1.8,1.6]])boxes.push([x,z,w,h,d]);
+ for(let i=0;i<8;i++){const x=-30+i*8,z=(i%2===0?-14:14)+(id%2?3:-3),h=1.1+(i%3)*.35;boxes.push([x,z,1.4,h,1.35]);}
+ return boxes;
+}
+function positionBlocked(x,z,map,radius=.55){return mapObstacles(map).some(([cx,cz,w,h,d])=>Math.abs(x-cx)<w/2+radius&&Math.abs(z-cz)<d/2+radius);}
+function rayBlocked(ox,oy,oz,dx,dy,dz,maxT,map){
+ for(const [cx,cz,w,h,d] of mapObstacles(map)){
+  let lo=0,hi=maxT;
+  for(const [o,v,min,max] of [[ox,dx,cx-w/2,cx+w/2],[oy,dy,0,h],[oz,dz,cz-d/2,cz+d/2]]){
+   if(Math.abs(v)<1e-8){if(o<min||o>max){lo=Infinity;break;}}
+   else{let a=(min-o)/v,b=(max-o)/v;if(a>b)[a,b]=[b,a];lo=Math.max(lo,a);hi=Math.min(hi,b);if(lo>hi){lo=Infinity;break;}}
+  }
+  if(lo<maxT&&hi>=0)return true;
+ }
+ return false;
+}
 function publicPlayer(id,p){return {id,name:p.name,x:p.x,z:p.z,yaw:p.yaw,health:p.health,shield:p.shield,kills:p.kills,deaths:p.deaths,cash:p.cash,weapons:p.weapons,hair:p.hair,uniform:p.uniform,skin:p.skin,shoes:p.shoes,armor:p.armor,armorColor:p.armorColor,team:p.team,map:p.map,mode:p.mode,isBot:!!p.isBot};}
 function state(room){return {players:[...players.entries()].filter(([,p])=>!room||p.room===room).map(([id,p])=>publicPlayer(id,p)).concat([...bots.entries()].filter(([,b])=>!room||b.room===room).map(([id,b])=>publicPlayer(id,b)))};}
 function broadcast(room){if(room){io.to(room).emit('state',state(room));return;}for(const roomName of new Set([...players.values()].map(p=>p.room)))io.to(roomName).emit('state',state(roomName));}
@@ -38,7 +68,7 @@ io.on('connection',socket=>{
  socket.on('voteMap',data=>{const p=players.get(socket.id);if(!p)return;const m=matches.get(p.room);if(!m||m.started)return;const map=Math.round(clamp(data?.map,0,4,-1));if(map<0)return;m.votes.set(socket.id,map);lobbyInfo(p.room);const members=[...players.entries()].filter(([,q])=>q.room===p.room);if(members.length&&members.every(([id])=>m.votes.has(id))){const tally=[0,0,0,0,0];for(const v of m.votes.values())tally[v]++;m.map=tally.indexOf(Math.max(...tally));clearTimeout(m.timer);beginMatch(p.room);}});
  socket.on('buy',data=>{const p=players.get(socket.id);if(!p)return;const wi=Math.round(clamp(data?.weapon,0,WEAPON_COSTS.length-1,-1));if(wi<1||wi>=WEAPON_COSTS.length)return;if(p.weapons.includes(wi)){socket.emit('notice','You already own that weapon');return;}const cost=WEAPON_COSTS[wi];if(p.cash<cost){socket.emit('notice','Not enough cash for that weapon');return;}p.cash-=cost;p.weapons.push(wi);p.weapons.sort();socket.emit('purchased',{cash:p.cash,weapons:p.weapons,weapon:wi,message:'Purchased '+['Pulse Pistol','Heavy Pistol','AK-47','Arena Rifle','Pump Shotgun','Burst Scatter'][wi]});broadcast();});
  socket.on('equip',data=>{const p=players.get(socket.id);const wi=Math.round(clamp(data?.weapon,0,WEAPONS.length-1,-1));if(!p||wi<0||!p.weapons.includes(wi))return;p.weapon=wi;});
- socket.on('move',data=>{const p=players.get(socket.id);if(!p||!data||Date.now()-p.lastMove<30)return;p.lastMove=Date.now();p.x=clamp(data.x,-24,24);p.z=clamp(data.z,-22,22);p.yaw=clamp(data.yaw,-Math.PI,Math.PI);broadcast(p.room);});
+ socket.on('move',data=>{const p=players.get(socket.id);if(!p||!data||Date.now()-p.lastMove<30)return;const now=Date.now(),nx=clamp(data.x,-39,39),nz=clamp(data.z,-34,34);if(Math.hypot(nx-p.x,nz-p.z)>1.35)return;p.lastMove=now;if(!positionBlocked(nx,nz,p.map,.58)){p.x=nx;p.z=nz;}else{const xClear=!positionBlocked(nx,p.z,p.map,.58),zClear=!positionBlocked(p.x,nz,p.map,.58);if(xClear)p.x=nx;if(zClear)p.z=nz;}p.yaw=clamp(data.yaw,-Math.PI,Math.PI);broadcast(p.room);});
  socket.on('shoot',data=>{
   const p=players.get(socket.id);if(!p||!data||Date.now()-p.lastShot<80)return;
   const wi=Math.round(clamp(data.weapon,0,WEAPONS.length-1,0)),w=WEAPONS[wi],now=Date.now();if(!p.weapons.includes(wi)){notice(socket,'Buy that weapon in the armory first');return;}
@@ -48,7 +78,7 @@ io.on('connection',socket=>{
   if(Math.hypot(ox-p.x,oz-p.z)>3.5)return;
   let dx=clamp(data.dx,-1,1),dy=clamp(data.dy,-1,1),dz=clamp(data.dz,-1,1),len=Math.hypot(dx,dy,dz)||1;dx/=len;dy/=len;dz/=len;
   let victim=null,bestT=w.range;
-  for(const [id,target] of players){if(id===socket.id||target.health<=0||target.room!==p.room||target.team===p.team)continue;const hit=distanceToRay({x:ox,y:oy,z:oz},{x:dx,y:dy,z:dz},{x:target.x,z:target.z});if(hit.t>0&&hit.t<bestT&&hit.dist<.85){bestT=hit.t;victim={id,p:target};}}
+  for(const [id,target] of players){if(id===socket.id||target.health<=0||target.room!==p.room||target.team===p.team)continue;const hit=distanceToRay({x:ox,y:oy,z:oz},{x:dx,y:dy,z:dz},{x:target.x,z:target.z});if(hit.t>0&&hit.t<bestT&&hit.dist<.85&&!rayBlocked(ox,oy,oz,dx,dy,dz,hit.t,p.map)){bestT=hit.t;victim={id,p:target};}}
   if(!victim)return;
   const dmg=w.damage*(w.pellets>1?Math.max(1,Math.round(w.pellets*.45)):1);
   const absorbed=Math.min(victim.p.shield,dmg);victim.p.shield-=absorbed;victim.p.health=Math.max(0,victim.p.health-(dmg-absorbed));
@@ -58,5 +88,5 @@ io.on('connection',socket=>{
  });
  socket.on('disconnect',()=>{const p=players.get(socket.id);const room=p?.room;if(p&&queues.has(p.mode)){const q=queues.get(p.mode),at=q.indexOf(socket.id);if(at>=0)q.splice(at,1);}players.delete(socket.id);if(room){if(matches.has(room)){const m=matches.get(room);m.votes.delete(socket.id);lobbyInfo(room);}syncBots(room);broadcast(room);}});
 });
-setInterval(()=>{const now=Date.now();for(const [id,b] of bots){if(b.respawnAt){if(now>=b.respawnAt){botRespawn(b);broadcast(b.room);}continue;}const enemies=[...players.entries()].filter(([,p])=>p.room===b.room&&p.team!==b.team&&p.health>0);if(!enemies.length)continue;let target=null,dist=Infinity;for(const [pid,p] of enemies){const d=Math.hypot(p.x-b.x,p.z-b.z);if(d<dist){dist=d;target={id:pid,p};}}if(!target)continue;const dx=target.p.x-b.x,dz=target.p.z-b.z;b.yaw=Math.atan2(dx,dz);if(dist>5&&dist<36){b.x+=dx/(dist||1)*.85;b.z+=dz/(dist||1)*.85;}if(dist<31&&now-b.lastShot>700+Math.random()*350){b.lastShot=now;if(Math.random()<Math.max(.25,.78-dist*.012)){const dmg=11,absorbed=Math.min(target.p.shield,dmg);target.p.shield-=absorbed;target.p.health=Math.max(0,target.p.health-(dmg-absorbed));io.to(b.room).emit('combat',{type:'hit',target:target.id,attacker:id,attackerName:b.name,health:target.p.health,shield:target.p.shield,damage:dmg});if(target.p.health<=0){target.p.deaths++;b.kills++;io.to(b.room).emit('combat',{type:'elimination',killer:id,target:target.id,kills:b.kills,cash:target.p.cash});setTimeout(()=>{const current=players.get(target.id);if(current){respawn(current);broadcast(current.room);const ts=io.sockets.sockets.get(target.id);if(ts)notice(ts,'Respawned — HP 100 / Shield 100');}},1800);}}broadcast(b.room);}}},300);
+setInterval(()=>{const now=Date.now();for(const [id,b] of bots){if(b.respawnAt){if(now>=b.respawnAt){botRespawn(b);broadcast(b.room);}continue;}const enemies=[...players.entries()].filter(([,p])=>p.room===b.room&&p.team!==b.team&&p.health>0);if(!enemies.length)continue;let target=null,dist=Infinity;for(const [pid,p] of enemies){const d=Math.hypot(p.x-b.x,p.z-b.z);if(d<dist){dist=d;target={id:pid,p};}}if(!target)continue;const dx=target.p.x-b.x,dz=target.p.z-b.z;b.yaw=Math.atan2(dx,dz);if(dist>5&&dist<36){const nx=b.x+dx/(dist||1)*.85,nz=b.z+dz/(dist||1)*.85;if(!positionBlocked(nx,nz,b.map,.5)){b.x=nx;b.z=nz;}else if(!positionBlocked(nx,b.z,b.map,.5))b.x=nx;else if(!positionBlocked(b.x,nz,b.map,.5))b.z=nz;}if(dist<31&&now-b.lastShot>700+Math.random()*350&&!rayBlocked(b.x,1.45,b.z,(target.p.x-b.x)/(dist||1),(-.45)/(dist||1),(target.p.z-b.z)/(dist||1),dist,b.map)){b.lastShot=now;if(Math.random()<Math.max(.25,.78-dist*.012)){const dmg=11,absorbed=Math.min(target.p.shield,dmg);target.p.shield-=absorbed;target.p.health=Math.max(0,target.p.health-(dmg-absorbed));io.to(b.room).emit('combat',{type:'hit',target:target.id,attacker:id,attackerName:b.name,health:target.p.health,shield:target.p.shield,damage:dmg});if(target.p.health<=0){target.p.deaths++;b.kills++;io.to(b.room).emit('combat',{type:'elimination',killer:id,target:target.id,kills:b.kills,cash:target.p.cash});setTimeout(()=>{const current=players.get(target.id);if(current){respawn(current);broadcast(current.room);const ts=io.sockets.sockets.get(target.id);if(ts)notice(ts,'Respawned — HP 100 / Shield 100');}},1800);}}broadcast(b.room);}}},300);
 server.listen(PORT,'0.0.0.0',()=>console.log('Browser Arena listening on port '+PORT));
