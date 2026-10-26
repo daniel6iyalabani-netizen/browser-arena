@@ -9,7 +9,7 @@ const renderer=new THREE.WebGLRenderer({antialias:innerWidth>700,powerPreference
 const controls=new PointerLockControls(camera,document.body);scene.add(controls.getObject());
 const clock=new THREE.Clock(),raycaster=new THREE.Raycaster(),colliders=[],solidMeshes=[],targets=[],remotePlayers=new Map(),keys=new Set();
 let running=false,online=false,socket=null,lastShot=0,lastSync=0,recoil=0,bob=0,firing=false,health=100,shield=100,kills=0,cash=300,ownedWeapons=new Set([0]),ammo=12,reserve=60,reloading=false,reloadUntil=0,playerName='Rookie',lastHitTime=0,weaponIndex=0,targetBot=0,difficulty='medium',mapIndex=0,matchMode='1v1',hairColor='#30241e',gunColor='#52665f',uniformColor='#477f72',skinColor='#b88d70',shoeColor='#20292b',armorLevel=0,playerRoundScore=0,botRoundScore=0,matchOver=false;
-let jumpVelocity=0,jumpOffset=0,slideRemaining=0,slideCooldown=0,slideDirection=new THREE.Vector3(),slideMessageAt=0;
+let jumpVelocity=0,jumpOffset=0,slideRemaining=0,slideCooldown=0,slideDirection=new THREE.Vector3(),slideMessageAt=0,sprintStamina=100;
 const weaponCosts=[0,300,900,400,650,700];
 const direction=new THREE.Vector3(),botShotEffects=[];
 const weapons=[
@@ -179,7 +179,7 @@ function startGame(useOnline){if(!useOnline)beginCareerMatch();$('results-screen
 $('bot-target').addEventListener('change',e=>{targetBot=Number(e.target.value);for(const b of targets)b.targetRing.visible=targetBot>0&&b.index===targetBot-1;});$('play-offline').addEventListener('click',()=>startGame(false));$('play-online').addEventListener('click',()=>{if(!$('server-url').value.trim())$('server-url').value=DEFAULT_SERVER_URL;startGame(true);});
 controls.addEventListener('unlock',()=>{if(running)setMessage('CLICK THE GAME TO CAPTURE THE MOUSE',2200);});
 renderer.domElement.addEventListener('click',()=>{if(running&&!controls.isLocked)controls.lock();});
-document.addEventListener('keydown',e=>{if(e.code==='Space'&&e.repeat){e.preventDefault();return;}keys.add(e.code);if((e.code==='Space'||e.code==='ControlLeft'||e.code==='ControlRight')&&running)e.preventDefault();if(e.code==='KeyB'&&running){toggleShop();e.preventDefault();}if(e.code==='Escape')toggleShop(false);if(e.code==='KeyR')reload();if(e.code==='Digit1')switchWeapon(0);if(e.code==='Digit2')switchWeapon(1);if(e.code==='Digit3')switchWeapon(2);if(e.code==='Digit4')switchWeapon(3);if(e.code==='Digit5')switchWeapon(4);if(e.code==='Digit6')switchWeapon(5);if(e.code==='Digit7')switchWeapon(6);if(e.code==='Tab'&&running){e.preventDefault();$('score-panel').classList.toggle('visible');}});
+document.addEventListener('keydown',e=>{if(e.code==='Space'&&e.repeat){e.preventDefault();return;}keys.add(e.code);if((e.code==='Tab'||e.code==='KeyZ'||e.code==='ControlLeft'||e.code==='ControlRight')&&running)e.preventDefault();if(e.code==='KeyB'&&running){toggleShop();e.preventDefault();}if(e.code==='Escape')toggleShop(false);if(e.code==='KeyR')reload();if(e.code==='Digit1')switchWeapon(0);if(e.code==='Digit2')switchWeapon(1);if(e.code==='Digit3')switchWeapon(2);if(e.code==='Digit4')switchWeapon(3);if(e.code==='Digit5')switchWeapon(4);if(e.code==='Digit6')switchWeapon(5);if(e.code==='Digit7')switchWeapon(6);if(e.code==='KeyK'&&running){e.preventDefault();$('score-panel').classList.toggle('visible');}});
 document.addEventListener('keyup',e=>keys.delete(e.code));document.addEventListener('mousedown',e=>{if(e.button===0&&running&&controls.isLocked){firing=true;shoot();}});document.addEventListener('mouseup',e=>{if(e.button===0)firing=false;});window.addEventListener('blur',()=>{firing=false;});document.addEventListener('contextmenu',e=>e.preventDefault());
 function switchWeapon(i){if(i<0||i>=weapons.length||i===weaponIndex)return;if(!ownedWeapons.has(i)){setMessage('BUY '+weapons[i].name+' IN ARMORY (B) · $'+weaponCosts[i],1800);toggleShop(true);return;}weaponIndex=i;applyWeapon();updateWeaponSelector();if(online&&socket?.connected)socket.emit('equip',{weapon:i});}
 function updateWeaponSelector(){const el=$('weapon-selector');if(!el)return;el.querySelectorAll('[data-weapon]').forEach(item=>{const i=Number(item.dataset.weapon);item.classList.toggle('active',i===weaponIndex);item.classList.toggle('locked',!ownedWeapons.has(i));});}
@@ -237,8 +237,12 @@ function movePlayer(dt){
   if(slideDirection.lengthSq()<.01)slideDirection.copy(view);slideDirection.normalize();
   if(performance.now()-slideMessageAt>900){setMessage('SLIDE · RELEASE CROUCH TO RECOVER',850);slideMessageAt=performance.now();}
  }
- if(keys.has('Space')&&jumpOffset<=0.001&&slideRemaining<=0){jumpVelocity=7.1;keys.delete('Space');}
- const speed=slideRemaining>0?11.2:((keys.has('ShiftLeft')||keys.has('ShiftRight'))?8.5:5.4);
+ if(keys.has('Tab')&&jumpOffset<=0.001&&slideRemaining<=0){jumpVelocity=7.1;keys.delete('Tab');}
+ const sprintHeld=keys.has('ControlLeft')||keys.has('ControlRight');
+ if(sprintHeld&&sprintStamina>0&&slideRemaining<=0&&(keys.has('KeyW')||keys.has('KeyS')||keys.has('KeyA')||keys.has('KeyD'))){sprintStamina=Math.max(0,sprintStamina-30*dt);}else{sprintStamina=Math.min(100,sprintStamina+22*dt);}
+ const sprinting=sprintHeld&&sprintStamina>0&&slideRemaining<=0;
+ const speed=slideRemaining>0?11.2:(sprinting?8.5:5.4);
+ const staminaFill=$('sprint-stamina-fill'),staminaLabel=$('sprint-stamina-label');if(staminaFill)staminaFill.style.width=sprintStamina+'%';if(staminaLabel)staminaLabel.textContent=Math.round(sprintStamina)+'%';
  const forwardInput=(keys.has('KeyW')?1:0)-(keys.has('KeyS')?1:0);
  const sideInput=(keys.has('KeyD')?1:0)-(keys.has('KeyA')?1:0);
  const forward=camera.getWorldDirection(new THREE.Vector3());forward.y=0;forward.normalize();
@@ -364,7 +368,7 @@ function setupV2Touch(){
  let stickId=null,lookId=null,origin=null,lastLook=null;
  const setKey=(code,on)=>{if(on)keys.add(code);else keys.delete(code);};
  const bindAction=(id,code)=>{const el=$(id);if(!el)return;const down=e=>{e.preventDefault();setKey(code,true);};const up=e=>{e.preventDefault();setKey(code,false);};el.addEventListener('pointerdown',down);['pointerup','pointercancel','pointerleave'].forEach(ev=>el.addEventListener(ev,up));};
- bindAction('touch-jump','Space');bindAction('touch-slide','ControlLeft');
+ bindAction('touch-jump','Tab');bindAction('touch-slide','KeyZ');
  stick.addEventListener('pointerdown',e=>{if(!touchMode())return;stickId=e.pointerId;stick.setPointerCapture(stickId);const r=stick.getBoundingClientRect();origin={x:r.left+r.width/2,y:r.top+r.height/2};moveStick(e);});
  function moveStick(e){if(e.pointerId!==stickId||!origin)return;const dx=e.clientX-origin.x,dy=e.clientY-origin.y,len=Math.hypot(dx,dy),scale=Math.min(1,len/40),x=len?dx/len*scale:0,y=len?dy/len*scale:0;nub.style.transform='translate('+x*34+'px,'+y*34+'px)';setKey('KeyA',x<-.22);setKey('KeyD',x>.22);setKey('KeyW',y<-.22);setKey('KeyS',y>.22);}
  stick.addEventListener('pointermove',moveStick);
@@ -373,7 +377,7 @@ function setupV2Touch(){
  look.addEventListener('pointerdown',e=>{if(!touchMode()||e.target.closest('button,#touch-stick'))return;lookId=e.pointerId;lastLook={x:e.clientX,y:e.clientY};look.setPointerCapture(lookId);});
  look.addEventListener('pointermove',e=>{if(e.pointerId!==lookId||!lastLook||!running)return;const dx=e.clientX-lastLook.x,dy=e.clientY-lastLook.y;lastLook={x:e.clientX,y:e.clientY};const yaw=controls.getObject();yaw.rotation.y-=dx*.0042;camera.rotation.x=THREE.MathUtils.clamp(camera.rotation.x-dy*.0042,-Math.PI/2,Math.PI/2);});
  const endLook=e=>{if(e.pointerId===lookId){lookId=null;lastLook=null;}};look.addEventListener('pointerup',endLook);look.addEventListener('pointercancel',endLook);
-$('touch-sprint')?.addEventListener('pointerdown',()=>setKey('ShiftLeft',true));['pointerup','pointercancel','pointerleave'].forEach(ev=>$('touch-sprint')?.addEventListener(ev,()=>setKey('ShiftLeft',false)));
+$('touch-sprint')?.addEventListener('pointerdown',()=>setKey('ControlLeft',true));['pointerup','pointercancel','pointerleave'].forEach(ev=>$('touch-sprint')?.addEventListener(ev,()=>setKey('ControlLeft',false)));
  $('audio-toggle')?.addEventListener('click',()=>{v2Audio.enabled=!v2Audio.enabled;$('audio-toggle').textContent=v2Audio.enabled?'SOUND: ON':'SOUND: OFF';if(v2Audio.enabled)v2Tone(660,.12,.035,'sine');});
 }
 buildV2Atmosphere();setupV2Touch();
