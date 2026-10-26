@@ -7,7 +7,7 @@ const scene=new THREE.Scene();scene.background=new THREE.Color(0x82c9e8);scene.f
 const camera=new THREE.PerspectiveCamera(76,innerWidth/innerHeight,.1,220);camera.position.set(0,1.7,8);
 const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;root.appendChild(renderer.domElement);
 const controls=new PointerLockControls(camera,document.body);scene.add(controls.getObject());
-const clock=new THREE.Clock(),raycaster=new THREE.Raycaster(),colliders=[],targets=[],remotePlayers=new Map(),keys=new Set();
+const clock=new THREE.Clock(),raycaster=new THREE.Raycaster(),colliders=[],solidMeshes=[],targets=[],remotePlayers=new Map(),keys=new Set();
 let running=false,online=false,socket=null,lastShot=0,lastSync=0,recoil=0,bob=0,firing=false,health=100,shield=100,kills=0,cash=300,ownedWeapons=new Set([0]),ammo=12,reserve=60,reloading=false,reloadUntil=0,playerName='Rookie',lastHitTime=0,weaponIndex=0,targetBot=0,difficulty='medium',mapIndex=0,matchMode='1v1',hairColor='#30241e',gunColor='#52665f';
 const weaponCosts=[0,300,900,400,650,700];
 const direction=new THREE.Vector3(),botShotEffects=[];
@@ -25,9 +25,9 @@ const floorMat=new THREE.MeshStandardMaterial({color:0x5eaa68,roughness:.92});co
 for(const [x,z,sx,sz,col] of [[-23,-20,10,7,0x3bbbd0],[23,-20,10,7,0xf4bd54],[-23,20,10,7,0xc77be8],[23,20,10,7,0x52d6a0],[0,0,8,8,0xf07b68]]){const pad=new THREE.Mesh(new THREE.PlaneGeometry(sx,sz),new THREE.MeshStandardMaterial({color:col,roughness:.8,side:THREE.DoubleSide}));pad.rotation.x=-Math.PI/2;pad.position.set(x,.025,z);scene.add(pad);mapPads.push(pad);}
 
 const mapThemes=[{name:'NEON MEADOW',sky:0x82c9e8,floor:0x5eaa68,grid:0x8ee6a1,pads:[0x3bbbd0,0xf4bd54,0xc77be8,0x52d6a0,0xf07b68]},{name:'DESERT CIRCUIT',sky:0xf2bd87,floor:0xc69a62,grid:0xf7d49a,pads:[0xf08b55,0xd6bf57,0xc65b42,0x7fbd86,0x8c6bbd]},{name:'FROST YARD',sky:0x9ed9ef,floor:0xb5dce3,grid:0xeafcff,pads:[0x59c9e9,0x8f9ff0,0x76e0d0,0xf5fbff,0x5c83ba]},{name:'LAVA WORKS',sky:0x5b3445,floor:0x5a4b4b,grid:0xff8a5b,pads:[0xff5b48,0xffa13d,0xd54e75,0x7d4b99,0xf3d06a]},{name:'JUNGLE RUINS',sky:0x9fc5a0,floor:0x3f7952,grid:0xa6d68b,pads:[0x79c653,0xc7a24b,0x37b8a0,0x9dcb65,0x9e7959]}];function applyMap(id){const mapId=Math.max(0,Math.min(4,Number(id)||0)),t=mapThemes[mapId];scene.background.setHex(t.sky);scene.fog.color.setHex(t.sky);floorMat.color.setHex(t.floor);grid.material.color.setHex(t.grid);mapPads.forEach((p,i)=>p.material.color.setHex(t.pads[i]));$('map-name').textContent=t.name;buildMapGeometry(mapId);}
-function box(x,y,z,sx,sy,sz,color,solid=true){const m=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),new THREE.MeshStandardMaterial({color,roughness:.82}));m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;scene.add(m);arenaObjects.push(m);if(solid)colliders.push(new THREE.Box3().setFromObject(m));return m;}
+function box(x,y,z,sx,sy,sz,color,solid=true){const m=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),new THREE.MeshStandardMaterial({color,roughness:.82}));m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;scene.add(m);arenaObjects.push(m);if(solid){colliders.push(new THREE.Box3().setFromObject(m));solidMeshes.push(m);}return m;}
 function buildMapGeometry(id){
- for(const o of arenaObjects)scene.remove(o);arenaObjects.length=0;colliders.length=0;
+ for(const o of arenaObjects)scene.remove(o);arenaObjects.length=0;colliders.length=0;solidMeshes.length=0;
  // Arena perimeter and varied cover. Each map has its own silhouette and palette.
  box(0,2,-36,82,4,1,0x43565a);box(0,2,36,82,4,1,0x43565a);box(-41,2,0,1,4,72,0x43565a);box(41,2,0,1,4,72,0x43565a);
  const layouts=[
@@ -43,8 +43,13 @@ function buildMapGeometry(id){
  box(0,.32,0,8,.64,8,accent[4],false);
  for(const [x,z,sx,sz] of [[0,-4.1,8.5,.16],[0,4.1,8.5,.16],[-4.1,0,.16,8.5],[4.1,0,.16,8.5]])box(x,.12,z,sx,.24,sz,accent[0],false);
  for(let i=0;i<4;i++){const x=i%2?34:-34,z=i<2?-20:20;box(x,1.4,z,2.8,2.8,2.8,accent[i],false);box(x,2.92,z,3.1,.18,3.1,0xf5f7df,false);box(x,3.3,z,1.4,.55,1.4,accent[(i+2)%accent.length],false);}
- // Smaller side cover pieces break up long sightlines.
- for(let i=0;i<6;i++){const x=-25+i*10,z=id%2===0?(i%2?8:-8):(i%2?-12:12);box(x,.55,z,2.2,1.1,1.3,accent[i%accent.length]);}
+ // Layered cover lanes: tall concrete blocks, waist-high barricades and supply crates.
+ // These are solid for movement and block shots, creating genuine peek-and-hide routes.
+ const coverPalette=[0x68716f,0x8b7962,0x53665f,0x74665b,0x9a8c73];
+ const cover=[[-9,-22,3.8,2.2,1.25],[9,-22,3.8,2.2,1.25],[-9,22,3.8,2.2,1.25],[9,22,3.8,2.2,1.25],[-29,-8,1.4,2.4,4.2],[29,8,1.4,2.4,4.2],[-6,-7,2.4,1.8,1.4],[6,7,2.4,1.8,1.4],[-6,7,2.4,1.8,1.4],[6,-7,2.4,1.8,1.4],[-18,0,3.2,1.4,1.2],[18,0,3.2,1.4,1.2],[-34,10,2.4,1.8,1.6],[34,-10,2.4,1.8,1.6]];
+ cover.forEach(([x,z,sx,sy,sz],i)=>box(x,sy/2,z,sx,sy,sz,coverPalette[(i+id)%coverPalette.length]));
+ // Smaller offset crates make the approach routes less symmetrical.
+ for(let i=0;i<8;i++){const x=-30+i*8,z=(i%2===0?-14:14)+(id%2?3:-3),h=1.1+(i%3)*.35;box(x,h/2,z,1.4,h,1.35,accent[(i+2)%accent.length]);}
 }
 
 const weapon=new THREE.Group();camera.add(weapon);weapon.position.set(.34,-.3,-.58);
@@ -120,7 +125,7 @@ function reload(){const w=weapons[weaponIndex];if(reloading||ammo===w.mag||reser
 function showHit(){const h=$('hitmarker');h.style.display='block';setTimeout(()=>h.style.display='none',120);}
 function shoot(){if($('shop-panel')?.classList.contains('visible'))return;const now=performance.now(),w=weapons[weaponIndex];if(reloading||now-lastShot<w.delay)return;if(ammo<=0){setMessage('EMPTY — PRESS R TO RELOAD',1000);return;}lastShot=now;ammo--;recoil=Math.min(recoil+(weaponIndex===2?.11:.065),.22);weapon.rotation.x=-recoil;flash.visible=true;muzzle.intensity=3.5;
 const origin=camera.getWorldPosition(new THREE.Vector3()),aim=camera.getWorldDirection(new THREE.Vector3());let botHit=false;
-for(let pellet=0;pellet<w.pellets;pellet++){const spread=new THREE.Vector3(aim.x+(Math.random()-.5)*w.spread,aim.y+(Math.random()-.5)*w.spread,aim.z+(Math.random()-.5)*w.spread).normalize();raycaster.set(origin,spread);raycaster.far=w.range;const candidates=[];if(!online)for(const b of targets)if(b.alive&&(!targetBot||b.index===targetBot-1))candidates.push(b.torso,b.head);const hit=raycaster.intersectObjects(candidates,false)[0];if(hit){const b=targets.find(q=>q.torso===hit.object||q.head===hit.object);if(b){let damage=hit.object===b.head?w.damage*1.5:w.damage;const absorbed=Math.min(b.shield,damage);b.shield-=absorbed;damage-=absorbed;b.hp=Math.max(0,b.hp-damage);botHit=true;if(b.hp<=0){b.alive=false;b.group.visible=false;b.respawn=now+2200;kills++;cash+=150;setMessage('BOT ELIMINATED · +$150');}}}}
+for(let pellet=0;pellet<w.pellets;pellet++){const spread=new THREE.Vector3(aim.x+(Math.random()-.5)*w.spread,aim.y+(Math.random()-.5)*w.spread,aim.z+(Math.random()-.5)*w.spread).normalize();raycaster.set(origin,spread);raycaster.far=w.range;const candidates=[];if(!online)for(const b of targets)if(b.alive&&(!targetBot||b.index===targetBot-1))candidates.push(b.torso,b.head);const hit=raycaster.intersectObjects(candidates,false)[0];const obstruction=raycaster.intersectObjects(solidMeshes,false)[0];if(hit&&(!obstruction||obstruction.distance>hit.distance)){const b=targets.find(q=>q.torso===hit.object||q.head===hit.object);if(b){let damage=hit.object===b.head?w.damage*1.5:w.damage;const absorbed=Math.min(b.shield,damage);b.shield-=absorbed;damage-=absorbed;b.hp=Math.max(0,b.hp-damage);botHit=true;if(b.hp<=0){b.alive=false;b.group.visible=false;b.respawn=now+2200;kills++;cash+=150;setMessage('BOT ELIMINATED · +$150');}}}}
 if(botHit)showHit();
 if(online&&socket?.connected){socket.emit('shoot',{x:origin.x,y:origin.y,z:origin.z,dx:aim.x,dy:aim.y,dz:aim.z,weapon:weaponIndex});}
 updateHud();}
@@ -194,6 +199,7 @@ function updateBots(dt,now){
   b.leftLeg.rotation.x=moving?-swing:0;b.rightLeg.rotation.x=moving?swing:0;
   // Bots fire visible tracer shots, with difficulty affecting cadence, accuracy and damage.
   if(!online&&dist<42&&now>b.fireAt&&now-lastHitTime>160){
+   const muzzleOrigin=b.botGun.getWorldPosition(new THREE.Vector3());const toPlayer=new THREE.Vector3(p.x,p.y-.12,p.z).sub(muzzleOrigin);const sightDistance=toPlayer.length();toPlayer.normalize();raycaster.set(muzzleOrigin,toPlayer);raycaster.far=Math.max(0,sightDistance-.35);const hasCover=raycaster.intersectObjects(solidMeshes,false).length>0;raycaster.far=Infinity;if(hasCover){b.fireAt=now+260+Math.random()*320;continue;}
    b.fireAt=now+level.cool+Math.random()*level.cool*.45;
    const targetPoint=new THREE.Vector3(p.x,p.y-.12,p.z);
    const accuracy=Math.max(.24,level.accuracy-dist*.006);
@@ -206,5 +212,5 @@ function updateBots(dt,now){
    }
   }
  }
-}function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.04),now=performance.now();if(reloading&&now>=reloadUntil){const w=weapons[weaponIndex],amount=Math.min(w.mag-ammo,reserve);ammo+=amount;reserve-=amount;reloading=false;updateHud();}updateBotShotEffects(now);if(running){movePlayer(dt);if(!online)updateBots(dt,now);if(firing&&(weaponIndex===2||weaponIndex===3)&&ammo>0&&!reloading&&controls.isLocked)shoot();}recoil=Math.max(0,recoil-dt*.42);weapon.rotation.x=-recoil;flash.visible=now-lastShot<65;muzzle.intensity=flash.visible?3.5:0;renderer.render(scene,camera);}
+}function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.04),now=performance.now();if(reloading&&now>=reloadUntil){const w=weapons[weaponIndex],amount=Math.min(w.mag-ammo,reserve);ammo+=amount;reserve-=amount;reloading=false;updateHud();}updateBotShotEffects(now);if(running){movePlayer(dt);if(!online)updateBots(dt,now);if(firing&&ammo>0&&!reloading&&controls.isLocked)shoot();}recoil=Math.max(0,recoil-dt*.42);weapon.rotation.x=-recoil;flash.visible=now-lastShot<65;muzzle.intensity=flash.visible?3.5:0;renderer.render(scene,camera);}
 animate();applyWeapon();updateWeaponSelector();applyMap(0);$('gun-color').addEventListener('input',e=>bodyMat.color.set(e.target.value));$('hair-color').addEventListener('input',e=>{hairColor=e.target.value;for(const item of remotePlayers.values())if(item.hair)item.hair.material.color.set(hairColor);});addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});window.addEventListener('beforeunload',()=>socket?.disconnect());
