@@ -50,7 +50,7 @@ html{background:#081218}
 /* Browser Arena 2.0: new touch layout, sound toggle, and clearer HUD hierarchy */
 .audio-toggle{float:right;margin-top:-5px;border:1px solid #80e9bd55;background:#142a2c;color:#a9f8d6;border-radius:999px;padding:7px 11px;font-size:9px;letter-spacing:.12em;font-weight:800;cursor:pointer}
 #touch-controls{display:none}
-#touch-controls.touch-enabled{display:block;position:fixed;inset:0;z-index:2;pointer-events:none;touch-action:none}
+#touch-controls.touch-enabled{display:block;position:fixed;inset:0;z-index:1;pointer-events:none;touch-action:none}#hud{z-index:2}
 #touch-look{position:absolute;inset:0;pointer-events:auto;touch-action:none}
 #touch-stick{position:absolute;left:20px;bottom:38px;width:124px;height:124px;border:1px solid #c9fff577;border-radius:50%;background:radial-gradient(circle,#80e9bd22,#07101666);box-shadow:0 0 28px #80e9bd15 inset;touch-action:none}
 #touch-stick:before{content:"";position:absolute;left:50%;top:50%;width:4px;height:4px;border-radius:50%;background:#80e9bd;transform:translate(-50%,-50%)}
