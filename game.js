@@ -39,7 +39,11 @@ function buildMapGeometry(id){
  ];
  const colors=[0x697d78,0xb18b61,0x8aaeb7,0x765d62,0x557c52],accent=mapThemes[id].pads;
  (layouts[id]||layouts[0]).forEach(([x,z,sx,sy,sz],i)=>box(x,sy/2,z,sx,sy,sz,i%3===0?accent[i%accent.length]:colors[id]));
- // Tall warehouse-style walls and concrete towers create genuine line-of-sight breaks.\n const tallMat=[0x59635f,0x9b7954,0x718a96,0x654d55,0x3d6747][id];\n for(const [x,z,w,h,d] of [[-14,-5,1.5,8,13],[14,5,1.5,8,13],[-3,-19,12,6.5,1.5],[3,19,12,6.5,1.5],[-31,0,1.5,7,12],[31,0,1.5,7,12]]){const wall=box(x,h/2,z,w,h,d,tallMat);wall.material.roughness=.94;wall.material.metalness=.04;for(let y=1.2;y<h;y+=1.8){const seam=box(x,y,z,w+.025,.055,d+.025,0x353f3d,false);seam.material.roughness=1;}}\n for(const [x,z] of [[-22,-12],[22,12],[-22,12],[22,-12]]){box(x,2.8,z,3,5.6,3,tallMat);box(x,5.7,z,3.3,.2,3.3,0x4b5550,false);}\n // Raised-looking central plinth and subdued perimeter markers.
+ // Tall warehouse-style walls and concrete towers create genuine line-of-sight breaks.
+ const tallMat=[0x59635f,0x9b7954,0x718a96,0x654d55,0x3d6747][id];
+ for(const [x,z,w,h,d] of [[-14,-5,1.5,8,13],[14,5,1.5,8,13],[-3,-19,12,6.5,1.5],[3,19,12,6.5,1.5],[-31,0,1.5,7,12],[31,0,1.5,7,12]]){const wall=box(x,h/2,z,w,h,d,tallMat);wall.material.roughness=.94;wall.material.metalness=.04;for(let y=1.2;y<h;y+=1.8){const seam=box(x,y,z,w+.025,.055,d+.025,0x353f3d,false);seam.material.roughness=1;}}
+ for(const [x,z] of [[-22,-12],[22,12],[-22,12],[22,-12]]){box(x,2.8,z,3,5.6,3,tallMat);box(x,5.7,z,3.3,.2,3.3,0x4b5550,false);}
+ // Raised-looking central plinth and subdued perimeter markers.
  box(0,.32,0,8,.64,8,accent[4],false);
  for(const [x,z,sx,sz] of [[0,-4.1,8.5,.16],[0,4.1,8.5,.16],[-4.1,0,.16,8.5],[4.1,0,.16,8.5]])box(x,.12,z,sx,.24,sz,accent[0],false);
  for(let i=0;i<4;i++){const x=i%2?34:-34,z=i<2?-20:20;box(x,1.4,z,2.8,2.8,2.8,accent[i],false);box(x,2.92,z,3.1,.18,3.1,0xf5f7df,false);box(x,3.3,z,1.4,.55,1.4,accent[(i+2)%accent.length],false);}
