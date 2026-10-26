@@ -227,7 +227,7 @@ function renderScoreboard(players){const el=$('score-list');if(!el)return;el.inn
 function movePlayer(dt){
  const p=controls.getObject().position;
  slideCooldown=Math.max(0,slideCooldown-dt);
- const wantsSlide=keys.has('ControlLeft')||keys.has('ControlRight')||keys.has('KeyC');
+ const wantsSlide=keys.has('KeyZ');
  const moving=keys.has('KeyW')||keys.has('KeyA')||keys.has('KeyS')||keys.has('KeyD');
  if(wantsSlide&&moving&&slideRemaining<=0&&slideCooldown<=0&&jumpOffset<=0.001){
   slideRemaining=.68;slideCooldown=1.15;
