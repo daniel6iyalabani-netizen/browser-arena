@@ -161,7 +161,25 @@ function connectOnline(){const url=($('server-url').value.trim()||DEFAULT_SERVER
  return {group,mesh:torso,name:p.name||'Player',hair};
 }
 function renderScoreboard(players){const el=$('score-list');if(!el)return;el.innerHTML='';for(const p of [...players].sort((a,b)=>(b.kills||0)-(a.kills||0))){const row=document.createElement('div');row.className='score-row';const n=document.createElement('span');n.textContent=p.name||'Player';const score=document.createElement('b');score.textContent=(p.kills||0)+' K / '+(p.deaths||0)+' D';row.append(n,score);el.appendChild(row);}}
-function movePlayer(dt){const speed=(keys.has('ShiftLeft')||keys.has('ShiftRight'))?8.5:5.4;direction.set(0,0,0);if(keys.has('KeyW'))direction.z-=1;if(keys.has('KeyS'))direction.z+=1;if(keys.has('KeyA'))direction.x-=1;if(keys.has('KeyD'))direction.x+=1;direction.normalize();const before=controls.getObject().position.clone();controls.moveForward(-direction.z*speed*dt);controls.moveRight(direction.x*speed*dt);const p=controls.getObject().position;p.y=1.7;for(const b of colliders){const expanded=b.clone().expandByVector(new THREE.Vector3(.48,1,.48));if(expanded.containsPoint(p)){p.x=before.x;p.z=before.z;break;}}bob+=dt*(direction.lengthSq()?speed*.9:1.4);weapon.position.y=-.3+Math.sin(bob*2)*.006*(direction.lengthSq()?1:0);if(online&&socket?.connected&&performance.now()-lastSync>50){lastSync=performance.now();const f=camera.getWorldDirection(new THREE.Vector3());socket.emit('move',{x:p.x,yaw:Math.atan2(f.x,-f.z),z:p.z});}}
+function movePlayer(dt){
+ const speed=(keys.has('ShiftLeft')||keys.has('ShiftRight'))?8.5:5.4;
+ const forwardInput=(keys.has('KeyW')?1:0)-(keys.has('KeyS')?1:0);
+ const sideInput=(keys.has('KeyD')?1:0)-(keys.has('KeyA')?1:0);
+ const before=controls.getObject().position.clone();
+ const forward=camera.getWorldDirection(new THREE.Vector3());forward.y=0;forward.normalize();
+ const right=new THREE.Vector3().crossVectors(forward,new THREE.Vector3(0,1,0)).normalize();
+ const delta=forward.multiplyScalar(forwardInput).add(right.multiplyScalar(sideInput));
+ if(delta.lengthSq()>1)delta.normalize();
+ delta.multiplyScalar(speed*dt);
+ const p=controls.getObject().position;
+ const blocked=(x,z)=>x<-39.1||x>39.1||z<-34.1||z>34.1||colliders.some(c=>c.clone().expandByVector(new THREE.Vector3(.58,1,.58)).containsPoint(new THREE.Vector3(x,1.7,z)));
+ // Resolve X and Z separately so the player slides along walls instead of sticking or passing through them.
+ const nextX=p.x+delta.x;if(!blocked(nextX,p.z))p.x=nextX;
+ const nextZ=p.z+delta.z;if(!blocked(p.x,nextZ))p.z=nextZ;
+ p.y=1.7;
+ bob+=dt*(delta.lengthSq()>.001?speed*.9:1.4);weapon.position.y=-.3+Math.sin(bob*2)*.006*(delta.lengthSq()>.001?1:0);
+ if(online&&socket?.connected&&performance.now()-lastSync>50){lastSync=performance.now();const f=camera.getWorldDirection(new THREE.Vector3());socket.emit('move',{x:p.x,yaw:Math.atan2(f.x,-f.z),z:p.z});}
+}
 function dieAndRestart(){if(!running)return;health=0;shield=0;firing=false;reloading=false;if(!online){botRoundScore++;$('bot-round-score').textContent=String(botRoundScore);if(botRoundScore>=5){matchOver=true;running=false;updateHud();controls.unlock();$('start-screen').classList.remove('hidden');setMessage('BOTS WIN · FIRST TO 5 · PLAY AGAIN',4000);return;}health=100;shield=100*(1+armorLevel*.03);const p=controls.getObject().position;p.set((Math.random()-.5)*10,1.7,Math.random()<.5?-12:12);lastHitTime=performance.now();updateHud();setMessage('RESPAWN · BOTS '+botRoundScore+' / 5',1500);return;}running=false;updateHud();controls.unlock();$('start-screen').classList.remove('hidden');setMessage('YOU DIED · CHOOSE A MODE TO RESTART',3000);}
 function spawnBotShot(b,target,now){
  const origin=b.botGun.getWorldPosition(new THREE.Vector3());origin.y+=.02;
