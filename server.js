@@ -9,7 +9,7 @@ const players=new Map(),bots=new Map(),queues=new Map(),matches=new Map();let bo
 function lobbyInfo(room){const m=matches.get(room);if(!m)return;const members=[...players.entries()].filter(([,p])=>p.room===room);for(const [id] of members){const s=io.sockets.sockets.get(id);if(s)s.emit('mapLobby',{mode:m.mode,players:members.map(([pid,p])=>({id:pid,name:p.name,team:p.team})),maps:[{id:0,name:'INDUSTRIAL YARD'},{id:1,name:'DESERT OUTPOST'},{id:2,name:'FROST DEPOT'},{id:3,name:'ABANDONED WORKS'},{id:4,name:'OVERGROWN RUINS'}],votes:Object.fromEntries(m.votes)});}}
 function beginMatch(room){const m=matches.get(room);if(!m||m.started)return;m.started=true;const members=[...players.entries()].filter(([,p])=>p.room===room);const counts=[0,0];for(const [id,p] of members){p.map=m.map;p.health=100;p.shield=100*(1+(p.armor||0)*.03);p.x=(Math.random()-.5)*12;p.z=p.team===0?-12-Math.random()*4:12+Math.random()*4;while(positionBlocked(p.x,p.z,p.map,.6)){p.x=(Math.random()-.5)*10;p.z=p.team===0?-12-Math.random()*3:12+Math.random()*3;}const s=io.sockets.sockets.get(id);if(s)s.emit('matchStart',{map:m.map,mode:m.mode,team:p.team,x:p.x,z:p.z});counts[p.team]++;}syncBots(room);broadcast(room);}
 function queuePlayer(id,mode){const p=players.get(id);if(!p)return;let q=queues.get(mode);if(!q){q=[];queues.set(mode,q);}if(!q.includes(id))q.push(id);p.mode=mode;p.room='queue:'+mode;const needed=(MODE_SIZES[mode]||1)*2;const waiting=q.map(pid=>players.get(pid)).filter(Boolean);for(const pid of q){const s=io.sockets.sockets.get(pid);if(s)s.emit('queueStatus',{mode,waiting:waiting.length,needed,message:'Waiting for '+needed+' real players to join '+mode+'.'});}if(waiting.length>=needed){const ids=q.splice(0,needed);const room='match:'+(++matchSeq);const m={room,mode,started:false,map:0,votes:new Map(),timer:null};matches.set(room,m);ids.forEach((pid,i)=>{const player=players.get(pid);if(!player)return;player.room=room;player.team=i%2;player.map=0;const s=io.sockets.sockets.get(pid);if(s){s.leave('queue:'+mode);s.join(room);}});lobbyInfo(room);m.timer=setTimeout(()=>{const tally=[0,0,0,0,0];for(const v of m.votes.values())tally[v]++;m.map=tally.indexOf(Math.max(...tally));beginMatch(room);},30000);}}
-const WEAPON_COSTS=[0,300,900,400,650,700,1200];
+const WEAPON_COSTS=[0,300,900,400,650,700,1200,500];
 const WEAPONS=[
  {mag:12,delay:190,damage:38,range:38,pellets:1,spread:.01},
  {mag:8,delay:300,damage:54,range:40,pellets:1,spread:.006},
@@ -17,7 +17,8 @@ const WEAPONS=[
  {mag:30,delay:115,damage:32,range:65,pellets:1,spread:.012},
  {mag:6,delay:620,damage:15,range:23,pellets:8,spread:.09},
  {mag:8,delay:460,damage:17,range:25,pellets:6,spread:.075},
- {mag:5,delay:950,damage:65,range:90,pellets:1,spread:.001}
+ {mag:5,delay:950,damage:65,range:90,pellets:1,spread:.001},
+ {mag:36,delay:68,damage:14,range:42,pellets:1,spread:.026}
 ];
 app.use(express.static(path.join(__dirname)));
 app.get('/health',(_req,res)=>res.json({ok:true,players:players.size}));
