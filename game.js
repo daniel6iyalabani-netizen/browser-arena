@@ -294,7 +294,7 @@ function setupV2Touch(){
  stick.addEventListener('pointermove',moveStick);
  function releaseStick(e){if(e.pointerId!==stickId)return;stickId=null;origin=null;nub.style.transform='translate(0,0)';['KeyA','KeyD','KeyW','KeyS'].forEach(k=>setKey(k,false));}
  stick.addEventListener('pointerup',releaseStick);stick.addEventListener('pointercancel',releaseStick);
- look.addEventListener('pointerdown',e=>{if(!touchMode()||e.target.closest('button'))return;lookId=e.pointerId;lastLook={x:e.clientX,y:e.clientY};look.setPointerCapture(lookId);});
+ look.addEventListener('pointerdown',e=>{if(!touchMode()||e.target.closest('button,#touch-stick'))return;lookId=e.pointerId;lastLook={x:e.clientX,y:e.clientY};look.setPointerCapture(lookId);});
  look.addEventListener('pointermove',e=>{if(e.pointerId!==lookId||!lastLook||!running)return;const dx=e.clientX-lastLook.x,dy=e.clientY-lastLook.y;lastLook={x:e.clientX,y:e.clientY};const yaw=controls.getObject();yaw.rotation.y-=dx*.0042;camera.rotation.x=THREE.MathUtils.clamp(camera.rotation.x-dy*.0042,-Math.PI/2,Math.PI/2);});
  const endLook=e=>{if(e.pointerId===lookId){lookId=null;lastLook=null;}};look.addEventListener('pointerup',endLook);look.addEventListener('pointercancel',endLook);
  fire.addEventListener('pointerdown',e=>{e.preventDefault();if(!running)return;firing=true;shoot();v2Tone(240,.045,.018,'triangle');});
