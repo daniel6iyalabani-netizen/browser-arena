@@ -37,3 +37,11 @@ for each row execute function public.keep_best_browser_arena_stats();
 \`\`\`
 
 The API accesses this table from the server using the service role key. The browser only calls the game's leaderboard endpoints. The leaderboard stores each player's best reported score, kills and wins under their callsign; callsigns are not account verification, so this prototype should not be treated as cheat-proof competitive ranking.
+
+## Optional player accounts and season challenges
+
+For email/password accounts, add the Supabase project's **anon/public key** as a third Render environment variable named `SUPABASE_ANON_KEY`. This key is intended for client-facing use; keep `SUPABASE_SERVICE_ROLE_KEY` private and server-only. Enable Email sign-in in Supabase Authentication. If email confirmation is enabled, players must confirm their email before signing in.
+
+The account UI calls the server's `/api/auth/signup`, `/api/auth/login`, and `/api/auth/me` endpoints. Online Socket.IO connections include the current access token, and the server verifies it with Supabase Auth. Guest access remains enabled. Account verification identifies the player but does not make every gameplay action cheat-proof.
+
+The season challenge panel tracks local challenge progress and cosmetic unlocks on the player's device. These are prototype progression rewards, not server-verified competitive entitlements. Ranked divisions are progression labels and should not be advertised as secure competitive ratings until match results and rating changes are computed and stored server-side.
