@@ -11,8 +11,8 @@ permissions:
   contents: read
 
 jobs:
-  syntax-check:
-    name: JavaScript syntax checks
+  syntax-and-api-tests:
+    name: Syntax and API smoke tests
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -21,10 +21,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Check server and browser scripts
+      - name: Install server dependencies
+        run: npm install --no-audit --no-fund
+      - name: Check JavaScript syntax
         run: |
           node --check server.js
           node --check leaderboard.js
           node --check accounts.js
           node --check season.js
           node --input-type=module --check < game.js
+      - name: Test server APIs
+        run: npm test
