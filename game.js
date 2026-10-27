@@ -31,6 +31,7 @@ for(const [x,z,sx,sz,col] of [[-23,-20,10,7,0x3bbbd0],[23,-20,10,7,0xf4bd54],[-2
 
 const mapThemes=[{name:'INDUSTRIAL YARD',sky:0xa8b9c0,floor:0x77776d,grid:0x77776d,pads:[0x77776d,0x77776d,0x77776d,0x77776d,0x77776d]},{name:'DESERT OUTPOST',sky:0xc5b9a6,floor:0xa18c6b,grid:0xa18c6b,pads:[0xa18c6b,0xa18c6b,0xa18c6b,0xa18c6b,0xa18c6b]},{name:'FROST DEPOT',sky:0xb9cbd0,floor:0x9ca9aa,grid:0x9ca9aa,pads:[0x9ca9aa,0x9ca9aa,0x9ca9aa,0x9ca9aa,0x9ca9aa]},{name:'ABANDONED WORKS',sky:0x867c7b,floor:0x5f5955,grid:0x5f5955,pads:[0x5f5955,0x5f5955,0x5f5955,0x5f5955,0x5f5955]},{name:'OVERGROWN RUINS',sky:0xa3b09b,floor:0x52634e,grid:0x52634e,pads:[0x52634e,0x52634e,0x52634e,0x52634e,0x52634e]},{name:'SKYBRIDGE',sky:0x8ea8c5,floor:0x596d80,grid:0x596d80,pads:[0x4c8fbc,0xd6a65f,0x6a86b5,0x65b7a2,0xb5c8dc]}];function applyMap(id){const mapId=Math.max(0,Math.min(5,Number(id)||0)),t=mapThemes[mapId];scene.background.setHex(t.sky);scene.fog.color.setHex(t.sky);floorMat.color.setHex(t.floor);grid.material.color.setHex(t.grid);mapPads.forEach((p,i)=>p.material.color.setHex(t.pads[i]));$('map-name').textContent=t.name;buildMapGeometry(mapId);}
 function box(x,y,z,sx,sy,sz,color,solid=true){const m=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),new THREE.MeshStandardMaterial({color,map:concreteTexture,roughness:.94,metalness:.02}));m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;scene.add(m);arenaObjects.push(m);if(solid){colliders.push(new THREE.Box3().setFromObject(m));solidMeshes.push(m);}return m;}
+function accentBox(x,y,z,sx,sy,sz,color,intensity=.65){const mat=new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity:intensity,roughness:.38,metalness:.12});const m=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),mat);m.position.set(x,y,z);m.castShadow=false;m.receiveShadow=false;scene.add(m);arenaObjects.push(m);return m;}
 function buildMapGeometry(id){
  for(const o of arenaObjects)scene.remove(o);arenaObjects.length=0;colliders.length=0;solidMeshes.length=0;
  // Arena perimeter and varied cover. Each map has its own silhouette and palette.
@@ -52,6 +53,11 @@ function buildMapGeometry(id){
  // Raised-looking central plinth and subdued perimeter markers.
  box(0,.32,0,8,.64,8,accent[4],false);
  for(const [x,z,sx,sz] of [[0,-4.1,8.5,.16],[0,4.1,8.5,.16],[-4.1,0,.16,8.5],[4.1,0,.16,8.5]])box(x,.12,z,sx,.24,sz,accent[0],false);
+ // Clean, luminous landmark trim adds a readable focal point without copying another game's map art.
+ const glow=accent[(id+2)%accent.length];
+ accentBox(0,.68,-3.92,6.8,.08,.12,glow,.9);accentBox(0,.68,3.92,6.8,.08,.12,glow,.9);accentBox(-3.92,.68,0,.12,.08,6.8,glow,.9);accentBox(3.92,.68,0,.12,.08,6.8,glow,.9);
+ // Four slim beacon caps make the corners easier to read at a glance.
+ for(const [x,z] of [[-34,-20],[34,-20],[-34,20],[34,20]]){accentBox(x,3.48,z,1.55,.12,1.55,accent[(id+1)%accent.length],.8);accentBox(x,3.58,z,.72,.08,.72,0xf4f7f1,.25);}
  for(let i=0;i<4;i++){const x=i%2?34:-34,z=i<2?-20:20;box(x,1.4,z,2.8,2.8,2.8,accent[i],false);box(x,2.92,z,3.1,.18,3.1,0xf5f7df,false);box(x,3.3,z,1.4,.55,1.4,accent[(i+2)%accent.length],false);}
  // Layered cover lanes: tall concrete blocks, waist-high barricades and supply crates.
  // These are solid for movement and block shots, creating genuine peek-and-hide routes.
