@@ -223,3 +223,5 @@ html{background:#081218}
 @media(prefers-reduced-motion:reduce){#health-vignette,#low-health-warning{transition:none}#low-health-warning.active{animation:none}}
 
 @media(prefers-reduced-motion:reduce){#crosshair{transition:none}}
+
+@media(prefers-reduced-motion:reduce){#weapon-selector>div{transition:none}}
