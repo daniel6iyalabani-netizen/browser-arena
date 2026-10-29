@@ -29,7 +29,7 @@
       ...prefs, gender:selectedGender, mode:selectedMode, difficulty:selectedDifficulty, map:selectedMap,
       uniform:$('setup-uniform').value, hair:$('setup-hair').value, skin:$('setup-skin').value,
       shoes:$('setup-shoes').value, gun:$('setup-gun').value, armor:$('setup-armor').value,
-      target:$('bot-target')?.value || '0'
+      target:$('setup-bot-target')?.value ?? $('bot-target')?.value ?? '0'
     };
     try { localStorage.setItem(prefKey, JSON.stringify(prefs)); } catch {}
     window.browserArenaGender = selectedGender;
@@ -131,6 +131,7 @@
     window.browserArenaSelectedMap=selectedMap;
     savePrefs();
   }));
+  $('setup-bot-target')?.addEventListener('change',()=>{selectValue('bot-target',$('setup-bot-target').value,'change');savePrefs();});
   root.querySelectorAll('[data-gender-choice]').forEach(b=>b.addEventListener('click',()=>{
     selectedGender=b.dataset.genderChoice;
     window.browserArenaGender=selectedGender;
