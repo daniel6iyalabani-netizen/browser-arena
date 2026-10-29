@@ -660,10 +660,92 @@ function setupV2Touch(){
 $('touch-sprint')?.addEventListener('pointerdown',()=>setKey('ControlLeft',true));['pointerup','pointercancel','pointerleave'].forEach(ev=>$('touch-sprint')?.addEventListener(ev,()=>setKey('ControlLeft',false)));
  $('audio-toggle')?.addEventListener('click',()=>{v2Audio.enabled=!v2Audio.enabled;$('audio-toggle').textContent=v2Audio.enabled?'SOUND: ON':'SOUND: OFF';if(v2Audio.enabled)v2Tone(660,.12,.035,'sine');});
 }
-buildV2Atmosphere();setupV2Touch();
+buildV2Atmosphere();setupV2Touch();initOperatorPreview();
 $('reset-progress')?.addEventListener('click',()=>{if(confirm('Reset your local XP and career stats? This cannot be undone.')){career=freshCareer();saveCareer();setMessage('CAREER RESET',1400);}});updateProgressUI();
 
 $('results-lobby')?.addEventListener('click',()=>{$('results-screen').classList.add('hidden');$('start-screen').classList.remove('hidden');$('hud').style.display='none';$('map-lobby').classList.add('hidden');});
 $('results-rematch')?.addEventListener('click',()=>{$('results-screen').classList.add('hidden');$('start-screen').classList.remove('hidden');$('hud').style.display='none';$('map-lobby').classList.add('hidden');setMessage('CHOOSE QUICK PLAY OR TRAINING TO START AGAIN',2600);});
-function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.04),now=performance.now();const targetFov=running&&sprintingNow?82:running&&aiming?57:76;if(Math.abs(camera.fov-targetFov)>.05){camera.fov=THREE.MathUtils.damp(camera.fov,targetFov,7,dt);camera.updateProjectionMatrix();}weapon.position.x=THREE.MathUtils.damp(weapon.position.x,aiming ? .02 : .34,15,dt);weapon.position.y=THREE.MathUtils.damp(weapon.position.y,aiming?-.24:-.3,15,dt);weapon.position.z=THREE.MathUtils.damp(weapon.position.z,aiming?-.43:-.58,15,dt);$('hud').classList.toggle('aiming',aiming);if(reloading&&now>=reloadUntil){const w=weapons[weaponIndex],amount=Math.min(w.mag-ammo,reserve);ammo+=amount;reserve-=amount;reloading=false;updateHud();}updateBotShotEffects(now);animateV2(dt,now);if(running){movePlayer(dt);if(!online)updateBots(dt,now);if(firing&&ammo>0&&!reloading&&controls.isLocked)shoot();}recoil=Math.max(0,recoil-dt*.42);weapon.rotation.x=-recoil;const shotAge=now-lastShot,kick=shotAge<360?Math.exp(-shotAge/82):0;let reloadRoll=0,reloadYaw=0;if(reloading){const w=weapons[weaponIndex],progress=THREE.MathUtils.clamp((now-(reloadUntil-w.reload))/w.reload,0,1),swing=Math.sin(progress*Math.PI);reloadRoll=swing*.48;reloadYaw=-swing*.09;}weapon.rotation.z=reloadRoll+kick*(weaponIndex%2?-.055:.055);weapon.rotation.y=reloadYaw-kick*.035;flash.visible=shotAge<flashDuration;muzzle.intensity=flash.visible?3.5:0;const crosshair=$('crosshair');if(crosshair){const spread=20+Math.min(18,movementAmount*7)+(sprintingNow?8:0)+(jumpOffset>.12?7:0)+(firing?3:0);crosshair.style.width=spread+'px';crosshair.style.height=spread+'px';}renderer.render(scene,camera);}
+
+/* Lobby operator showcase: a separate lightweight real-time 3D scene. */
+let operatorPreview=null;
+function initOperatorPreview(){
+ const canvas=$('operator-preview-canvas');if(!canvas||operatorPreview)return;
+ const pScene=new THREE.Scene();pScene.background=new THREE.Color(0x242b2b);pScene.fog=new THREE.Fog(0x242b2b,10,29);
+ const pCamera=new THREE.PerspectiveCamera(34,1,.1,80);pCamera.position.set(0,2.45,8.9);pCamera.lookAt(.25,1.48,0);
+ let pRenderer;
+ try{pRenderer=new THREE.WebGLRenderer({canvas,antialias:innerWidth>700,alpha:false,powerPreference:'low-power'});}catch(e){canvas.parentElement.classList.add('preview-fallback');return;}
+ pRenderer.setPixelRatio(Math.min(devicePixelRatio||1,1.35));pRenderer.shadowMap.enabled=true;pRenderer.shadowMap.type=THREE.PCFSoftShadowMap;pRenderer.outputColorSpace=THREE.SRGBColorSpace;pRenderer.toneMapping=THREE.ACESFilmicToneMapping;pRenderer.toneMappingExposure=1.08;
+ pScene.add(new THREE.HemisphereLight(0xc9d8d7,0x373b35,1.7));
+ const key=new THREE.DirectionalLight(0xffdfb0,3.2);key.position.set(-3,7,5);key.castShadow=true;key.shadow.mapSize.set(512,512);key.shadow.camera.left=-5;key.shadow.camera.right=5;key.shadow.camera.top=7;key.shadow.camera.bottom=-3;pScene.add(key);
+ const rim=new THREE.DirectionalLight(0x8caeb2,2.1);rim.position.set(4,4,-4);pScene.add(rim);
+ const mat=(color,roughness=.8,metalness=.05)=>new THREE.MeshStandardMaterial({color,roughness,metalness});
+ const concrete=mat(0x555b57,.95),wall=mat(0x454d4b,.94),darkMetal=mat(0x202726,.65,.45),olive=mat(0x4c5947,.92),cloth=mat(0x626a58,.98),armor=mat(0x343c37,.82,.12),rubber=mat(0x202422,.98),tan=mat(0x8b8069,.93),glass=mat(0x182627,.25,.5);
+ const ground=new THREE.Mesh(new THREE.PlaneGeometry(34,28),concrete);ground.rotation.x=-Math.PI/2;ground.position.y=-.04;ground.receiveShadow=true;pScene.add(ground);
+ function box(parent,x,y,z,sx,sy,sz,material,rotY=0){const m=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),material);m.position.set(x,y,z);m.rotation.y=rotY;m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;}
+ function cyl(parent,x,y,z,r1,r2,h,material,rotZ=0){const m=new THREE.Mesh(new THREE.CylinderGeometry(r1,r2,h,10),material);m.position.set(x,y,z);m.rotation.z=rotZ;m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;}
+ // A layered industrial training bay with concrete structure, utility pipes and stacked freight.
+ box(pScene,0,2.8,-5.8,13,5.7,.55,wall);box(pScene,-6.1,2.6,-1.5,.6,5,9,wall);box(pScene,6.1,2.6,-1.5,.6,5,9,wall);
+ box(pScene,-2.7,2.15,-5.48,2.7,4.2,.12,darkMetal);box(pScene,-2.7,4.35,-5.39,2.9,.14,.14,mat(0x777c73,.9));
+ for(let i=0;i<5;i++){box(pScene,-3.75+i*.52,2.1,-5.36,.035,3.8,.035,mat(0x777b70,.88));}
+ for(let i=0;i<4;i++){cyl(pScene,4.6,1.1+i*.48,-5.1,.075,.075,7,darkMetal,Math.PI/2);}
+ // Floor expansion seams and a worn yellow safety stripe.
+ for(let z=-4;z<5;z+=2.4)box(pScene,0,-.018,z,12,.012,.018,mat(0x343a36,.95));
+ box(pScene,-3.9,-.01,1.7,2.3,.014,.09,mat(0x9d8b4e,.95),-.02);
+ box(pScene,-4.6,.65,-1.7,1.25,1.25,1.15,mat(0x5b5e55,.96),-.12);box(pScene,-4.4,1.38,-1.8,1.45,.16,1.3,darkMetal,-.12);
+ box(pScene,4.6,.45,-.2,1.2,.9,1.2,mat(0x5c6258,.94),.08);box(pScene,4.6,.94,-.2,1.3,.1,1.25,darkMetal,.08);
+ // Operator rig: original field specialist silhouette, layered gear and a low-ready prop rifle.
+ const op=new THREE.Group();op.position.set(1.35,0,.05);pScene.add(op);
+ const body=new THREE.Group();op.add(body);
+ // boots and articulated legs
+ box(body,-.19,.12,.015,.31,.22,.47,rubber,-.04);box(body,.19,.12,.015,.31,.22,.47,rubber,-.04);
+ const leftLeg=new THREE.Mesh(new THREE.CapsuleGeometry(.115,.58,4,8),olive);leftLeg.position.set(-.19,.58,0);leftLeg.castShadow=true;body.add(leftLeg);
+ const rightLeg=new THREE.Mesh(new THREE.CapsuleGeometry(.115,.58,4,8),cloth);rightLeg.position.set(.19,.58,0);rightLeg.castShadow=true;body.add(rightLeg);
+ box(body,-.19,.58,.09,.22,.2,.26,armor);box(body,.19,.58,.09,.22,.2,.26,armor);
+ // torso, neck and head
+ const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.29,.58,5,10),cloth);torso.position.set(0,1.47,0);torso.castShadow=true;body.add(torso);
+ box(body,0,1.48,.245,.49,.59,.16,armor);
+ box(body,0,1.53,.337,.33,.32,.035,mat(0x515b4d,.82));
+ box(body,0,1.82,.21,.35,.13,.12,olive);
+ cyl(body,0,1.94,0,.105,.105,.16,tan);
+ const head=new THREE.Mesh(new THREE.SphereGeometry(.19,14,12),mat(0x9b765e,.9));head.position.set(0,2.16,0);head.scale.set(.86,1.08,.88);head.castShadow=true;body.add(head);
+ // helmet, rim, rails, goggles
+ const helmet=new THREE.Mesh(new THREE.SphereGeometry(.225,16,10,0,Math.PI*2,0,Math.PI*.62),olive);helmet.position.set(0,2.28,-.015);helmet.scale.set(1.05,.82,1.03);helmet.castShadow=true;body.add(helmet);
+ box(body,0,2.21,.185,.35,.045,.08,darkMetal);
+ box(body,0,2.17,.208,.25,.055,.025,glass);
+ box(body,-.22,2.25,0,.045,.14,.09,darkMetal);box(body,.22,2.25,0,.045,.14,.09,darkMetal);
+ // shoulder pads, sleeves, forearms and gloves
+ const limb=(x,y,z,rx,ry,rz,material)=>{const m=new THREE.Mesh(new THREE.CapsuleGeometry(.105,.35,4,8),material);m.position.set(x,y,z);m.rotation.set(rx,ry,rz);m.castShadow=true;body.add(m);return m;};
+ limb(-.39,1.52,0,0,0,-.22,olive);limb(.39,1.52,0,0,0,.22,olive);
+ const foreL=limb(-.48,1.22,.16,0,0,-.12,cloth),foreR=limb(.47,1.22,.18,0,0,.18,cloth);
+ box(body,-.49,1.04,.23,.19,.13,.18,rubber);box(body,.48,1.04,.25,.19,.13,.18,rubber);
+ // vest webbing, magazine pouches, radio, belt and backpack
+ box(body,0,1.38,-.19,.43,.53,.2,olive);box(body,0,1.48,.34,.39,.36,.07,armor);
+ for(let i=0;i<3;i++){box(body,-.14+i*.14,1.31,.39,.105,.17,.075,darkMetal);box(body,-.14+i*.14,1.4,.433,.095,.025,.018,tan);}
+ box(body,-.28,1.51,.02,.12,.27,.14,armor);box(body,-.3,1.68,.03,.14,.12,.12,darkMetal);
+ box(body,0,1.08,.02,.49,.11,.3,darkMetal);box(body,0,1.08,.18,.11,.08,.04,tan);
+ // small hydration pack and straps
+ box(body,0,1.52,-.32,.39,.48,.2,olive);box(body,.01,1.72,-.43,.21,.17,.12,armor);
+ box(body,-.19,1.55,.02,.06,.47,.08,tan,-.12);box(body,.19,1.55,.02,.06,.47,.08,tan,.12);
+ // compact stylized rifle held across the chest (visual-only prop)
+ const rifle=new THREE.Group();rifle.position.set(.35,1.22,.31);rifle.rotation.z=-.16;rifle.rotation.y=-.08;body.add(rifle);
+ box(rifle,0,0,0,.58,.105,.13,darkMetal);box(rifle,-.05,.005,.08,.28,.075,.055,armor);box(rifle,-.19,-.1,.015,.14,.2,.1,rubber,-.2);
+ box(rifle,.32,.015,0,.43,.045,.045,darkMetal);box(rifle,.49,.015,0,.035,.07,.055,mat(0x111716,.7,.35));
+ box(rifle,.04,.1,0,.12,.08,.08,olive);box(rifle,.1,-.105,.015,.09,.19,.07,rubber,.08);
+ cyl(rifle,.03,.12,.005,.025,.025,.2,darkMetal,Math.PI/2);
+ // Small cloth seams / shoulder insignia keep the silhouette readable at lobby scale.
+ box(body,-.39,1.56,.09,.13,.13,.045,tan);box(body,.39,1.56,.09,.13,.13,.045,mat(0x777c6b,.9));
+ op.rotation.y=-.1;
+ operatorPreview={scene:pScene,camera:pCamera,renderer:pRenderer,canvas,operator:op,body,resize(){const w=Math.max(1,canvas.clientWidth),h=Math.max(1,canvas.clientHeight);pRenderer.setSize(w,h,false);pCamera.aspect=w/h;pCamera.updateProjectionMatrix();}};
+ operatorPreview.resize();
+}
+function renderOperatorPreview(dt){
+ if(!operatorPreview)return;
+ const stage=operatorPreview.canvas.parentElement;
+ if(!stage||stage.offsetWidth===0||stage.offsetHeight===0)return;
+ const t=performance.now()*.00035;operatorPreview.operator.rotation.y=-.12+Math.sin(t)*.055;
+ operatorPreview.body.position.y=Math.sin(t*2)*.008;
+ operatorPreview.renderer.render(operatorPreview.scene,operatorPreview.camera);
+}
+
+function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.04),now=performance.now();const targetFov=running&&sprintingNow?82:running&&aiming?57:76;if(Math.abs(camera.fov-targetFov)>.05){camera.fov=THREE.MathUtils.damp(camera.fov,targetFov,7,dt);camera.updateProjectionMatrix();}weapon.position.x=THREE.MathUtils.damp(weapon.position.x,aiming ? .02 : .34,15,dt);weapon.position.y=THREE.MathUtils.damp(weapon.position.y,aiming?-.24:-.3,15,dt);weapon.position.z=THREE.MathUtils.damp(weapon.position.z,aiming?-.43:-.58,15,dt);$('hud').classList.toggle('aiming',aiming);if(reloading&&now>=reloadUntil){const w=weapons[weaponIndex],amount=Math.min(w.mag-ammo,reserve);ammo+=amount;reserve-=amount;reloading=false;updateHud();}updateBotShotEffects(now);animateV2(dt,now);renderOperatorPreview(dt);if(running){movePlayer(dt);if(!online)updateBots(dt,now);if(firing&&ammo>0&&!reloading&&controls.isLocked)shoot();}recoil=Math.max(0,recoil-dt*.42);weapon.rotation.x=-recoil;const shotAge=now-lastShot,kick=shotAge<360?Math.exp(-shotAge/82):0;let reloadRoll=0,reloadYaw=0;if(reloading){const w=weapons[weaponIndex],progress=THREE.MathUtils.clamp((now-(reloadUntil-w.reload))/w.reload,0,1),swing=Math.sin(progress*Math.PI);reloadRoll=swing*.48;reloadYaw=-swing*.09;}weapon.rotation.z=reloadRoll+kick*(weaponIndex%2?-.055:.055);weapon.rotation.y=reloadYaw-kick*.035;flash.visible=shotAge<flashDuration;muzzle.intensity=flash.visible?3.5:0;const crosshair=$('crosshair');if(crosshair){const spread=20+Math.min(18,movementAmount*7)+(sprintingNow?8:0)+(jumpOffset>.12?7:0)+(firing?3:0);crosshair.style.width=spread+'px';crosshair.style.height=spread+'px';}renderer.render(scene,camera);}
 animate();applyWeapon();updateWeaponSelector();applyMap(0);$('gun-color').addEventListener('input',e=>bodyMat.color.set(e.target.value));$('hair-color').addEventListener('input',e=>{hairColor=e.target.value;for(const item of remotePlayers.values())if(item.hair)item.hair.material.color.set(hairColor);});addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setPixelRatio(Math.min(devicePixelRatio,innerWidth<700?1.25:1.75));renderer.setSize(innerWidth,innerHeight);});window.addEventListener('beforeunload',()=>socket?.disconnect());
