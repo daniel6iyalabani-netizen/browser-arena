@@ -775,12 +775,14 @@ html{background:#081218}
 }
 
 
-/* Crisp the embedded reference artwork without replacing its text or details. */
+/* Keep the reference artwork on the browser's normal full-resolution image path.
+   Avoid an SVG filter/composited GPU layer: both can soften fine text and edges. */
 #start-screen #reference-lobby-art{
-  filter:url(#lobby-sharpen) contrast(1.05) saturate(1.025)!important;
+  filter:contrast(1.045) saturate(1.02)!important;
   image-rendering:auto!important;
-  transform:translateZ(0);
-  backface-visibility:hidden;
+  transform:none!important;
+  backface-visibility:visible!important;
+  will-change:auto!important;
 }
 
 
