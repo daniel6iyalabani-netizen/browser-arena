@@ -891,3 +891,10 @@ html{background:#081218}
  #start-screen .setup-footer{align-items:flex-start;flex-direction:column}
  #start-screen .setup-launch{width:100%;min-width:0}
 }
+
+
+#start-screen .setup-target-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(180px,260px);align-items:center;gap:18px;margin:0 0 22px;padding:13px 14px;border:1px solid #ffffff20;background:#ffffff04}
+#start-screen .setup-target-row label{display:flex;flex-direction:column;gap:4px;font-size:10px;font-weight:850;letter-spacing:.1em;color:#d6dace}
+#start-screen .setup-target-row label small{font-size:9px;font-weight:400;letter-spacing:0;color:#8a948c}
+#start-screen .setup-target-row select{min-height:38px;padding:0 10px;border:1px solid #ffffff24;background:#111614;color:#e4e8df;font:inherit;font-size:10px;letter-spacing:.06em}
+@media(max-width:680px){#start-screen .setup-target-row{grid-template-columns:1fr;gap:8px;margin-bottom:16px}}
