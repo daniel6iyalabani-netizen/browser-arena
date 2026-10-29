@@ -544,3 +544,130 @@ html{background:#081218}
 #start-screen .operator-stage{z-index:1!important}
 #start-screen .operator-stage:after{z-index:2;pointer-events:none}
 #start-screen #operator-preview-canvas{z-index:0}
+
+
+/* Cinematic hangar lobby — full-viewport operator, minimal gold tactical UI. */
+#start-screen.lobby-screen{
+  display:block!important;position:fixed;inset:0;overflow:hidden!important;padding:0!important;
+  background:
+    radial-gradient(ellipse at 51% 54%,#4b4a40 0%,#292d2b 27%,#171c1d 56%,#080b0c 100%)!important;
+  isolation:isolate;
+}
+#start-screen.lobby-screen:after{
+  content:"";position:fixed;inset:68px 0 0;z-index:-1;pointer-events:none;
+  background:
+    linear-gradient(90deg,#070a0bed 0%,#090d0db0 23%,#090d0d12 48%,#090d0d20 69%,#080b0bd9 100%),
+    linear-gradient(0deg,#080b0bef 0%,transparent 26%,#05070740 100%),
+    repeating-linear-gradient(90deg,transparent 0 11.5%,#c5b58f08 11.6% 11.75%,transparent 11.85% 22%);
+}
+#start-screen .lobby-shell{position:relative;width:100%;height:100%;min-height:100%;padding:0!important;margin:0;display:block!important;gap:0!important;max-width:none}
+#start-screen .lobby-topbar{
+ position:absolute;inset:0 0 auto;height:68px;z-index:12;display:flex;flex-wrap:nowrap;gap:0;
+ padding:0 2.1%;border-bottom:1px solid #d0d0c52c;background:linear-gradient(90deg,#080a0bf5,#080a0bd9 65%,#080a0bf0);
+}
+#start-screen .lobby-mark{font-size:clamp(15px,1.75vw,27px);letter-spacing:-.035em;white-space:nowrap;gap:0}
+#start-screen .mark-glyph,#start-screen .lobby-mark small{display:none}
+#start-screen .lobby-mark b{margin-left:8px;color:#c5a04a}
+#start-screen .lobby-nav{height:100%;flex:1;min-width:0;gap:0;margin-left:clamp(30px,7vw,130px)}
+#start-screen .lobby-nav-item{height:100%;min-width:clamp(72px,8.4vw,130px);padding:0 12px;font-size:clamp(9px,.98vw,15px);letter-spacing:.04em;color:#9ca2a7}
+#start-screen .lobby-nav-item.active{color:#f6f0df;background:linear-gradient(180deg,#c5a04a00,#c5a04a1c);border:0}
+#start-screen .lobby-nav-item.active:after{left:0;right:0;bottom:0;height:2px;background:#d7b65c;box-shadow:0 0 12px #d7b65c}
+#start-screen .lobby-top-meta{margin-left:auto;white-space:nowrap;font-size:9px}
+#start-screen .lobby-top-meta>span:not(.live-dot),#start-screen .lobby-top-meta>b{display:none}
+#start-screen .lobby-top-meta .audio-toggle{margin:0 0 0 12px;font-size:8px;padding:8px 10px}
+#start-screen .lobby-main-grid{display:block;height:100%;min-height:0}
+#start-screen .lobby-showcase{position:static;min-width:0;padding:0}
+#start-screen .showcase-kicker,#start-screen .showcase-title,#start-screen .showcase-copy,#start-screen .showcase-foot{display:none!important}
+#start-screen .operator-stage{
+ position:fixed;inset:68px 0 0;height:auto!important;width:100%;z-index:0!important;
+ overflow:hidden;border:0;background:
+  radial-gradient(ellipse at 50% 28%,#7d7a6c 0%,#4a4b45 18%,#282d2b 48%,#111718 78%,#080b0c 100%);
+ box-shadow:none;isolation:isolate;
+}
+#start-screen #operator-preview-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:0;display:block}
+#start-screen .operator-stage:after{
+ content:"";position:absolute;inset:0;z-index:2;pointer-events:none;
+ background:
+  linear-gradient(90deg,#070a0bf0 0%,#080b0bc2 20%,#0b0e0e20 42%,#090c0c16 60%,#070a0bd9 100%),
+  linear-gradient(0deg,#080b0bf0 0%,transparent 24%,#080a0a28 75%,#080a0a66 100%);
+}
+#start-screen .stage-vignette{z-index:3;box-shadow:inset 0 0 100px #0009;pointer-events:none}
+#start-screen .stage-topline{display:none}
+#start-screen .stage-map-label{left:32%;bottom:7%;opacity:.7}
+#start-screen .stage-character-label{right:32%;bottom:7%;opacity:.7}
+#start-screen .stage-bottomline{display:none}
+#start-screen .lobby-console{position:static;display:block!important;pointer-events:none;padding:0;margin:0;border:0;background:transparent;box-shadow:none;overflow:visible}
+#start-screen .lobby-console>*{pointer-events:auto}
+#start-screen .lobby-console:before{display:none}
+#start-screen .console-heading{display:none!important}
+#start-screen .callsign-wrap,#start-screen #account-card,#start-screen .progress-card,#start-screen .global-leaderboard,
+#start-screen .queue-heading,#start-screen .console-options,#start-screen .customize-drawer,
+#start-screen .console-footer{display:none!important}
+#start-screen .queue-cards{position:fixed;left:2.15%;top:40%;width:min(28vw,430px);display:flex;flex-direction:column;gap:0;z-index:9}
+#start-screen .queue-card{
+ min-height:60px;display:flex;align-items:center;gap:14px;width:100%;text-align:left;
+ padding:0 18px;border:1px solid #d2d2c326;border-radius:0;background:linear-gradient(90deg,#101313e8,#101313a8);
+ color:#c3c7c6;box-shadow:none;
+}
+#start-screen .queue-card:first-child{border-color:#d0b05a;background:linear-gradient(100deg,#b28a2c72,#191a17e8 84%);color:#fff6df}
+#start-screen .queue-icon{font-size:21px;color:#d9d9d3}
+#start-screen .queue-card:first-child .queue-icon{color:#e9d59a}
+#start-screen .queue-card-text b{font-size:clamp(10px,1.05vw,15px);letter-spacing:.035em}
+#start-screen .queue-card-text small{font-size:clamp(9px,.9vw,12px);color:#a5aaa7;margin-top:5px}
+#start-screen .queue-radio{margin-left:auto;border-color:#ffffff42}
+#start-screen .queue-card.selected .queue-radio{border-color:#d2b052;box-shadow:0 0 8px #d2b05240}
+#start-screen .launch-actions{position:fixed;inset:0;z-index:10;pointer-events:none;display:block!important;margin:0;padding:0}
+#start-screen #open-tutorial{position:fixed;left:2.15%;top:91%;width:54px;height:46px;opacity:0;pointer-events:auto}
+#start-screen #play-online{
+ position:fixed;right:2.35%;bottom:12.4%;width:min(24vw,365px);height:clamp(62px,9vh,92px);
+ display:flex;align-items:center;justify-content:center;gap:22px;pointer-events:auto;
+ border:1px solid #f2d578;border-radius:3px;background:linear-gradient(105deg,#302712,#b38b2f 95%);
+ color:#fff3ce;font-size:clamp(23px,3vw,48px);font-weight:900;letter-spacing:.035em;
+ box-shadow:0 0 0 1px #17130a,0 0 30px #d3ad4d20,inset 0 1px #fff4bd70;
+}
+#start-screen #play-online:before{content:"▶";font-size:.8em}
+#start-screen #play-online span{font-size:inherit}
+#start-screen #play-online b{display:none}
+#start-screen #play-offline{
+ position:fixed;left:2.15%;top:46%;width:min(28vw,430px);height:60px;
+ pointer-events:auto;border:1px solid #ffffff20;border-radius:0;
+ background:linear-gradient(90deg,#101313ed,#101313a8);color:#d1d4d1;
+}
+#start-screen #play-offline:after{content:"  →";margin-left:12px}
+#start-screen .lobby-feature-panel{position:fixed;z-index:20;inset:82px 4% 4%;overflow:auto;background:#0b0f10f5;border:1px solid #c5a04a55;padding:22px;box-shadow:0 24px 90px #000b}
+#start-screen .feature-panel-head h2{color:#e6d3a1}
+#start-screen .lobby-bottom{position:fixed;z-index:8;left:2.1%;right:2.1%;bottom:2%;display:flex;justify-content:space-between;color:#8d9695;font-size:8px;letter-spacing:.12em;pointer-events:none}
+#start-screen .lobby-bottom b{color:#c5a04a}
+#start-screen .lobby-bottom span:nth-child(2){display:none}
+#start-screen .lobby-console:after{
+ content:"DAILY MISSIONS                                      ◷ 12h 34m\\A\\A━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\A\\A◈   Get 5 Kills                                           2/5\\A━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\A\\A◈   Win 2 Matches                                     0/2\\A━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\A\\A◈   Deal 500 Damage                             320/500\\A━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\A\\A◇   150                                      CLAIM REWARD";
+ white-space:pre-wrap;position:fixed;z-index:8;top:12%;right:1.8%;width:min(21vw,330px);min-height:300px;padding:16px 14px;
+ border:1px solid #a8b0b133;background:linear-gradient(145deg,#080c0deF,#080c0dbf);color:#c5c9c8;
+ font:clamp(8px,.95vw,13px)/1.8 Arial,sans-serif;letter-spacing:.02em;pointer-events:none;box-sizing:border-box;
+}
+#start-screen .lobby-console:after{border-radius:2px}
+@media(max-width:760px){
+ #start-screen .lobby-topbar{height:58px;padding:0 12px}
+ #start-screen .lobby-mark{font-size:12px}
+ #start-screen .lobby-nav{margin-left:12px}
+ #start-screen .lobby-nav-item{min-width:0;padding:0 8px;font-size:8px}
+ #start-screen .lobby-top-meta{display:none}
+ #start-screen .operator-stage{inset:58px 0 0}
+ #start-screen .queue-cards{left:12px;top:auto;bottom:120px;width:45vw}
+ #start-screen .queue-card{min-height:42px;padding:0 8px;gap:7px}
+ #start-screen .queue-card-text b{font-size:9px}
+ #start-screen .queue-card-text small{font-size:8px}
+ #start-screen #play-offline{left:12px;top:auto;bottom:74px;width:45vw;height:40px}
+ #start-screen #play-online{right:12px;bottom:74px;width:43vw;height:62px;font-size:22px;gap:8px}
+ #start-screen .lobby-console:after{top:72px;right:10px;width:40vw;min-height:0;padding:8px;font-size:7px;line-height:1.55}
+ #start-screen .stage-map-label,#start-screen .stage-character-label{display:none}
+ #start-screen .lobby-bottom{display:none}
+}
+@media(max-width:430px){
+ #start-screen .lobby-nav-item{padding:0 5px;font-size:7px}
+ #start-screen .lobby-mark{font-size:10px}
+ #start-screen .queue-cards{bottom:124px;width:48vw}
+ #start-screen #play-offline{width:48vw;bottom:76px}
+ #start-screen #play-online{width:43vw;font-size:18px}
+ #start-screen .lobby-console:after{font-size:6px}
+}
