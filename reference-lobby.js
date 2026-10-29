@@ -38,7 +38,8 @@
   function syncNativeSettings() {
     selectValue('match-mode', selectedMode, 'change');
     selectValue('difficulty', selectedDifficulty, 'change');
-    selectValue('bot-target', $('setup-bot-target')?.value || prefs.target || '0', 'change');
+    const botTarget = $('setup-bot-target') ? $('setup-bot-target').value : (prefs.target || '0');
+    selectValue('bot-target', botTarget, 'change');
     selectValue('uniform-color', $('setup-uniform').value);
     selectValue('hair-color', $('setup-hair').value);
     selectValue('skin-color', $('setup-skin').value);
@@ -65,6 +66,7 @@
     selectValue('match-mode', selectedMode, 'change');
     selectValue('difficulty', selectedDifficulty, 'change');
     if ($('bot-target')) $('bot-target').value = String(prefs.target || '0');
+    if ($('setup-bot-target')) $('setup-bot-target').value = String(prefs.target || '0');
     selectedMap = Math.max(0,Math.min(5,Number(prefs.map)||0));
     selectedGender = prefs.gender === 'female' ? 'female' : 'male';
     window.browserArenaGender = selectedGender;
