@@ -698,7 +698,7 @@ let operatorPreview=null;
 function initOperatorPreview(){
  const canvas=$('operator-preview-canvas');if(!canvas||operatorPreview)return;
  const pScene=new THREE.Scene();pScene.background=new THREE.Color(0x242b2b);pScene.fog=new THREE.Fog(0x242b2b,10,29);
- const pCamera=new THREE.PerspectiveCamera(30,1,.1,80);pCamera.position.set(1.5,2.72,6.7);pCamera.lookAt(1.2,1.38,0);
+ const pCamera=new THREE.PerspectiveCamera(27,1,.1,80);pCamera.position.set(1.42,2.5,5.9);pCamera.lookAt(1.35,1.35,0);
  let pRenderer;
  try{pRenderer=new THREE.WebGLRenderer({canvas,antialias:innerWidth>700,alpha:false,powerPreference:'low-power'});}catch(e){canvas.parentElement.classList.add('preview-fallback');return;}
  pRenderer.setPixelRatio(Math.min(devicePixelRatio||1,1.35));pRenderer.shadowMap.enabled=true;pRenderer.shadowMap.type=THREE.PCFSoftShadowMap;pRenderer.outputColorSpace=THREE.SRGBColorSpace;pRenderer.toneMapping=THREE.ACESFilmicToneMapping;pRenderer.toneMappingExposure=1.08;
