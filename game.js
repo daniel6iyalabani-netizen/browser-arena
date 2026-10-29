@@ -88,7 +88,39 @@ const weaponAccentMat=new THREE.MeshStandardMaterial({color:0x72c9ff,emissive:0x
 function gunPart(sx,sy,sz,x,y,z,mat=darkMat){const m=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),mat);m.position.set(x,y,z);m.castShadow=true;weapon.add(m);return m;}
 const gunBody=gunPart(.18,.16,.43,0,0,0,bodyMat),gunBarrel=gunPart(.105,.09,.46,0,.035,-.37),gunFront=gunPart(.075,.075,.36,0,.035,-.77),gunGrip=gunPart(.12,.18,.17,0,-.14,.08,bodyMat);
 // Bright, weapon-specific side panels and top rail give the first-person model a colourful arena finish.
-const weaponSideL=gunPart(.018,.075,.25,-.098,.012,-.025,weaponAccentMat),weaponSideR=gunPart(.018,.075,.25,.098,.012,-.025,weaponAccentMat),weaponRail=gunPart(.055,.018,.25,0,.094,-.13,weaponAccentMat),weaponMuzzleRing=gunPart(.115,.105,.035,0,.035,-.62,weaponAccentMat);const gloveMat=new THREE.MeshStandardMaterial({color:0x303a39,roughness:.72});const gloveL=new THREE.Mesh(new THREE.BoxGeometry(.13,.12,.18),gloveMat);gloveL.position.set(-.16,-.12,-.19);weapon.add(gloveL);const gloveR=new THREE.Mesh(new THREE.BoxGeometry(.13,.12,.18),gloveMat);gloveR.position.set(.15,-.14,.035);weapon.add(gloveR);const genericLower=gunPart(.09,.22,.12,0,-.27,.04),genericSightBase=gunPart(.06,.07,.16,0,.115,-.18),genericFrontDetail=gunPart(.025,.03,.1,0,.12,-.73,bodyMat);const rifleSight=gunPart(.045,.055,.09,0,.14,-.22),shotgunBarrel=gunPart(.065,.065,.36,.07,.035,-.75),rifleStock=gunPart(.14,.11,.23,0,-.01,.29,bodyMat);
+const weaponSideL=gunPart(.018,.075,.25,-.098,.012,-.025,weaponAccentMat),weaponSideR=gunPart(.018,.075,.25,.098,.012,-.025,weaponAccentMat),weaponRail=gunPart(.055,.018,.25,0,.094,-.13,weaponAccentMat),weaponMuzzleRing=gunPart(.115,.105,.035,0,.035,-.62,weaponAccentMat);
+const gloveMat=new THREE.MeshStandardMaterial({color:0x252b2a,roughness:.82}),sleeveMat=new THREE.MeshStandardMaterial({color:0x3c4940,roughness:.9});
+const gloveL=new THREE.Mesh(new THREE.BoxGeometry(.14,.105,.17),gloveMat);gloveL.position.set(-.12,-.08,-.43);gloveL.rotation.x=-.16;weapon.add(gloveL);
+const gloveR=new THREE.Mesh(new THREE.BoxGeometry(.13,.11,.15),gloveMat);gloveR.position.set(.065,-.14,.045);gloveR.rotation.x=-.12;weapon.add(gloveR);
+const supportSleeve=new THREE.Mesh(new THREE.CapsuleGeometry(.075,.34,4,8),sleeveMat);supportSleeve.position.set(-.25,-.25,-.25);supportSleeve.rotation.z=-.62;supportSleeve.rotation.x=-.35;weapon.add(supportSleeve);
+const firingSleeve=new THREE.Mesh(new THREE.CapsuleGeometry(.078,.3,4,8),sleeveMat);firingSleeve.position.set(.23,-.29,.12);firingSleeve.rotation.z=.5;firingSleeve.rotation.x=.22;weapon.add(firingSleeve);
+const genericLower=gunPart(.09,.22,.12,0,-.27,.04),genericSightBase=gunPart(.06,.07,.16,0,.115,-.18),genericFrontDetail=gunPart(.025,.03,.1,0,.12,-.73,bodyMat);
+const rifleSight=gunPart(.045,.055,.09,0,.14,-.22),shotgunBarrel=gunPart(.065,.065,.36,.07,.035,-.75),rifleStock=gunPart(.14,.11,.23,0,-.01,.29,bodyMat);
+const akSteel=new THREE.MeshStandardMaterial({color:0x303638,metalness:.72,roughness:.38}),akEdge=new THREE.MeshStandardMaterial({color:0x69706d,metalness:.82,roughness:.31}),akWood=new THREE.MeshStandardMaterial({color:0x754323,roughness:.78}),akWoodLight=new THREE.MeshStandardMaterial({color:0x9a6233,roughness:.82}),akBlack=new THREE.MeshStandardMaterial({color:0x191e1e,metalness:.36,roughness:.5});
+const akParts=[];
+function akPart(sx,sy,sz,x,y,z,mat){const m=gunPart(sx,sy,sz,x,y,z,mat);m.visible=false;akParts.push(m);return m;}
+akPart(.19,.16,.42,0,.005,-.015,akSteel);
+akPart(.195,.055,.38,0,.102,-.02,akEdge);
+akPart(.12,.045,.27,0,.145,-.11,akBlack);
+akPart(.105,.075,.27,0,.025,-.39,akWood);
+akPart(.11,.035,.26,0,.07,-.39,akWoodLight);
+akPart(.13,.105,.27,0,-.015,.29,akWood);
+akPart(.14,.028,.24,0,-.018,.31,akWoodLight);
+akPart(.105,.19,.13,0,-.13,.09,akWood);
+akPart(.105,.075,.12,0,-.19,.035,akWoodLight);
+akPart(.105,.12,.13,0,-.15,-.045,akSteel);
+const akMag1=akPart(.105,.105,.12,0,-.245,-.035,akSteel);akMag1.rotation.x=-.12;
+const akMag2=akPart(.10,.10,.115,0,-.326,.005,akSteel);akMag2.rotation.x=-.25;
+const akMag3=akPart(.095,.085,.105,0,-.397,.055,akSteel);akMag3.rotation.x=-.38;
+akPart(.045,.04,.34,0,.075,-.4,akSteel);
+const akBarrel=new THREE.Mesh(new THREE.CylinderGeometry(.018,.018,.43,10),akSteel);akBarrel.rotation.x=Math.PI/2;akBarrel.position.set(0,.035,-.635);akBarrel.visible=false;weapon.add(akBarrel);akParts.push(akBarrel);
+akPart(.07,.12,.09,0,.06,-.61,akSteel);
+akPart(.055,.11,.055,0,.135,-.035,akBlack);
+akPart(.022,.12,.025,0,.13,-.68,akBlack);
+akPart(.09,.085,.07,0,.035,-.76,akSteel);
+akPart(.07,.075,.08,0,.035,-.84,akBlack);
+for(let i=0;i<4;i++)akPart(.012,.012,.17,-.057+i*.038,.035,-.39,akWoodLight);
+const akTrigger=new THREE.Mesh(new THREE.TorusGeometry(.045,.009,5,12),akBlack);akTrigger.position.set(0,-.115,.045);akTrigger.rotation.x=Math.PI/2;akTrigger.visible=false;weapon.add(akTrigger);akParts.push(akTrigger);
 const muzzle=new THREE.PointLight(0xffb66d,0,5);muzzle.position.set(0,.04,-.98);weapon.add(muzzle);const flash=new THREE.Mesh(new THREE.ConeGeometry(.09,.28,8),new THREE.MeshBasicMaterial({color:0xffd38a,transparent:true,opacity:.9}));flash.rotation.x=-Math.PI/2;flash.position.set(0,.035,-1.02);flash.visible=false;weapon.add(flash);
 function applyWeapon(){const w=weapons[weaponIndex],isAK=weaponIndex===2;gunBody.visible=gunBarrel.visible=gunFront.visible=gunGrip.visible=!isAK;genericLower.visible=genericSightBase.visible=genericFrontDetail.visible=!isAK;gunBody.scale.setScalar(weaponIndex===0?.75:weaponIndex===6?1.28:weaponIndex===7?1.05:1);gunBarrel.scale.z=weaponIndex===0?.7:1;gunFront.scale.z=1;gunGrip.scale.setScalar(weaponIndex===0?.85:1);rifleSight.visible=!isAK&&(weaponIndex===3||weaponIndex===6);shotgunBarrel.visible=weaponIndex===4||weaponIndex===5;rifleStock.visible=!isAK&&(weaponIndex===3||weaponIndex===6||weaponIndex===7);for(const part of akParts)part.visible=isAK;weaponSideL.visible=weaponSideR.visible=weaponRail.visible=!isAK;weaponMuzzleRing.visible=!isAK&&weaponIndex!==0;bodyMat.color.set(gunColor);weaponAccentMat.color.setHex(w.color);weaponAccentMat.emissive.setHex(w.color).multiplyScalar(.22);muzzle.color.setHex(w.color);flash.material.color.setHex(w.color);flash.position.z=isAK?-.9:-1.02;flashDuration=weaponIndex===4||weaponIndex===5?82:weaponIndex===6?90:weaponIndex===0?45:65;flash.scale.setScalar(weaponIndex===4||weaponIndex===5?1.35:weaponIndex===6?1.5:weaponIndex===0?.72:1);ammo=w.mag;reserve=w.reserve;reloading=false;$('weapon-name').textContent=w.name;updateHud();setMessage('EQUIPPED '+w.name,850);}
 function makeBot(x,z,index){
