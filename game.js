@@ -698,7 +698,7 @@ let operatorPreview=null;
 function initOperatorPreview(){
  const canvas=$('operator-preview-canvas');if(!canvas||operatorPreview)return;
  const pScene=new THREE.Scene();pScene.background=new THREE.Color(0x242b2b);pScene.fog=new THREE.Fog(0x242b2b,10,29);
- const pCamera=new THREE.PerspectiveCamera(23,1,.1,80);pCamera.position.set(1.5,2.62,3.45);pCamera.lookAt(1.2,1.42,0);
+ const pCamera=new THREE.PerspectiveCamera(30,1,.1,80);pCamera.position.set(1.5,2.72,6.7);pCamera.lookAt(1.2,1.38,0);
  let pRenderer;
  try{pRenderer=new THREE.WebGLRenderer({canvas,antialias:innerWidth>700,alpha:false,powerPreference:'low-power'});}catch(e){canvas.parentElement.classList.add('preview-fallback');return;}
  pRenderer.setPixelRatio(Math.min(devicePixelRatio||1,1.35));pRenderer.shadowMap.enabled=true;pRenderer.shadowMap.type=THREE.PCFSoftShadowMap;pRenderer.outputColorSpace=THREE.SRGBColorSpace;pRenderer.toneMapping=THREE.ACESFilmicToneMapping;pRenderer.toneMappingExposure=1.08;
@@ -729,7 +729,7 @@ function initOperatorPreview(){
  box(pScene,-4.6,.65,-1.7,1.25,1.25,1.15,mat(0x5b5e55,.96),-.12);box(pScene,-4.4,1.38,-1.8,1.45,.16,1.3,darkMetal,-.12);
  box(pScene,4.6,.45,-.2,1.2,.9,1.2,mat(0x5c6258,.94),.08);box(pScene,4.6,.94,-.2,1.3,.1,1.25,darkMetal,.08);
  // Operator rig: original field specialist silhouette, layered gear and a low-ready prop rifle.
- const op=new THREE.Group();op.position.set(1.35,0,.05);op.scale.setScalar(1.62);pScene.add(op);
+ const op=new THREE.Group();op.position.set(1.35,0,.05);op.scale.setScalar(1.45);pScene.add(op);
  const body=new THREE.Group();op.add(body);
  // boots and articulated legs
  box(body,-.19,.12,.015,.31,.22,.47,rubber,-.04);box(body,.19,.12,.015,.31,.22,.47,rubber,-.04);
