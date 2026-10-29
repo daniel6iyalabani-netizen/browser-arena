@@ -121,8 +121,97 @@ akPart(.09,.085,.07,0,.035,-.76,akSteel);
 akPart(.07,.075,.08,0,.035,-.84,akBlack);
 for(let i=0;i<4;i++)akPart(.012,.012,.17,-.057+i*.038,.035,-.39,akWoodLight);
 const akTrigger=new THREE.Mesh(new THREE.TorusGeometry(.045,.009,5,12),akBlack);akTrigger.position.set(0,-.115,.045);akTrigger.rotation.x=Math.PI/2;akTrigger.visible=false;weapon.add(akTrigger);akParts.push(akTrigger);
+// Distinct, material-led first-person models for the full weapon roster.
+const variantSteel=new THREE.MeshStandardMaterial({color:0x353a3b,metalness:.78,roughness:.34});
+const variantEdge=new THREE.MeshStandardMaterial({color:0x707775,metalness:.82,roughness:.29});
+const polymer=new THREE.MeshStandardMaterial({color:0x202625,metalness:.18,roughness:.74});
+const polymerOlive=new THREE.MeshStandardMaterial({color:0x454b40,metalness:.12,roughness:.8});
+const walnut=new THREE.MeshStandardMaterial({color:0x704324,roughness:.8});
+const walnutLight=new THREE.MeshStandardMaterial({color:0x966038,roughness:.82});
+const opticGlass=new THREE.MeshStandardMaterial({color:0x173b3c,metalness:.25,roughness:.2,emissive:0x071c1c});
+const variantParts=Array.from({length:8},()=>[]);
+function variantPart(index,sx,sy,sz,x,y,z,mat=variantSteel,rotX=0,rotY=0,rotZ=0){const m=gunPart(sx,sy,sz,x,y,z,mat);m.rotation.set(rotX,rotY,rotZ);m.visible=false;variantParts[index].push(m);return m;}
+function variantCylinder(index,rTop,rBottom,length,x,y,z,mat=variantSteel,axis='z'){const m=new THREE.Mesh(new THREE.CylinderGeometry(rTop,rBottom,length,12),mat);if(axis==='z')m.rotation.x=Math.PI/2;else if(axis==='x')m.rotation.z=Math.PI/2;m.position.set(x,y,z);m.castShadow=true;m.visible=false;weapon.add(m);variantParts[index].push(m);return m;}
+function variantRing(index,r,t,x,y,z,mat=variantSteel){const m=new THREE.Mesh(new THREE.TorusGeometry(r,t,6,16),mat);m.position.set(x,y,z);m.visible=false;weapon.add(m);variantParts[index].push(m);return m;}
+// 0 — compact service pistol: slide, barrel, textured grip, sights and trigger guard.
+variantPart(0,.15,.105,.31,0,.005,-.12,variantSteel);
+variantPart(0,.155,.035,.28,0,.064,-.12,variantEdge);
+variantCylinder(0,.025,.025,.18,0,.018,-.39,variantSteel);
+variantPart(0,.105,.19,.12,0,-.115,.045,polymer,-.16);
+variantPart(0,.11,.035,.09,0,-.202,.065,polymerOlive,-.16);
+variantPart(0,.045,.025,.05,0,.071,-.17,polymer);
+variantPart(0,.025,.035,.04,0,.09,-.27,variantEdge);
+variantRing(0,.035,.007,0,-.085,-.015,variantSteel);
+// 1 — heavy pistol with a longer squared slide and pronounced muzzle.
+variantPart(1,.18,.13,.36,0,.015,-.12,variantSteel);
+variantPart(1,.185,.035,.32,0,.084,-.12,variantEdge);
+variantCylinder(1,.033,.033,.19,0,.025,-.405,variantSteel);
+variantPart(1,.12,.21,.14,0,-.13,.045,polymer,-.12);
+variantPart(1,.125,.035,.11,0,-.226,.065,polymerOlive,-.12);
+variantPart(1,.07,.025,.08,0,.094,-.16,variantSteel);
+variantPart(1,.03,.035,.045,0,.112,-.26,variantEdge);
+variantRing(1,.045,.008,0,-.095,-.02,variantSteel);
+// 3 — modern service rifle with polymer handguard, adjustable stock, curved magazine and optic.
+variantPart(3,.19,.15,.4,0,.005,-.015,variantSteel);
+variantPart(3,.20,.045,.34,0,.098,-.015,variantEdge);
+variantPart(3,.115,.08,.3,0,.018,-.39,polymerOlive);
+variantPart(3,.13,.045,.25,0,.065,-.39,polymer);
+variantCylinder(3,.022,.022,.48,0,.04,-.72,variantSteel);
+variantPart(3,.12,.18,.13,0,-.13,.07,polymer,-.14);
+variantPart(3,.11,.12,.12,0,-.16,-.04,variantSteel,-.12);
+variantPart(3,.10,.11,.12,0,-.25,-.015,variantSteel,-.25);
+variantPart(3,.14,.09,.23,0,-.005,.29,polymerOlive);
+variantPart(3,.13,.07,.17,0,-.005,.48,polymer);
+variantPart(3,.13,.07,.12,0,.145,-.13,polymer);
+variantPart(3,.10,.045,.08,0,.19,-.13,opticGlass);
+variantPart(3,.035,.04,.04,0,.14,-.27,variantEdge);
+// 4 — pump shotgun with wooden furniture, long barrel and under-barrel tube.
+variantPart(4,.18,.14,.34,0,.005,.015,variantSteel);
+variantPart(4,.14,.10,.24,0,-.01,.28,walnut);
+variantPart(4,.15,.035,.21,0,.035,.28,walnutLight);
+variantPart(4,.105,.07,.22,0,.02,-.36,walnut);
+variantPart(4,.11,.035,.19,0,.063,-.36,walnutLight);
+variantCylinder(4,.03,.03,.62,0,.045,-.67,variantSteel);
+variantCylinder(4,.022,.022,.48,0,-.035,-.56,variantEdge);
+variantPart(4,.12,.17,.12,0,-.13,.10,polymer,-.14);
+variantPart(4,.075,.06,.07,0,.13,-.20,variantSteel);
+// 5 — tactical burst scattergun with twin front tubes and a compact stock.
+variantPart(5,.19,.15,.34,0,.005,-.015,variantSteel);
+variantPart(5,.12,.085,.25,0,.015,-.36,polymer);
+variantCylinder(5,.027,.027,.55,-.045,.04,-.67,variantSteel);
+variantCylinder(5,.027,.027,.55,.045,.04,-.67,variantEdge);
+variantPart(5,.10,.18,.13,0,-.13,.08,polymerOlive,-.14);
+variantPart(5,.13,.08,.20,0,-.01,.28,polymer);
+variantPart(5,.10,.10,.12,0,-.13,-.08,variantSteel,-.13);
+variantPart(5,.11,.035,.20,0,.07,-.36,polymerOlive);
+variantPart(5,.10,.045,.13,0,.135,-.14,variantSteel);
+variantPart(5,.07,.05,.07,0,.16,-.14,opticGlass);
+// 6 — precision sniper rifle with long barrel, cheek rest, scope and bipod.
+variantPart(6,.18,.14,.43,0,.005,.005,variantSteel);
+variantPart(6,.15,.11,.32,0,-.01,.32,polymerOlive);
+variantPart(6,.16,.035,.25,0,.045,.30,polymer);
+variantPart(6,.11,.075,.28,0,.015,-.39,polymer);
+variantCylinder(6,.022,.022,.88,0,.04,-.91,variantSteel);
+variantPart(6,.12,.12,.16,0,.12,-.19,variantSteel);
+variantCylinder(6,.048,.048,.27,0,.19,-.23,variantSteel,'x');
+variantCylinder(6,.036,.036,.12,0,.19,-.23,opticGlass,'x');
+variantPart(6,.055,.065,.08,0,.17,-.23,polymer);
+variantPart(6,.13,.035,.15,0,.08,.13,polymer);
+variantPart(6,.018,.18,.025,-.06,-.12,-.42,variantEdge,-.18);
+variantPart(6,.018,.18,.025,.06,-.12,-.42,variantEdge,.18);
+// 7 — compact SMG with short barrel, folding stock, top rail and compact magazine.
+variantPart(7,.18,.15,.34,0,.005,-.015,variantSteel);
+variantPart(7,.12,.075,.21,0,.015,-.30,polymerOlive);
+variantCylinder(7,.022,.022,.30,0,.035,-.58,variantSteel);
+variantPart(7,.11,.18,.13,0,-.13,.065,polymer,-.13);
+variantPart(7,.10,.12,.10,0,-.22,-.045,variantSteel,-.18);
+variantPart(7,.10,.10,.10,0,-.30,-.005,variantSteel,-.30);
+variantPart(7,.13,.045,.18,0,.115,-.10,variantSteel);
+variantPart(7,.035,.04,.06,0,.15,-.14,polymer);
+variantPart(7,.12,.08,.22,0,-.005,.27,polymerOlive);
+variantPart(7,.035,.04,.08,0,-.005,.42,variantEdge);
 const muzzle=new THREE.PointLight(0xffb66d,0,5);muzzle.position.set(0,.04,-.98);weapon.add(muzzle);const flash=new THREE.Mesh(new THREE.ConeGeometry(.09,.28,8),new THREE.MeshBasicMaterial({color:0xffd38a,transparent:true,opacity:.9}));flash.rotation.x=-Math.PI/2;flash.position.set(0,.035,-1.02);flash.visible=false;weapon.add(flash);
-function applyWeapon(){const w=weapons[weaponIndex],isAK=weaponIndex===2;gunBody.visible=gunBarrel.visible=gunFront.visible=gunGrip.visible=!isAK;genericLower.visible=genericSightBase.visible=genericFrontDetail.visible=!isAK;gunBody.scale.setScalar(weaponIndex===0?.75:weaponIndex===6?1.28:weaponIndex===7?1.05:1);gunBarrel.scale.z=weaponIndex===0?.7:1;gunFront.scale.z=1;gunGrip.scale.setScalar(weaponIndex===0?.85:1);rifleSight.visible=!isAK&&(weaponIndex===3||weaponIndex===6);shotgunBarrel.visible=weaponIndex===4||weaponIndex===5;rifleStock.visible=!isAK&&(weaponIndex===3||weaponIndex===6||weaponIndex===7);for(const part of akParts)part.visible=isAK;weaponSideL.visible=weaponSideR.visible=weaponRail.visible=!isAK;weaponMuzzleRing.visible=!isAK&&weaponIndex!==0;bodyMat.color.set(gunColor);weaponAccentMat.color.setHex(w.color);weaponAccentMat.emissive.setHex(w.color).multiplyScalar(.22);muzzle.color.setHex(w.color);flash.material.color.setHex(w.color);flash.position.z=isAK?-.9:-1.02;flashDuration=weaponIndex===4||weaponIndex===5?82:weaponIndex===6?90:weaponIndex===0?45:65;flash.scale.setScalar(weaponIndex===4||weaponIndex===5?1.35:weaponIndex===6?1.5:weaponIndex===0?.72:1);ammo=w.mag;reserve=w.reserve;reloading=false;$('weapon-name').textContent=w.name;updateHud();setMessage('EQUIPPED '+w.name,850);}
+function applyWeapon(){const w=weapons[weaponIndex],isAK=weaponIndex===2;gunBody.visible=gunBarrel.visible=gunFront.visible=gunGrip.visible=false;genericLower.visible=genericSightBase.visible=genericFrontDetail.visible=false;rifleSight.visible=shotgunBarrel.visible=rifleStock.visible=false;for(const part of variantParts.flat())part.visible=false;if(weaponIndex!==2)for(const part of variantParts[weaponIndex])part.visible=true;for(const part of akParts)part.visible=isAK;weaponSideL.visible=weaponSideR.visible=weaponRail.visible=weaponMuzzleRing.visible=false;bodyMat.color.set(gunColor);weaponAccentMat.color.setHex(w.color);weaponAccentMat.emissive.setHex(w.color).multiplyScalar(.22);muzzle.color.setHex(w.color);flash.material.color.setHex(w.color);flash.position.z=weaponIndex===6? -1.25:weaponIndex===4||weaponIndex===5?-.95:isAK?-.9:-.85;flashDuration=weaponIndex===4||weaponIndex===5?82:weaponIndex===6?90:weaponIndex===0?45:65;flash.scale.setScalar(weaponIndex===4||weaponIndex===5?1.35:weaponIndex===6?1.5:weaponIndex===0?.72:1);ammo=w.mag;reserve=w.reserve;reloading=false;$('weapon-name').textContent=w.name;updateHud();setMessage('EQUIPPED '+w.name,850);}
 function makeBot(x,z,index){
  x*=2;z*=2;const group=new THREE.Group();group.position.set(x,0,z);if(index===8)group.scale.setScalar(1.28);scene.add(group);
  const armor=new THREE.MeshStandardMaterial({color:index%2?0x75664f:0x56645a,map:concreteTexture,metalness:.08,roughness:.94});
