@@ -225,3 +225,6 @@ html{background:#081218}
 @media(prefers-reduced-motion:reduce){#crosshair{transition:none}}
 
 @media(prefers-reduced-motion:reduce){#weapon-selector>div{transition:none}}
+
+/* Keep weapon labels readable and compact on small screens. */
+@media(max-width:650px){#weapon-selector{left:12px;bottom:54px;gap:5px;max-width:calc(100vw - 24px)}#weapon-selector>div{gap:5px;padding:6px 7px;font-size:8px;letter-spacing:.04em;border-radius:6px}#weapon-selector>div img,#weapon-selector>div svg{max-width:22px;max-height:18px}}
