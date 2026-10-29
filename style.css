@@ -900,3 +900,16 @@ html{background:#081218}
 #start-screen .setup-target-row label small{font-size:9px;font-weight:400;letter-spacing:0;color:#8a948c}
 #start-screen .setup-target-row select{min-height:38px;padding:0 10px;border:1px solid #ffffff24;background:#111614;color:#e4e8df;font:inherit;font-size:10px;letter-spacing:.06em}
 @media(max-width:680px){#start-screen .setup-target-row{grid-template-columns:1fr;gap:8px;margin-bottom:16px}}
+
+
+/* Critical: never blur the whole lobby; it contains the reference artwork itself. */
+#start-screen.lobby-screen{
+  -webkit-backdrop-filter:none!important;
+  backdrop-filter:none!important;
+}
+#start-screen #reference-lobby-art{
+  -webkit-filter:none!important;
+  filter:none!important;
+  transform:none!important;
+  will-change:auto!important;
+}
