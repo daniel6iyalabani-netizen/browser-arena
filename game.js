@@ -658,7 +658,21 @@ function setupV2Touch(){
  look.addEventListener('pointermove',e=>{if(e.pointerId!==lookId||!lastLook||!running)return;const dx=e.clientX-lastLook.x,dy=e.clientY-lastLook.y;lastLook={x:e.clientX,y:e.clientY};const yaw=controls.getObject();yaw.rotation.y-=dx*.0042;camera.rotation.x=THREE.MathUtils.clamp(camera.rotation.x-dy*.0042,-Math.PI/2,Math.PI/2);});
  const endLook=e=>{if(e.pointerId===lookId){lookId=null;lastLook=null;}};look.addEventListener('pointerup',endLook);look.addEventListener('pointercancel',endLook);
 $('touch-sprint')?.addEventListener('pointerdown',()=>setKey('ControlLeft',true));['pointerup','pointercancel','pointerleave'].forEach(ev=>$('touch-sprint')?.addEventListener(ev,()=>setKey('ControlLeft',false)));
- $('audio-toggle')?.addEventListener('click',()=>{v2Audio.enabled=!v2Audio.enabled;$('audio-toggle').textContent=v2Audio.enabled?'SOUND: ON':'SOUND: OFF';if(v2Audio.enabled)v2Tone(660,.12,.035,'sine');});
+ // Lobby navigation keeps the main Play view intact while taking players directly to customization.
+document.querySelectorAll('[data-lobby-tab]').forEach(tab=>tab.addEventListener('click',()=>{
+ document.querySelectorAll('[data-lobby-tab]').forEach(item=>{item.classList.toggle('active',item===tab);item.setAttribute('aria-current',item===tab?'page':'false');});
+ const target=tab.dataset.lobbyTab;
+ if(target==='loadout'||target==='operators'){
+  const drawer=document.querySelector('.customize-drawer');if(drawer)drawer.open=true;
+  if(target==='operators')$('uniform-color')?.focus({preventScroll:true});
+  drawer?.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'center'});
+ }else if(target==='armory'){
+  toggleShop(true);
+ }else{
+  $('start-screen')?.scrollTo({top:0,behavior:'smooth'});
+ }
+}));
+$('audio-toggle')?.addEventListener('click',()=>{v2Audio.enabled=!v2Audio.enabled;$('audio-toggle').textContent=v2Audio.enabled?'SOUND: ON':'SOUND: OFF';if(v2Audio.enabled)v2Tone(660,.12,.035,'sine');});
 }
 buildV2Atmosphere();setupV2Touch();initOperatorPreview();
 $('reset-progress')?.addEventListener('click',()=>{if(confirm('Reset your local XP and career stats? This cannot be undone.')){career=freshCareer();saveCareer();setMessage('CAREER RESET',1400);}});updateProgressUI();
