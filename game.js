@@ -121,7 +121,7 @@ function buildMapGeometry(id){
  // Short utility conduits follow the inside of the perimeter wall.
  for(const z of [-34,34]){
   const pipe=new THREE.Mesh(new THREE.CylinderGeometry(.075,.075,144,8),new THREE.MeshStandardMaterial({color:0x555c5a,metalness:.55,roughness:.62}));
-  pipe.rotation.x=Math.PI/2;pipe.position.set(0,1.05,z*2);pipe.castShadow=true;scene.add(pipe);arenaObjects.push(pipe);
+  pipe.rotation.z=Math.PI/2;pipe.position.set(0,1.05,z*2);pipe.castShadow=true;scene.add(pipe);arenaObjects.push(pipe);
   for(let x=-34;x<=34;x+=8){const clamp=new THREE.Mesh(new THREE.BoxGeometry(.12,.28,.2),new THREE.MeshStandardMaterial({color:0x393f3e,metalness:.62,roughness:.5}));clamp.position.set(x*2,1.05,z*2);scene.add(clamp);arenaObjects.push(clamp);}
  }
 }
