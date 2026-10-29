@@ -694,6 +694,14 @@ function initOperatorPreview(){
  const rim=new THREE.DirectionalLight(0x8caeb2,2.1);rim.position.set(4,4,-4);pScene.add(rim);
  const mat=(color,roughness=.8,metalness=.05)=>new THREE.MeshStandardMaterial({color,roughness,metalness});
  const concrete=mat(0x555b57,.95),wall=mat(0x454d4b,.94),darkMetal=mat(0x202726,.65,.45),olive=mat(0x4c5947,.92),cloth=mat(0x626a58,.98),armor=mat(0x343c37,.82,.12),rubber=mat(0x202422,.98),tan=mat(0x8b8069,.93),glass=mat(0x182627,.25,.5);
+ // Reuse the game's procedural PBR surface library so the showcase shares its concrete,
+ // weathering and metal language with the playable maps instead of looking like a flat mock-up.
+ concrete.map=realisticSurfaces[0].color;concrete.bumpMap=realisticSurfaces[0].bump;concrete.bumpScale=.075;
+ wall.map=realisticSurfaces[0].color;wall.bumpMap=realisticSurfaces[0].bump;wall.bumpScale=.045;
+ darkMetal.map=realisticSurfaces[5].color;darkMetal.bumpMap=realisticSurfaces[5].bump;darkMetal.bumpScale=.025;
+ olive.map=realisticSurfaces[4].color;olive.bumpMap=realisticSurfaces[4].bump;olive.bumpScale=.035;
+ cloth.map=realisticSurfaces[0].color;cloth.bumpMap=realisticSurfaces[0].bump;cloth.bumpScale=.018;
+ for(const material of [concrete,wall,darkMetal,olive,cloth])material.needsUpdate=true;
  const ground=new THREE.Mesh(new THREE.PlaneGeometry(34,28),concrete);ground.rotation.x=-Math.PI/2;ground.position.y=-.04;ground.receiveShadow=true;pScene.add(ground);
  function box(parent,x,y,z,sx,sy,sz,material,rotY=0){const m=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),material);m.position.set(x,y,z);m.rotation.y=rotY;m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;}
  function cyl(parent,x,y,z,r1,r2,h,material,rotZ=0){const m=new THREE.Mesh(new THREE.CylinderGeometry(r1,r2,h,10),material);m.position.set(x,y,z);m.rotation.z=rotZ;m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;}
