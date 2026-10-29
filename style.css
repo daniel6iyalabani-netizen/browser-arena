@@ -546,3 +546,124 @@ html{background:#081218}
 #start-screen #operator-preview-canvas{z-index:0}
 
 
+
+
+/* Reference rebuild: real controls over a full-screen operator scene. */
+#start-screen.lobby-screen{position:fixed!important;inset:0!important;display:block!important;overflow:hidden!important;padding:0!important;background:#0a0d0e!important;color:#f0eee6;isolation:isolate}
+#start-screen.lobby-screen:before{display:none!important}
+#start-screen.lobby-screen:after{display:none!important}
+#start-screen .lobby-shell{position:relative!important;width:100%!important;height:100%!important;min-height:0!important;max-width:none!important;margin:0!important;padding:0!important;display:block!important}
+#start-screen .lobby-topbar{position:absolute!important;left:0;right:0;top:0;height:68px;min-height:68px;z-index:30;display:flex;align-items:center;gap:0;padding:0 2.1%;background:linear-gradient(90deg,#070909f5,#0b0d0de8);border-bottom:1px solid #d4d3c32c;backdrop-filter:blur(10px)}
+#start-screen .lobby-mark{font-size:clamp(16px,1.75vw,27px);letter-spacing:-.035em;white-space:nowrap;gap:0;color:#eee}
+#start-screen .lobby-mark>span:last-child{display:inline}
+#start-screen .mark-glyph,#start-screen .lobby-mark small{display:none!important}
+#start-screen .lobby-mark b{margin-left:6px;color:#c9a344}
+#start-screen .lobby-nav{height:100%;flex:1;min-width:0;margin-left:clamp(28px,7vw,125px);display:flex;justify-content:flex-start;gap:0}
+#start-screen .lobby-nav-item{position:relative;height:100%;min-width:clamp(74px,8.4vw,130px);padding:0 12px;font-size:clamp(10px,.98vw,15px);letter-spacing:.04em;color:#a1a6a7;border:0;border-radius:0;background:transparent}
+#start-screen .lobby-nav-item.active{color:#fff8e8;background:linear-gradient(180deg,transparent,#c5a04a20)}
+#start-screen .lobby-nav-item.active:after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:#d8b65a;box-shadow:0 0 12px #d8b65a}
+#start-screen .lobby-top-meta{display:flex;align-items:center;gap:12px;margin-left:auto;white-space:nowrap;font-size:9px}
+#start-screen .lobby-top-meta>span:not(.live-dot),#start-screen .lobby-top-meta>b{display:none}
+#start-screen .lobby-top-meta .audio-toggle{margin:0;padding:8px 10px;border-color:#ffffff20;background:#101313;color:#bfc2be;font-size:8px}
+#start-screen .lobby-main-grid{display:block!important;position:static!important;height:100%!important;min-height:0!important;padding:0!important}
+#start-screen .lobby-showcase{position:static!important;min-width:0;padding:0!important}
+#start-screen .showcase-kicker,#start-screen .showcase-title,#start-screen .showcase-copy,#start-screen .showcase-foot{display:none!important}
+#start-screen .operator-stage{position:fixed!important;inset:68px 0 0!important;width:100%!important;height:auto!important;z-index:1!important;overflow:hidden;border:0!important;border-radius:0!important;box-shadow:none!important;background:radial-gradient(ellipse at 50% 33%,#5a5b53 0%,#343a37 35%,#1a2020 68%,#090c0d 100%)!important;pointer-events:none}
+#start-screen #operator-preview-canvas{position:absolute!important;inset:0!important;display:block!important;width:100%!important;height:100%!important;z-index:0!important}
+#start-screen .operator-stage:after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;background:linear-gradient(90deg,#080b0bf0 0%,#080b0bb8 22%,#080b0d08 43%,#080b0d08 61%,#080b0bd9 100%),linear-gradient(0deg,#080b0be8 0%,transparent 23%,#080b0d24 75%,#080b0d55 100%)}
+#start-screen .stage-vignette{position:absolute;inset:0;z-index:3;box-shadow:inset 0 0 90px #0009;pointer-events:none}
+#start-screen .stage-topline{display:none!important}
+#start-screen .stage-map-label{left:2.2%;bottom:3%;z-index:4}
+#start-screen .stage-character-label{right:29%;bottom:3%;z-index:4}
+#start-screen .stage-map-label span,#start-screen .stage-character-label span{font-size:9px;color:#c4b992}
+#start-screen .stage-map-label b,#start-screen .stage-character-label b{font-size:12px;letter-spacing:.08em}
+#start-screen .stage-map-label small,#start-screen .stage-character-label small{font-size:8px;color:#a4aaa6}
+#start-screen .stage-bottomline{display:none!important}
+#start-screen .lobby-console{position:static!important;display:block!important;padding:0!important;margin:0!important;border:0!important;background:transparent!important;box-shadow:none!important;overflow:visible!important;pointer-events:none}
+#start-screen .lobby-console>*{pointer-events:auto}
+#start-screen .lobby-console:before{display:none!important}
+#start-screen .console-heading{display:none!important}
+#start-screen .callsign-wrap,#start-screen #account-card,#start-screen .progress-card,#start-screen .global-leaderboard,#start-screen .queue-heading,#start-screen .console-options,#start-screen .customize-drawer,#start-screen .console-footer{display:none!important}
+#start-screen .queue-cards{position:fixed!important;left:2.15%!important;top:33.4%!important;width:min(25.8vw,430px)!important;display:flex!important;flex-direction:column;gap:0!important;z-index:12}
+#start-screen .queue-card{display:flex!important;align-items:center;gap:13px;width:100%;min-height:6.1vh;padding:0 18px!important;border:1px solid #ffffff20!important;border-radius:0!important;background:linear-gradient(90deg,#101313ed,#101313b0)!important;color:#c9ceca!important;text-align:left;box-shadow:none!important}
+#start-screen .queue-card:first-child{border-color:#d1b35b!important;background:linear-gradient(100deg,#8d6c2777,#161814ed 85%)!important;color:#fff6dd!important}
+#start-screen .queue-icon{width:auto;height:auto;display:inline-flex;align-items:center;justify-content:center;font-size:20px;color:#d9d9d3;border:0}
+#start-screen .queue-card:first-child .queue-icon{color:#ead8a2}
+#start-screen .queue-card-text b{font-size:clamp(10px,1.05vw,15px)!important;letter-spacing:.035em}
+#start-screen .queue-card-text small{font-size:clamp(9px,.9vw,12px)!important;color:#a5aaa7!important;margin-top:5px}
+#start-screen .queue-radio{margin-left:auto;border-color:#ffffff42}
+#start-screen .launch-actions{position:fixed!important;inset:0!important;z-index:15!important;display:block!important;margin:0!important;padding:0!important;pointer-events:none}
+#start-screen .launch-actions>*{pointer-events:auto}
+#start-screen #open-tutorial{position:fixed;left:2.15%;bottom:3%;opacity:0;width:50px;height:42px}
+#start-screen #play-online{position:fixed!important;right:2.35%!important;bottom:12.4%!important;width:min(24vw,365px)!important;height:clamp(62px,9vh,92px)!important;display:flex!important;align-items:center;justify-content:center;gap:18px;border:1px solid #f2d578!important;border-radius:3px!important;background:linear-gradient(105deg,#302712,#b38b2f 95%)!important;color:#fff3ce!important;font-size:0!important;font-weight:900;box-shadow:0 0 0 1px #17130a,0 0 30px #d3ad4d20,inset 0 1px #fff4bd70!important}
+#start-screen #play-online:before{content:"▶";font-size:clamp(25px,3vw,43px)}
+#start-screen #play-online span{font-size:clamp(23px,3vw,48px)!important;letter-spacing:.035em}
+#start-screen #play-online b{display:none!important}
+#start-screen #play-offline{position:fixed!important;left:2.15%!important;top:45.7%!important;width:min(25.8vw,430px)!important;height:6.1vh!important;min-height:42px;padding:0 18px!important;text-align:left!important;pointer-events:auto;border:1px solid #ffffff20!important;border-radius:0!important;background:linear-gradient(90deg,#101313ed,#101313b0)!important;color:#c9ceca!important;font-size:clamp(10px,1.05vw,15px)!important;font-weight:800}
+#start-screen .reference-missions{position:fixed;z-index:12;top:12%;right:1.8%;width:min(21vw,330px);padding:14px 13px 12px;border:1px solid #a8b0b133;border-radius:3px;background:linear-gradient(145deg,#080c0def,#080c0dc7);box-shadow:0 16px 40px #0004;color:#c9cece;font-size:clamp(9px,.95vw,13px)}
+#start-screen .reference-missions-head{display:flex;justify-content:space-between;align-items:center;gap:8px;padding-bottom:12px;border-bottom:1px solid #ffffff30}
+#start-screen .reference-missions-head b{font-size:clamp(10px,1.1vw,15px);color:#aabed0}
+#start-screen .reference-missions-head span{font-size:10px;color:#a9b0b0;white-space:nowrap}
+#start-screen .reference-mission{display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:center;gap:10px;padding:14px 2px;border-bottom:1px solid #ffffff20}
+#start-screen .mission-medal{width:31px;height:31px;display:grid;place-items:center;border:2px solid #879196;border-radius:50%;font-size:18px;color:#aeb9c0}
+#start-screen .reference-mission>div{min-width:0}
+#start-screen .reference-mission>small{color:#9ea6aa;font-size:11px;white-space:nowrap}
+#start-screen .mission-track{height:6px;margin-top:8px;border:1px solid #ffffff30;border-radius:2px;overflow:hidden}
+#start-screen .mission-track i{display:block;height:100%;background:#c49b35}
+#start-screen .reference-reward{display:flex;justify-content:space-between;align-items:center;gap:8px;padding-top:12px}
+#start-screen .reference-reward b{color:#e2c16b;font-size:15px}
+#start-screen .reference-reward button{padding:9px 10px;border:1px solid #c7a348;border-radius:2px;background:#352b13;color:#f0d17a;font-size:10px;cursor:pointer}
+#start-screen .reference-season-card{position:fixed;left:2.15%;top:56%;width:min(25.8vw,430px);height:14.8vh;min-height:104px;z-index:11;padding:0 18px 12px;display:flex;flex-direction:column;justify-content:flex-end;gap:4px;border:1px solid #ffffff24;background:linear-gradient(0deg,#080b0bf5 0%,#080b0b40 65%),radial-gradient(ellipse at 50% 15%,#6c6b5d,#242a27 75%);box-shadow:0 8px 24px #0005}
+#start-screen .season-art{position:absolute;inset:0 0 20px;overflow:hidden;background:linear-gradient(0deg,#080b0b80,transparent),repeating-linear-gradient(90deg,transparent 0 22%,#c3b28c13 22.5% 23%,transparent 23.5% 40%),linear-gradient(150deg,#7c8581,#3b4544 36%,#1c2322 60%,#56584b 61%,#202524)}
+#start-screen .season-art:before{content:"";position:absolute;left:10%;right:10%;bottom:0;height:70%;background:repeating-linear-gradient(90deg,#131817 0 12%,#39413d 12% 14%,#161b1a 14% 26%);clip-path:polygon(0 30%,15% 10%,35% 25%,52% 0,75% 24%,100% 12%,100% 100%,0 100%);opacity:.85}
+#start-screen .season-art span{position:absolute;top:10px;left:12px;font-size:8px;letter-spacing:.12em;color:#c7c5b6}
+#start-screen .reference-season-card>b{position:relative;color:#d2a43d;font-size:clamp(11px,1.2vw,17px)}
+#start-screen .reference-season-card>small{position:relative;color:#adb2b0;font-size:clamp(9px,.9vw,12px)}
+#start-screen .season-chevron{position:absolute;right:17px;bottom:20px;font-size:32px;color:#e6e8e5}
+#start-screen .reference-social{position:fixed;left:2.1%;bottom:2%;z-index:14;display:flex;gap:8px}
+#start-screen .reference-social button{width:58px;height:48px;border:1px solid #ffffff20;border-radius:3px;background:#101313d9;color:#a9b0b4;font-size:19px}
+#start-screen .lobby-bottom{display:none!important}
+#start-screen .lobby-feature-panel{position:fixed!important;z-index:40!important;inset:82px 4% 4%!important;overflow:auto!important;background:#0b0f10f5!important;border:1px solid #c5a04a55!important;padding:22px!important}
+#start-screen .feature-panel-head h2{color:#e6d3a1}
+@media(max-width:760px){
+ #start-screen .lobby-topbar{height:58px!important;min-height:58px!important;padding:0 12px!important;gap:6px!important}
+ #start-screen .lobby-mark{font-size:11px}
+ #start-screen .lobby-nav{margin-left:12px!important}
+ #start-screen .lobby-nav-item{min-width:0!important;padding:0 6px!important;font-size:8px!important}
+ #start-screen .lobby-top-meta{display:none!important}
+ #start-screen .operator-stage{inset:58px 0 0!important}
+ #start-screen .queue-cards{left:12px!important;top:auto!important;bottom:126px!important;width:45vw!important}
+ #start-screen .queue-card{min-height:39px;padding:0 8px!important;gap:7px}
+ #start-screen .queue-card-text b{font-size:9px!important}
+ #start-screen .queue-card-text small{display:none!important}
+ #start-screen #play-offline{left:12px!important;top:auto!important;bottom:78px!important;width:45vw!important;height:39px!important;min-height:0!important;padding:0 8px!important}
+ #start-screen #play-online{right:12px!important;bottom:78px!important;width:43vw!important;height:58px!important;font-size:0!important}
+ #start-screen #play-online span{font-size:21px!important}
+ #start-screen .reference-missions{top:70px;right:10px;width:42vw;padding:8px;font-size:7px}
+ #start-screen .reference-missions-head{padding-bottom:5px}
+ #start-screen .reference-missions-head b{font-size:8px}
+ #start-screen .reference-missions-head span{font-size:6px}
+ #start-screen .reference-mission{grid-template-columns:19px minmax(0,1fr) auto;gap:5px;padding:7px 0}
+ #start-screen .mission-medal{width:18px;height:18px;font-size:10px;border-width:1px}
+ #start-screen .mission-track{height:4px;margin-top:4px}
+ #start-screen .reference-mission>small{font-size:7px}
+ #start-screen .reference-reward{padding-top:6px}
+ #start-screen .reference-reward b{font-size:9px}
+ #start-screen .reference-reward button{padding:5px 4px;font-size:6px}
+ #start-screen .reference-season-card{left:12px;top:13%;width:45vw;height:12vh;min-height:75px;padding:0 8px 7px}
+ #start-screen .reference-season-card>b{font-size:10px}
+ #start-screen .reference-season-card>small{font-size:8px}
+ #start-screen .season-chevron{right:8px;bottom:9px;font-size:21px}
+ #start-screen .reference-social{left:12px;bottom:10px;gap:5px}
+ #start-screen .reference-social button{width:34px;height:30px;font-size:12px}
+ #start-screen .stage-map-label,#start-screen .stage-character-label{display:none!important}
+}
+@media(max-width:430px){
+ #start-screen .lobby-mark{font-size:9px}
+ #start-screen .lobby-nav-item{padding:0 4px!important;font-size:7px!important}
+ #start-screen .reference-missions{width:44vw;right:7px}
+ #start-screen .reference-season-card{top:15%;width:45vw}
+ #start-screen .queue-cards{width:48vw!important}
+ #start-screen #play-offline{width:48vw!important}
+ #start-screen #play-online{width:43vw!important}
+}
