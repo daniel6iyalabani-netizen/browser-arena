@@ -13,17 +13,20 @@
   <div class="lobby-shell">
     <header class="lobby-topbar">
       <a class="lobby-mark" href="#" aria-label="Browser Arena home"><span class="mark-glyph">B</span><span>BROWSER <b>ARENA</b><small>COMPETITIVE PLAY SYSTEMS</small></span></a>
-      <div class="lobby-top-meta"><span class="live-dot"></span><span>ARENA NETWORK</span><b>BUILD 02.06</b><button id="audio-toggle" class="audio-toggle" type="button">SOUND: OFF</button></div>
+      <nav class="lobby-nav" aria-label="Main menu"><button class="lobby-nav-item active" type="button" data-lobby-tab="play">PLAY</button><button class="lobby-nav-item" type="button" data-lobby-tab="loadout" id="loadout-nav">LOADOUT</button><button class="lobby-nav-item" type="button" data-lobby-tab="operators" id="operators-nav">OPERATORS</button><button class="lobby-nav-item" type="button" data-lobby-tab="armory" id="armory-nav">ARMORY</button></nav>
+      <div class="lobby-top-meta"><span class="live-dot"></span><span>ARENA NETWORK</span><b>BUILD 02.07</b><button id="audio-toggle" class="audio-toggle" type="button">SOUND: OFF</button></div>
     </header>
     <div class="lobby-main-grid">
       <main class="lobby-showcase">
         <div class="showcase-kicker"><span class="kicker-line"></span> SEASON 02 <span class="kicker-sep">/</span> NEON FRONTIER</div>
         <div class="showcase-title"><div class="title-index">01 <span>— READY UP</span></div><h1>OWN THE<br><span>ARENA.</span></h1></div>
         <p class="showcase-copy">Drop in. Find your rhythm. Make every round count.<br>Queue solo online or sharpen your skills in training.</p>
-        <div class="arena-preview" aria-label="Neon arena preview">
-          <div class="preview-grid"></div><div class="preview-sun"></div><div class="preview-ring ring-one"></div><div class="preview-ring ring-two"></div>
-          <div class="preview-tower tower-a"></div><div class="preview-tower tower-b"></div><div class="preview-tower tower-c"></div>
-          <div class="preview-floor"></div><div class="preview-label"><span>MAP ROTATION</span><b>NEON MEADOW</b></div><div class="preview-coordinate">40° 42' N<br>74° 00' W</div><div class="preview-status"><span></span> ENVIRONMENT ONLINE</div>
+        <div class="operator-stage" aria-label="Live 3D operator and environment preview">
+          <canvas id="operator-preview-canvas" aria-label="3D tactical operator standing in a realistic industrial training environment"></canvas>
+          <div class="stage-vignette"></div><div class="stage-topline"><span><i></i> LIVE CHARACTER PREVIEW</span><b>OPERATOR 01 / FIELD UNIT</b></div>
+          <div class="stage-map-label"><span>ACTIVE THEATRE</span><b>ABANDONED WORKS</b><small>INDUSTRIAL ZONE · 06:40 LOCAL</small></div>
+          <div class="stage-character-label"><span>SELECTED OPERATOR</span><b>FIELD SPECIALIST</b><small>RECON CLASS · LEVEL 01</small></div>
+          <div class="stage-bottomline"><span>ENVIRONMENT RENDER: REAL-TIME 3D</span><span class="stage-ready"><i></i> SYSTEM READY</span></div>
         </div>
         <div class="showcase-foot"><div><span class="foot-label">MATCHMAKING</span><b>Cross-platform lobby</b></div><div><span class="foot-label">GAME MODE</span><b>Squad or solo queue</b></div><div><span class="foot-label">STATUS</span><b class="status-ready">Ready when you are</b></div></div>
       </main>
