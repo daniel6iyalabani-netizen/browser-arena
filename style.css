@@ -225,3 +225,7 @@ html{background:#081218}
 @media(prefers-reduced-motion:reduce){#crosshair{transition:none}}
 
 @media(prefers-reduced-motion:reduce){#weapon-selector>div{transition:none}}
+
+
+/* Keep the weapon strip readable and compact on narrow screens. */
+@media(max-width:650px){#weapon-selector{left:10px;bottom:44px;gap:4px;max-width:calc(100vw - 20px)}#weapon-selector>div{gap:5px;padding:6px 7px;font-size:8px;letter-spacing:.04em}#weapon-selector kbd{width:16px;height:16px;font-size:9px}#weapon-selector small{font-size:8px}}
