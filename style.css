@@ -537,3 +537,10 @@ html{background:#081218}
 #start-screen .lobby-console:after{content:"◈   Get 5 Eliminations                 2/5\A━━━━━━━━━━━━━━━━━━━━━━━━━━━━\A\A◈   Win 2 Matches                        0/2\A━━━━━━━━━━━━━━━━━━━━━━━━━━━━\A\A◈   Deal 500 Damage                 320/500\A━━━━━━━━━━━━━━━━━━━━━━━━━━━━\A\A◇   DAILY REWARDS                        150";white-space:pre-wrap;position:fixed;z-index:6;top:146px;right:24px;width:min(300px,27vw);min-height:210px;padding:16px 14px;border:1px solid #ffffff30;background:#0a0d0de8;color:#c2c5be;font:10px/1.65 Arial,sans-serif;letter-spacing:.025em;pointer-events:none;box-sizing:border-box}
 @media(max-width:900px){#start-screen .lobby-console:after{top:166px;right:14px;width:220px;padding:10px;font-size:8px;min-height:170px}}
 @media(max-width:560px){#start-screen .lobby-console:after{display:none}}
+
+
+/* Fix: the lobby's decorative pseudo-overlay was stacked above the WebGL canvas and obscured the operator. */
+#start-screen.lobby-screen:before{display:none!important;pointer-events:none!important}
+#start-screen .operator-stage{z-index:1!important}
+#start-screen .operator-stage:after{z-index:2;pointer-events:none}
+#start-screen #operator-preview-canvas{z-index:0}
