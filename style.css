@@ -235,3 +235,6 @@ html{background:#081218}
 #hitmarker.hit-pop{animation:hit-confirm-pop .17s cubic-bezier(.2,.8,.2,1)}
 @keyframes hit-confirm-pop{0%{opacity:.3;scale:.65}55%{opacity:1;scale:1.18}100%{opacity:1;scale:1}}
 @media(prefers-reduced-motion:reduce){#hitmarker.hit-pop{animation:none}}
+
+#touch-actions #touch-aim{background:#8d9bff2b;border-color:#a7b1ff99}
+#touch-actions #touch-aim.active{background:#8d9bff88;border-color:#d8dcff;box-shadow:0 0 18px #8d9bff55}
