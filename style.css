@@ -225,3 +225,46 @@ html{background:#081218}
 @media(prefers-reduced-motion:reduce){#crosshair{transition:none}}
 
 @media(prefers-reduced-motion:reduce){#weapon-selector>div{transition:none}}
+
+/* Aim-down-sights polish: responsive focus, compact reticle and a subtle hit-confirmation pop. */
+#crosshair{will-change:width,height,opacity}
+#hud.aiming #crosshair{width:8px!important;height:8px!important;opacity:.38}
+#hud.aiming #crosshair i{background:#f7fff9;box-shadow:0 0 5px #111}
+#hud.aiming #crosshair i:nth-child(1),#hud.aiming #crosshair i:nth-child(2){height:3px}
+#hud.aiming #crosshair i:nth-child(3),#hud.aiming #crosshair i:nth-child(4){width:3px}
+#hitmarker.hit-pop{animation:hit-confirm-pop .17s cubic-bezier(.2,.8,.2,1)}
+@keyframes hit-confirm-pop{0%{opacity:.3;scale:.65}55%{opacity:1;scale:1.18}100%{opacity:1;scale:1}}
+@media(prefers-reduced-motion:reduce){#hitmarker.hit-pop{animation:none}}
+
+#touch-actions #touch-aim{background:#8d9bff2b;border-color:#a7b1ff99}
+#touch-actions #touch-aim.active{background:#8d9bff88;border-color:#d8dcff;box-shadow:0 0 18px #8d9bff55}
+
+/* Cleaner in-match HUD: keep combat information readable without covering the arena. */
+#hud .brand{display:none}
+#hud .topline{top:14px;left:18px;right:18px;justify-content:flex-end}
+#hud .pill{padding:5px 9px;font-size:9px;background:#07101688}
+#hud .stats{top:18px;left:18px;right:150px;display:flex;align-items:center;gap:13px;flex-wrap:nowrap;font-size:9px;letter-spacing:.08em}
+#hud .stats span{white-space:nowrap}
+#hud .stats b{display:inline-block;font-size:14px;margin:0 0 0 4px}
+#hud .stats span:nth-child(4),#hud .stats span:nth-child(6){display:none}
+#weapon-selector{left:18px;bottom:20px;gap:0;max-width:220px}
+#weapon-selector>div:not(.active){display:none}
+#weapon-selector>div.active{padding:8px 11px;background:#071016b8;border-color:#ffffff38;box-shadow:none}
+#weapon-selector>div.active kbd{background:#4a5c56;color:#fff}
+#weapon-selector small{display:none}
+#target-status,#map-name,#achievement-panel,#daily-panel,#achievement-toast,#killstreak-banner{display:none!important}
+#bottom-help{display:none}
+#match-score{top:14px;padding:4px 10px;background:#07101688;border:1px solid #ffffff20;box-shadow:none;font-size:10px}
+#match-score #player-round-score,#match-score #bot-round-score{font-size:15px}
+#match-score small{font-size:7px}
+#scoreboard{top:55px;right:18px;padding:5px 8px;background:#07101680;font-size:9px}
+#message{top:29%;font-size:12px}
+#hud.aiming #weapon-selector{opacity:.35}
+@media(max-width:650px){
+ #hud .topline{top:10px;right:10px}
+ #hud .stats{top:12px;left:10px;right:10px;gap:8px}
+ #hud .stats b{font-size:12px}
+ #weapon-selector{left:10px;bottom:12px}
+ #match-score{top:44px;padding:3px 7px}
+ #scoreboard{top:72px;right:10px}
+}
