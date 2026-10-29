@@ -93,6 +93,51 @@ function buildMapGeometry(id){
  cover.forEach(([x,z,sx,sy,sz],i)=>box(x,sy/2,z,sx,sy,sz,coverPalette[(i+id)%coverPalette.length]));
  // Smaller offset crates make the approach routes less symmetrical.
  for(let i=0;i<8;i++){const x=-30+i*8,z=(i%2===0?-14:14)+(id%2?3:-3),h=1.1+(i%3)*.35;box(x,h/2,z,1.4,h,1.35,[0x6c6c63,0x79766a,0x5d625c,0x777064][i%4]);}
+ // Original environmental set dressing: practical props vary by location rather than relying on neon landmarks.
+ function propCylinder(x,y,z,radius,height,color,metalness=.12,roughness=.86){
+  const mesh=new THREE.Mesh(new THREE.CylinderGeometry(radius*2,radius*2,height,10),new THREE.MeshStandardMaterial({color,map:activeSurfaceSet.color,bumpMap:activeSurfaceSet.bump,bumpScale:.035,metalness,roughness}));
+  mesh.position.set(x*2,y,z*2);mesh.castShadow=true;mesh.receiveShadow=true;scene.add(mesh);arenaObjects.push(mesh);return mesh;
+ }
+ function propTire(x,y,z,radius=.62){
+  const mesh=new THREE.Mesh(new THREE.TorusGeometry(radius*2*.72,radius*2*.28,7,12),new THREE.MeshStandardMaterial({color:0x292c2b,roughness:.98,metalness:0}));
+  mesh.rotation.x=Math.PI/2;mesh.position.set(x*2,y,z*2);mesh.castShadow=true;mesh.receiveShadow=true;scene.add(mesh);arenaObjects.push(mesh);return mesh;
+ }
+ if(id===0||id===3){
+  // Industrial and abandoned sites: battered drums, timber pallets and low utility runs.
+  for(const [x,z,c] of [[-34,-5,0x6a5b48],[-32,-5,0x777064],[33,5,0x4d5b5a],[31,5,0x6b6254]])propCylinder(x,.62,z,.34,1.24,c,.22,.78);
+  for(const [x,z] of [[-25,-14],[25,14],[-25,14],[25,-14]]){
+   for(let i=0;i<4;i++)box(x,.13+i*.11,z-1.1+i*.72,1.35,.12,.12,0x766d5d,false);
+   box(x,.24,z,1.45,.13,.12,0x4e514d,false);
+  }
+ }
+ if(id===1){
+  // Desert outpost: low sandbag lips and sun-faded supply drums.
+  for(const [x,z,dir] of [[-31,0,0],[31,0,0],[-12,24,1],[12,-24,1]]){
+   for(let i=0;i<5;i++){const bag=box(x+(dir?i*1.05-2.1:0),.28,z+(dir?0:i*1.05-2.1),.56,.28,.38, i%2?0x8d7a5b:0x9b8768,false);bag.rotation.y=dir?0:Math.PI/2;}
+  }
+  for(const [x,z] of [[-34,25],[34,-25]])propCylinder(x,.55,z,.31,1.1,0x71634e,.08,.94);
+ }
+ if(id===2){
+  // Frost depot: snow-dulled crates and dark rubber stacks at the edges of lanes.
+  for(const [x,z] of [[-33,-16],[33,16],[-33,16],[33,-16]]){
+   box(x,.52,z,1.05,1.04,.92,0x7c8585,false);box(x,.99,z,1.08,.07,.95,0x59615f,false);
+   propTire(x+1.35,.42,z,.52);propTire(x+1.35,1.12,z,.52);
+  }
+ }
+ if(id===4){
+  // Overgrown ruins: fractured masonry and restrained ground cover at wall bases.
+  for(const [x,z] of [[-33,-25],[33,-25],[-33,25],[33,25],[-11,28],[11,-28]]){
+   for(let i=0;i<4;i++){const rubble=box(x+(i%2)*.55,.16+(i%3)*.08,z+Math.floor(i/2)*.58,.38,.25+(i%2)*.12,.34,[0x555c4c,0x68695b,0x777566][i%3],false);rubble.rotation.y=(i*.43);}
+  }
+  for(const [x,z] of [[-37,-13],[37,13],[-37,13],[37,-13]])propCylinder(x,.3,z,.22,.6,0x4a5145,.02,.98);
+ }
+ if(id===5){
+  // Skybridge: restrained service equipment and cable-tray supports, not glowing sci-fi trim.
+  for(const [x,z] of [[-34,-24],[34,-24],[-34,24],[34,24]]){
+   box(x,.48,z,1.15,.96,.78,0x555e62,false);box(x,1.02,z,1.2,.08,.82,0x343c3e,false);
+   for(let j=0;j<3;j++)box(x-0.65+j*.65,1.15,z,.035,.18,.035,0x8a8c83,false);
+  }
+ }
  // Four wrecked cars (five on alternating maps) create solid, waist-high cover in the outer lanes.
  const wrecks=[[-29,-27],[29,-25],[-31,19],[30,22]];if(id%2===0)wrecks.push([0,-30]);
  wrecks.forEach(([x,z],i)=>{
