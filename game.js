@@ -5,7 +5,7 @@ const DEFAULT_SERVER_URL='https://browser-arena-cw84.onrender.com';
 $('server-url').value=DEFAULT_SERVER_URL;
 const scene=new THREE.Scene();scene.background=new THREE.Color(0xa8b9c0);scene.fog=new THREE.Fog(0xa8b9c0,58,230);
 const camera=new THREE.PerspectiveCamera(76,innerWidth/innerHeight,.1,320);camera.position.set(0,1.7,8);
-const renderer=new THREE.WebGLRenderer({antialias:innerWidth>700,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,innerWidth<700?1.25:1.75));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;root.appendChild(renderer.domElement);
+const renderer=new THREE.WebGLRenderer({antialias:innerWidth>700,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,innerWidth<700?1.25:1.75));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.92;root.appendChild(renderer.domElement);
 const controls=new PointerLockControls(camera,document.body);scene.add(controls.getObject());
 const clock=new THREE.Clock(),raycaster=new THREE.Raycaster(),colliders=[],solidMeshes=[],targets=[],remotePlayers=new Map(),keys=new Set();
 let running=false,online=false,aiming=false,socket=null,lastShot=0,lastSync=0,recoil=0,flashDuration=65,bob=0,firing=false,health=100,shield=100,kills=0,cash=300,ownedWeapons=new Set([0]),ammo=12,reserve=60,reloading=false,reloadUntil=0,playerName='Rookie',lastHitTime=0,weaponIndex=0,targetBot=0,difficulty='medium',mapIndex=0,matchMode='1v1',hairColor='#30241e',gunColor='#52665f',uniformColor='#477f72',skinColor='#b88d70',shoeColor='#20292b',armorLevel=0,playerRoundScore=0,botRoundScore=0,matchOver=false;
@@ -22,16 +22,38 @@ const weapons=[
  {name:'SNIPER RIFLE',mag:5,reserve:25,delay:950,reload:1800,damage:65,range:90,pellets:1,spread:.001,color:0xb5d7e8},
  {name:'VOLT SMG',mag:36,reserve:180,delay:68,reload:1250,damage:14,range:42,pellets:1,spread:.026,color:0x9d8cff}
 ];
-scene.add(new THREE.HemisphereLight(0xd8dcd8,0x3c413d,1.35));const sun=new THREE.DirectionalLight(0xfff1dc,2.2);sun.position.set(-14,25,12);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-100;sun.shadow.camera.right=100;sun.shadow.camera.top=100;sun.shadow.camera.bottom=-100;scene.add(sun);
+scene.add(new THREE.HemisphereLight(0xcbd4d5,0x343a35,0.92));const sun=new THREE.DirectionalLight(0xffe7c5,2.55);sun.position.set(-14,25,12);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-100;sun.shadow.camera.right=100;sun.shadow.camera.top=100;sun.shadow.camera.bottom=-100;scene.add(sun);
 function makeSurfaceTexture(base='#c8c8bd',seed=17){const canvas=document.createElement('canvas');canvas.width=512;canvas.height=512;const ctx=canvas.getContext('2d');ctx.fillStyle=base;ctx.fillRect(0,0,512,512);let n=seed;const rand=()=>{n=(n*1664525+1013904223)>>>0;return n/4294967296;};for(let i=0;i<15000;i++){const v=Math.floor(95+rand()*130);ctx.fillStyle='rgba('+v+','+v+','+Math.max(85,v-5)+','+(0.025+rand()*.12)+')';const size=1+rand()*3;ctx.fillRect(rand()*512,rand()*512,size,size);}for(let i=0;i<85;i++){const x=rand()*512,y=rand()*512;ctx.strokeStyle='rgba(54,58,54,'+(0.035+rand()*.08)+')';ctx.lineWidth=.4+rand()*.8;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+(rand()-.5)*45,y+(rand()-.5)*45);ctx.stroke();}const tex=new THREE.CanvasTexture(canvas);tex.wrapS=tex.wrapT=THREE.RepeatWrapping;tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=4;return tex;}
 const groundTexture=makeSurfaceTexture('#bcbcb0',41);groundTexture.repeat.set(12,12);const concreteTexture=makeSurfaceTexture('#d2d0c6',73);concreteTexture.repeat.set(1.5,1.5);
-const floorMat=new THREE.MeshStandardMaterial({color:0x77776d,map:groundTexture,roughness:1,metalness:0});const floor=new THREE.Mesh(new THREE.PlaneGeometry(160,160),floorMat);floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;scene.add(floor);const grid=new THREE.GridHelper(160,80,0x74786f,0x74786f);grid.position.y=.012;grid.material.transparent=true;grid.material.opacity=.055;scene.add(grid);const mapPads=[],arenaObjects=[];
+function makeRealisticSurface(base,seed,kind){
+ const canvas=document.createElement('canvas');canvas.width=canvas.height=512;const ctx=canvas.getContext('2d');ctx.fillStyle=base;ctx.fillRect(0,0,512,512);let n=seed;
+ const rand=()=>{n=(n*1664525+1013904223)>>>0;return n/4294967296;};
+ for(let i=0;i<24000;i++){const v=Math.floor(55+rand()*175),a=.025+rand()*.12;ctx.fillStyle='rgba('+v+','+Math.max(0,v-(kind==='sand'?10:kind==='moss'?24:4))+','+Math.max(0,v-(kind==='rust'?30:kind==='moss'?35:kind==='snow'?-5:8))+','+a+')';const s=kind==='sand'?1+rand()*2.5:.6+rand()*2.1;ctx.fillRect(rand()*512,rand()*512,s,s);}
+ for(let i=0;i<120;i++){const x=rand()*512,y=rand()*512,r=5+rand()*42;const grad=ctx.createRadialGradient(x,y,0,x,y,r);grad.addColorStop(0,'rgba(25,27,25,'+(kind==='moss'?.12:.075)+')');grad.addColorStop(1,'rgba(25,27,25,0)');ctx.fillStyle=grad;ctx.fillRect(x-r,y-r,r*2,r*2);}
+ if(kind==='concrete'||kind==='rust'||kind==='metal'){ctx.strokeStyle=kind==='metal'?'rgba(20,25,26,.28)':'rgba(35,37,34,.19)';ctx.lineWidth=1;for(let y=64;y<512;y+=128){ctx.beginPath();ctx.moveTo(0,y+(rand()-0.5)*7);ctx.lineTo(512,y+(rand()-0.5)*7);ctx.stroke();}for(let x=128;x<512;x+=128){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,512);ctx.stroke();}}
+ if(kind==='concrete'||kind==='rust'){for(let i=0;i<18;i++){let x=rand()*512,y=rand()*512;ctx.strokeStyle='rgba(30,31,29,'+(.12+rand()*.16)+')';ctx.lineWidth=.5+rand()*1.4;ctx.beginPath();ctx.moveTo(x,y);for(let j=0;j<3;j++){x+=(rand()-.5)*18;y+=rand()*16;ctx.lineTo(x,y);}ctx.stroke();}}
+ if(kind==='sand'){for(let i=0;i<170;i++){ctx.strokeStyle='rgba(77,60,42,'+(0.035+rand()*.08)+')';ctx.lineWidth=.5+rand();ctx.beginPath();const x=rand()*512,y=rand()*512;ctx.moveTo(x,y);ctx.lineTo(x+3+rand()*18,y-1+rand()*3);ctx.stroke();}}
+ if(kind==='moss'){for(let i=0;i<90;i++){ctx.fillStyle='rgba(44,65,39,'+(0.04+rand()*.1)+')';ctx.beginPath();ctx.ellipse(rand()*512,rand()*512,3+rand()*15,2+rand()*8,rand()*Math.PI,0,Math.PI*2);ctx.fill();}}
+ const color=new THREE.CanvasTexture(canvas);color.wrapS=color.wrapT=THREE.RepeatWrapping;color.colorSpace=THREE.SRGBColorSpace;color.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
+ const bump=color.clone();bump.colorSpace=THREE.NoColorSpace;bump.needsUpdate=true;
+ return {color,bump,roughness:kind==='metal'?.68:kind==='snow'?.96:kind==='sand'?.98:.93,metalness:kind==='metal'?.24:kind==='rust'?.12:.025};
+}
+const realisticSurfaces=[
+ makeRealisticSurface('#77766f',91,'concrete'),
+ makeRealisticSurface('#9b8768',123,'sand'),
+ makeRealisticSurface('#aab8bd',155,'snow'),
+ makeRealisticSurface('#5f5b57',187,'rust'),
+ makeRealisticSurface('#59644f',219,'moss'),
+ makeRealisticSurface('#596b79',251,'metal')
+];
+let activeSurfaceSet=realisticSurfaces[0];
+const floorMat=new THREE.MeshStandardMaterial({color:0x77766f,map:groundTexture,bumpMap:concreteTexture,bumpScale:.055,roughness:.96,metalness:.015});const floor=new THREE.Mesh(new THREE.PlaneGeometry(160,160),floorMat);floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;scene.add(floor);const grid=new THREE.GridHelper(160,80,0x74786f,0x74786f);grid.position.y=.012;grid.material.transparent=true;grid.material.opacity=.012;scene.add(grid);const mapPads=[],arenaObjects=[];
 // Bright arena pads and coloured landmark structures make the battlefield easier to read.
-for(const [x,z,sx,sz,col] of [[-23,-20,10,7,0x3bbbd0],[23,-20,10,7,0xf4bd54],[-23,20,10,7,0xc77be8],[23,20,10,7,0x52d6a0],[0,0,8,8,0xf07b68]]){const pad=new THREE.Mesh(new THREE.PlaneGeometry(sx,sz),new THREE.MeshStandardMaterial({color:col,roughness:.8,side:THREE.DoubleSide}));pad.rotation.x=-Math.PI/2;pad.position.set(x,.025,z);scene.add(pad);mapPads.push(pad);}
+for(const [x,z,sx,sz,col] of [[-23,-20,10,7,0x3bbbd0],[23,-20,10,7,0xf4bd54],[-23,20,10,7,0xc77be8],[23,20,10,7,0x52d6a0],[0,0,8,8,0xf07b68]]){const pad=new THREE.Mesh(new THREE.PlaneGeometry(sx,sz),new THREE.MeshStandardMaterial({color:col,roughness:.8,side:THREE.DoubleSide}));pad.rotation.x=-Math.PI/2;pad.position.set(x,.025,z);pad.visible=false;scene.add(pad);mapPads.push(pad);}
 
-const mapThemes=[{name:'INDUSTRIAL YARD',sky:0xa8b9c0,floor:0x77776d,grid:0x77776d,pads:[0x77776d,0x77776d,0x77776d,0x77776d,0x77776d]},{name:'DESERT OUTPOST',sky:0xc5b9a6,floor:0xa18c6b,grid:0xa18c6b,pads:[0xa18c6b,0xa18c6b,0xa18c6b,0xa18c6b,0xa18c6b]},{name:'FROST DEPOT',sky:0xb9cbd0,floor:0x9ca9aa,grid:0x9ca9aa,pads:[0x9ca9aa,0x9ca9aa,0x9ca9aa,0x9ca9aa,0x9ca9aa]},{name:'ABANDONED WORKS',sky:0x867c7b,floor:0x5f5955,grid:0x5f5955,pads:[0x5f5955,0x5f5955,0x5f5955,0x5f5955,0x5f5955]},{name:'OVERGROWN RUINS',sky:0xa3b09b,floor:0x52634e,grid:0x52634e,pads:[0x52634e,0x52634e,0x52634e,0x52634e,0x52634e]},{name:'SKYBRIDGE',sky:0x8ea8c5,floor:0x596d80,grid:0x596d80,pads:[0x4c8fbc,0xd6a65f,0x6a86b5,0x65b7a2,0xb5c8dc]}];function applyMap(id){const mapId=Math.max(0,Math.min(5,Number(id)||0)),t=mapThemes[mapId];scene.background.setHex(t.sky);scene.fog.color.setHex(t.sky);floorMat.color.setHex(t.floor);grid.material.color.setHex(t.grid);mapPads.forEach((p,i)=>p.material.color.setHex(t.pads[i]));$('map-name').textContent=t.name+(rainMapIds.has(mapId)?' · RAIN':'');rainGroup.visible=rainMapIds.has(mapId);buildMapGeometry(mapId);}
-function box(x,y,z,sx,sy,sz,color,solid=true){const m=new THREE.Mesh(new THREE.BoxGeometry(sx*2,sy,sz*2),new THREE.MeshStandardMaterial({color,map:concreteTexture,roughness:.94,metalness:.02}));m.position.set(x*2,y,z*2);m.castShadow=true;m.receiveShadow=true;scene.add(m);arenaObjects.push(m);if(solid){colliders.push(new THREE.Box3().setFromObject(m));solidMeshes.push(m);}return m;}
-function accentBox(x,y,z,sx,sy,sz,color,intensity=.65){const mat=new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity:intensity,roughness:.38,metalness:.12});const m=new THREE.Mesh(new THREE.BoxGeometry(sx*2,sy,sz*2),mat);m.position.set(x*2,y,z*2);m.castShadow=false;m.receiveShadow=false;scene.add(m);arenaObjects.push(m);return m;}
+const mapThemes=[{name:'INDUSTRIAL YARD',sky:0x9aaeb8,floor:0x77766f,grid:0x77766f,pads:[0x77766f,0x77766f,0x77766f,0x77766f,0x77766f]},{name:'DESERT OUTPOST',sky:0xc1ad8d,floor:0x9b8768,grid:0x9b8768,pads:[0x9b8768,0x9b8768,0x9b8768,0x9b8768,0x9b8768]},{name:'FROST DEPOT',sky:0xaebfc8,floor:0xaab8bd,grid:0xaab8bd,pads:[0xaab8bd,0xaab8bd,0xaab8bd,0xaab8bd,0xaab8bd]},{name:'ABANDONED WORKS',sky:0x8b8883,floor:0x5f5b57,grid:0x5f5b57,pads:[0x5f5b57,0x5f5b57,0x5f5b57,0x5f5b57,0x5f5b57]},{name:'OVERGROWN RUINS',sky:0x9cae96,floor:0x59644f,grid:0x59644f,pads:[0x59644f,0x59644f,0x59644f,0x59644f,0x59644f]},{name:'SKYBRIDGE',sky:0x8fa6bd,floor:0x596b79,grid:0x596b79,pads:[0x596b79,0x596b79,0x596b79,0x596b79,0x596b79]}];function applyMap(id){const mapId=Math.max(0,Math.min(5,Number(id)||0)),t=mapThemes[mapId];activeSurfaceSet=realisticSurfaces[mapId];scene.background.setHex(t.sky);scene.fog.color.setHex(t.sky);floorMat.color.setHex(t.floor);grid.material.color.setHex(t.grid);if(floorMat.map&&floorMat.map!==groundTexture)floorMat.map.dispose();if(floorMat.bumpMap&&floorMat.bumpMap!==concreteTexture)floorMat.bumpMap.dispose();floorMat.map=activeSurfaceSet.color.clone();floorMat.map.repeat.set(12,12);floorMat.bumpMap=activeSurfaceSet.bump.clone();floorMat.bumpMap.repeat.set(12,12);floorMat.bumpScale=.065;floorMat.needsUpdate=true;mapPads.forEach((p,i)=>p.material.color.setHex(t.pads[i]));$('map-name').textContent=t.name+(rainMapIds.has(mapId)?' · RAIN':'');rainGroup.visible=rainMapIds.has(mapId);buildMapGeometry(mapId);}
+function box(x,y,z,sx,sy,sz,color,solid=true){const m=new THREE.Mesh(new THREE.BoxGeometry(sx*2,sy,sz*2),new THREE.MeshStandardMaterial({color,map:activeSurfaceSet.color,bumpMap:activeSurfaceSet.bump,bumpScale:.085,roughness:activeSurfaceSet.roughness,metalness:activeSurfaceSet.metalness}));m.position.set(x*2,y,z*2);m.castShadow=true;m.receiveShadow=true;scene.add(m);arenaObjects.push(m);if(solid){colliders.push(new THREE.Box3().setFromObject(m));solidMeshes.push(m);}return m;}
+function accentBox(x,y,z,sx,sy,sz,color,intensity=.65){const mat=new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity:Math.min(.10,intensity*.12),roughness:.76,metalness:.06});const m=new THREE.Mesh(new THREE.BoxGeometry(sx*2,sy,sz*2),mat);m.position.set(x*2,y,z*2);m.castShadow=false;m.receiveShadow=false;scene.add(m);arenaObjects.push(m);return m;}
 function buildMapGeometry(id){
  for(const o of arenaObjects)scene.remove(o);arenaObjects.length=0;colliders.length=0;solidMeshes.length=0;
  // Arena perimeter and varied cover. Each map has its own silhouette and palette.
@@ -50,22 +72,27 @@ function buildMapGeometry(id){
  const tallMat=[0x59635f,0x9b7954,0x718a96,0x654d55,0x3d6747,0x48677f][id];
  for(const [x,z,w,h,d] of [[-14,-5,1.5,8,13],[14,5,1.5,8,13],[-3,-19,12,6.5,1.5],[3,19,12,6.5,1.5],[-31,0,1.5,7,12],[31,0,1.5,7,12]]){const wall=box(x,h/2,z,w,h,d,tallMat);wall.material.roughness=.94;wall.material.metalness=.04;for(let y=1.2;y<h;y+=1.8){const seam=box(x,y,z,w+.025,.055,d+.025,0x353f3d,false);seam.material.roughness=1;}}
  for(const [x,z] of [[-22,-12],[22,12],[-22,12],[22,-12]]){box(x,2.8,z,3,5.6,3,tallMat);box(x,5.7,z,3.3,.2,3.3,0x4b5550,false);}
- // Raised-looking central plinth and subdued perimeter markers.
- box(0,.32,0,8,.64,8,accent[4],false);
- for(const [x,z,sx,sz] of [[0,-4.1,8.5,.16],[0,4.1,8.5,.16],[-4.1,0,.16,8.5],[4.1,0,.16,8.5]])box(x,.12,z,sx,.24,sz,accent[0],false);
- // Clean, luminous landmark trim adds a readable focal point without copying another game's map art.
- const glow=accent[(id+2)%accent.length];
- accentBox(0,.68,-3.92,6.8,.08,.12,glow,.9);accentBox(0,.68,3.92,6.8,.08,.12,glow,.9);accentBox(-3.92,.68,0,.12,.08,6.8,glow,.9);accentBox(3.92,.68,0,.12,.08,6.8,glow,.9);
- // Four slim beacon caps make the corners easier to read at a glance.
- for(const [x,z] of [[-34,-20],[34,-20],[-34,20],[34,20]]){accentBox(x,3.48,z,1.55,.12,1.55,accent[(id+1)%accent.length],.8);accentBox(x,3.58,z,.72,.08,.72,0xf4f7f1,.25);}
- for(let i=0;i<4;i++){const x=i%2?34:-34,z=i<2?-20:20;box(x,1.4,z,2.8,2.8,2.8,accent[i],false);box(x,2.92,z,3.1,.18,3.1,0xf5f7df,false);box(x,3.3,z,1.4,.55,1.4,accent[(i+2)%accent.length],false);}
+ // Functional concrete service pad with worn painted lane marks instead of a glowing neon plinth.
+ box(0,.16,0,8,.32,8,0x686a65,false);
+ const markingMat=new THREE.MeshStandardMaterial({color:0xc0b99e,roughness:.94,metalness:0});
+ for(const [x,z,sx,sz] of [[0,-3.25,5.8,.045],[0,3.25,5.8,.045],[-3.25,0,.045,5.8],[3.25,0,.045,5.8]]){
+  const mark=new THREE.Mesh(new THREE.PlaneGeometry(sx*2,sz*2),markingMat);mark.rotation.x=-Math.PI/2;mark.position.set(x*2,.337,z*2);mark.receiveShadow=true;scene.add(mark);arenaObjects.push(mark);
+ }
+ // Low-profile steel corner posts and fasteners make the central cover read as built infrastructure.
+ for(const [x,z] of [[-7,-7],[7,-7],[-7,7],[7,7]]){
+  const post=new THREE.Mesh(new THREE.CylinderGeometry(.055,.07,.42,8),new THREE.MeshStandardMaterial({color:0x454b49,metalness:.48,roughness:.58}));post.position.set(x*2,.21,z*2);post.castShadow=true;scene.add(post);arenaObjects.push(post);
+ }
+ // Subtle painted hazard marks are kept non-emissive and limited to service edges.
+ for(const [x,z] of [[-34,-20],[34,-20],[-34,20],[34,20]]){
+  box(x,3.05,z,1.1,.05,1.1,0x817b6d,false);
+ }
  // Layered cover lanes: tall concrete blocks, waist-high barricades and supply crates.
  // These are solid for movement and block shots, creating genuine peek-and-hide routes.
- const coverPalette=[0x68716f,0x8b7962,0x53665f,0x74665b,0x9a8c73,0x647f9c];
+ const coverPalette=[0x666a65,0x777065,0x505a55,0x6b6259,0x898173,0x626e78];
  const cover=[[-9,-22,3.8,2.2,1.25],[9,-22,3.8,2.2,1.25],[-9,22,3.8,2.2,1.25],[9,22,3.8,2.2,1.25],[-29,-8,1.4,2.4,4.2],[29,8,1.4,2.4,4.2],[-6,-7,2.4,1.8,1.4],[6,7,2.4,1.8,1.4],[-6,7,2.4,1.8,1.4],[6,-7,2.4,1.8,1.4],[-18,0,3.2,1.4,1.2],[18,0,3.2,1.4,1.2],[-34,10,2.4,1.8,1.6],[34,-10,2.4,1.8,1.6]];
  cover.forEach(([x,z,sx,sy,sz],i)=>box(x,sy/2,z,sx,sy,sz,coverPalette[(i+id)%coverPalette.length]));
  // Smaller offset crates make the approach routes less symmetrical.
- for(let i=0;i<8;i++){const x=-30+i*8,z=(i%2===0?-14:14)+(id%2?3:-3),h=1.1+(i%3)*.35;box(x,h/2,z,1.4,h,1.35,accent[(i+2)%accent.length]);}
+ for(let i=0;i<8;i++){const x=-30+i*8,z=(i%2===0?-14:14)+(id%2?3:-3),h=1.1+(i%3)*.35;box(x,h/2,z,1.4,h,1.35,[0x6c6c63,0x79766a,0x5d625c,0x777064][i%4]);}
  // Four wrecked cars (five on alternating maps) create solid, waist-high cover in the outer lanes.
  const wrecks=[[-29,-27],[29,-25],[-31,19],[30,22]];if(id%2===0)wrecks.push([0,-30]);
  wrecks.forEach(([x,z],i)=>{
@@ -78,8 +105,25 @@ function buildMapGeometry(id){
   const wheelMat=new THREE.MeshStandardMaterial({color:0x171b1c,roughness:.98});
   for(const wx of [-1.15,1.15])for(const wz of [-.83,.83]){const wheel=new THREE.Mesh(new THREE.CylinderGeometry(.39,.39,.24,10),wheelMat);wheel.rotation.z=Math.PI/2;wheel.position.set(x*2+wx*2,.38,z*2+wz*2);wheel.rotation.x=(i%2?-.06:.04);wheel.castShadow=true;scene.add(wheel);arenaObjects.push(wheel);}
   const door=box(x+(i%2?.45:-.5),.88,z+(i%2?.9:-.9),1.05,.72,.08,0x4a4037,false);door.rotation.z=i%2?.14:-.12;
-  const lamp=box(x-1.65,.86,z-.45,.12,.12,.18,0xffa15a,false);lamp.material.emissive.setHex(0x6a2610);lamp.material.emissiveIntensity=.25;
+  const lamp=box(x-1.65,.86,z-.45,.12,.12,.18,0x75654f,false);lamp.material.emissive.setHex(0x241b11);lamp.material.emissiveIntensity=.035;
  });
+ // Drain grates and expansion joints break up large empty floor planes.
+ for(const [x,z] of [[-18,-5],[18,5],[-30,0],[30,0],[0,-28],[0,28]]){
+  const grate=new THREE.Mesh(new THREE.BoxGeometry(2.8,.035,.62),new THREE.MeshStandardMaterial({color:0x353b3a,metalness:.42,roughness:.82}));
+  grate.position.set(x*2,.025,z*2);grate.receiveShadow=true;scene.add(grate);arenaObjects.push(grate);
+  for(let j=-5;j<=5;j++){const bar=new THREE.Mesh(new THREE.BoxGeometry(.035,.04,.55),new THREE.MeshStandardMaterial({color:0x737873,metalness:.55,roughness:.65}));bar.position.set(x*2+j*.23,.048,z*2);scene.add(bar);arenaObjects.push(bar);}
+ }
+ // Repeated concrete control joints, with subtle chipped paint at lane edges.
+ for(const z of [-32,-16,16,32])for(const x of [-24,-8,8,24]){
+  const seam=new THREE.Mesh(new THREE.PlaneGeometry(.035,18),new THREE.MeshStandardMaterial({color:0x343a37,roughness:1,transparent:true,opacity:.42,side:THREE.DoubleSide}));
+  seam.rotation.x=-Math.PI/2;seam.position.set(x*2,.012,z*2);scene.add(seam);arenaObjects.push(seam);
+ }
+ // Short utility conduits follow the inside of the perimeter wall.
+ for(const z of [-34,34]){
+  const pipe=new THREE.Mesh(new THREE.CylinderGeometry(.075,.075,144,8),new THREE.MeshStandardMaterial({color:0x555c5a,metalness:.55,roughness:.62}));
+  pipe.rotation.x=Math.PI/2;pipe.position.set(0,1.05,z*2);pipe.castShadow=true;scene.add(pipe);arenaObjects.push(pipe);
+  for(let x=-34;x<=34;x+=8){const clamp=new THREE.Mesh(new THREE.BoxGeometry(.12,.28,.2),new THREE.MeshStandardMaterial({color:0x393f3e,metalness:.62,roughness:.5}));clamp.position.set(x*2,1.05,z*2);scene.add(clamp);arenaObjects.push(clamp);}
+ }
 }
 
 const weapon=new THREE.Group();camera.add(weapon);weapon.position.set(.34,-.3,-.58);
@@ -528,31 +572,21 @@ const v2Motes=[],v2Lights=[];
 function buildV2Atmosphere(){
  while(v2Decor.children.length){const o=v2Decor.children.pop();if(o.geometry)o.geometry.dispose();if(o.material){if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}}
  v2Motes.length=0;v2Lights.length=0;
- const colors=[0x80e9bd,0x76d8ff,0xffd18a,0xc77be8];
- for(let i=0;i<42;i++){
-  const x=(Math.random()-.5)*144,z=(Math.random()-.5)*124,y=.5+Math.random()*7;
-  const geo=new THREE.SphereGeometry(.035+Math.random()*.035,6,6);
-  const mat=new THREE.MeshBasicMaterial({color:colors[i%colors.length],transparent:true,opacity:.25+Math.random()*.35});
-  const mote=new THREE.Mesh(geo,mat);mote.position.set(x,y,z);mote.userData={baseY:y,phase:Math.random()*Math.PI*2,speed:.25+Math.random()*.5};v2Decor.add(mote);v2Motes.push(mote);
- }
- // Four illuminated pylons give each arena a strong, readable skyline.
- for(const [x,z,col] of [[-35,-29,0x80e9bd],[35,-29,0x76d8ff],[-35,29,0xc77be8],[35,29,0xffd18a]]){
-  const base=new THREE.Mesh(new THREE.CylinderGeometry(.55,.8,5.5,8),new THREE.MeshStandardMaterial({color:0x24363a,metalness:.6,roughness:.38}));
-  base.position.set(x*2,2.75,z*2);base.castShadow=true;v2Decor.add(base);
-  const ring=new THREE.Mesh(new THREE.TorusGeometry(.72,.09,8,24),new THREE.MeshBasicMaterial({color:col}));
-  ring.rotation.x=Math.PI/2;ring.position.set(x*2,4.9,z*2);v2Decor.add(ring);
-  const lamp=new THREE.PointLight(col,1.6,13,2);lamp.position.set(x*2,4.8,z*2);v2Decor.add(lamp);v2Lights.push({lamp,ring,phase:Math.random()*6});
- }
- // Low luminous guide rails around the centre, kept non-solid so existing collision stays unchanged.
- for(const [x,z,sx,sz,col] of [[0,-31,30,.1,0x76d8ff],[0,31,30,.1,0x80e9bd],[-38,0,.1,24,0xc77be8],[38,0,.1,24,0xffd18a]]){
-  const rail=new THREE.Mesh(new THREE.BoxGeometry(sx*2,.045,sz*2),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.72}));
-  rail.position.set(x*2,.08,z*2);v2Decor.add(rail);
+ // Practical perimeter floodlights replace floating particles and glowing sci-fi rails.
+ for(const [x,z] of [[-36,-30],[36,-30],[-36,30],[36,30]]){
+  const pole=new THREE.Mesh(new THREE.CylinderGeometry(.075,.11,6.4,8),new THREE.MeshStandardMaterial({color:0x3d4546,metalness:.62,roughness:.48}));
+  pole.position.set(x*2,3.2,z*2);pole.castShadow=true;v2Decor.add(pole);
+  const arm=new THREE.Mesh(new THREE.BoxGeometry(1.05,.09,.09),new THREE.MeshStandardMaterial({color:0x4a5050,metalness:.58,roughness:.5}));
+  arm.position.set(x*2+(x<0?.42:-.42),6.15,z*2);v2Decor.add(arm);
+  const fixture=new THREE.Mesh(new THREE.BoxGeometry(.38,.12,.24),new THREE.MeshStandardMaterial({color:0x686d68,metalness:.42,roughness:.42}));
+  fixture.position.set(x*2+(x<0?.82:-.82),6.05,z*2);fixture.castShadow=true;v2Decor.add(fixture);
+  const lens=new THREE.Mesh(new THREE.PlaneGeometry(.24,.1),new THREE.MeshStandardMaterial({color:0xe4d5ac,emissive:0xbca77c,emissiveIntensity:.18,roughness:.55,side:THREE.DoubleSide}));
+  lens.position.set(fixture.position.x,5.98,z*2);lens.rotation.x=-Math.PI/5;v2Decor.add(lens);
+  const lamp=new THREE.PointLight(0xffdfb0,.42,24,2);lamp.position.set(fixture.position.x,5.9,z*2);v2Decor.add(lamp);
  }
 }
 function animateV2(dt,now){
  animateRain(dt);
- for(const m of v2Motes){m.position.y=m.userData.baseY+Math.sin(now*.001*m.userData.speed+m.userData.phase)*.32;m.rotation.y+=dt*.18;}
- for(const l of v2Lights){const pulse=.75+Math.sin(now*.0014+l.phase)*.25;l.lamp.intensity=1.15+pulse*.8;l.ring.rotation.z+=dt*.25;}
  if(v2Audio&&v2Audio.ctx&&v2Audio.ctx.state==='running'&&v2Audio.enabled&&now-v2Audio.lastAmbient>9000){v2Audio.lastAmbient=now;v2Tone(110,.055,.012,'sine');}
 }
 let v2Audio={ctx:null,enabled:false,lastAmbient:0};
