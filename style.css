@@ -671,3 +671,53 @@ html{background:#081218}
  #start-screen #play-online{width:43vw;font-size:18px}
  #start-screen .lobby-console:after{font-size:6px}
 }
+
+
+/* Match-select and season tiles complete the reference's left rail. */
+#start-screen .lobby-showcase:before{
+ content:"";position:fixed;z-index:5;left:2.15%;top:12.8%;width:min(25.8vw,430px);height:19.3vh;min-height:145px;
+ border:1px solid #c2c8c333;border-radius:3px;pointer-events:none;
+ background:
+  linear-gradient(0deg,#080b0bf2 0%,#080b0b8a 32%,transparent 72%),
+  linear-gradient(90deg,#11191b22,#171c1d11),
+  repeating-linear-gradient(0deg,transparent 0 28px,#d5d6ca08 29px 30px),
+  linear-gradient(155deg,#73818a 0%,#505e65 26%,#2e3a3d 46%,#64665c 47%,#292f2e 71%,#121718 100%);
+ box-shadow:inset 0 0 35px #0007,0 8px 20px #0005;
+}
+#start-screen .lobby-showcase:after{
+ content:"TEAM DEATHMATCH\\A Eliminate the enemy team";white-space:pre-wrap;
+ position:fixed;z-index:6;left:3.4%;top:26.4%;width:min(23vw,390px);
+ color:#f0f0e9;font-size:clamp(11px,1.2vw,17px);font-weight:850;line-height:1.7;
+ text-shadow:0 2px 7px #000;pointer-events:none;
+}
+#start-screen .showcase-copy{
+ display:block!important;position:fixed;left:2.15%;top:56%;width:min(25.8vw,430px);height:14.7vh;min-height:100px;
+ margin:0;padding:clamp(12px,1.5vw,22px);z-index:6;border:1px solid #c2c8c32b;
+ background:linear-gradient(90deg,#0b0e0dd9,#0b0e0d65),linear-gradient(145deg,#45483e,#171b19);
+ color:#d2b25b!important;font-weight:850;font-size:clamp(11px,1.2vw,17px);line-height:1.5;
+}
+#start-screen .showcase-copy:before{content:"NEW SEASON";display:block;color:#d2a83f;font-weight:900}
+#start-screen .showcase-copy{font-size:0}
+#start-screen .showcase-copy:after{content:"More maps. More action.";display:block;color:#aeb4b1;font-size:clamp(9px,.95vw,13px);font-weight:400}
+#start-screen .queue-cards{top:33.3%;width:min(25.8vw,430px)}
+#start-screen .queue-card{min-height:6.1vh}
+#start-screen .queue-card-text small{display:none}
+#start-screen .queue-card:first-child .queue-card-text b{font-size:0}
+#start-screen .queue-card:first-child .queue-card-text b:after{content:"QUICK PLAY";font-size:clamp(10px,1.05vw,15px)}
+#start-screen .queue-card:nth-child(2) .queue-card-text b{font-size:0}
+#start-screen .queue-card:nth-child(2) .queue-card-text b:after{content:"CUSTOM GAME";font-size:clamp(10px,1.05vw,15px)}
+#start-screen .queue-card:nth-child(2) .queue-icon{font-size:0}
+#start-screen .queue-card:nth-child(2) .queue-icon:after{content:"♟";font-size:20px}
+#start-screen #play-offline{top:45.7%;left:2.15%;width:min(25.8vw,430px);height:6.1vh;min-height:42px;font-size:0}
+#start-screen #play-offline:before{content:"▣   PRIVATE MATCH";font-size:clamp(10px,1.05vw,15px);font-weight:800}
+#start-screen #play-offline:after{display:none}
+#start-screen .lobby-console:after{top:12%;min-height:300px}
+@media(max-width:760px){
+ #start-screen .lobby-showcase:before{top:12%;left:12px;width:45vw;height:14vh;min-height:90px}
+ #start-screen .lobby-showcase:after{left:20px;top:20%;font-size:10px}
+ #start-screen .showcase-copy{top:51%;left:12px;width:45vw;height:10vh;min-height:68px;padding:8px}
+ #start-screen .showcase-copy:after{font-size:8px}
+ #start-screen .queue-cards{top:auto;bottom:124px;left:12px;width:45vw}
+ #start-screen .queue-card{min-height:38px}
+ #start-screen #play-offline{top:auto;bottom:78px;left:12px;width:45vw;height:38px}
+}
