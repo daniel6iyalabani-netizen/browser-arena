@@ -70,11 +70,11 @@ function buildMapGeometry(id){
  const wrecks=[[-29,-27],[29,-25],[-31,19],[30,22]];if(id%2===0)wrecks.push([0,-30]);
  wrecks.forEach(([x,z],i)=>{
   const rust=[0x59463b,0x5c5148,0x465252,0x625047,0x4e4c46][(i+id)%5];
-  const shell=box(x,.72,z,3.7,1.18,1.72,rust,true);shell.material.roughness=.98;shell.material.metalness=.18;
+  const shell=box(x,.88,z,3.7,1.76,1.72,rust,true);shell.material.roughness=.98;shell.material.metalness=.18;
   // Missing roof panels, broken glass and bent bodywork make each wreck read as abandoned.
-  const hood=box(x-1.08,1.28,z,1.2,.22,1.62,0x3b4545,false);hood.rotation.z=(i%2?-.08:.06);
-  const trunk=box(x+1.18,1.17,z,1.05,.2,1.6,0x353f40,false);trunk.rotation.z=(i%2?.07:-.05);
-  const glass=box(x-.08,1.42,z,1.12,.12,1.35,0x263d43,false);glass.material.transparent=true;glass.material.opacity=.7;
+  const hood=box(x-1.08,1.84,z,1.2,.18,1.62,0x3b4545,false);hood.rotation.z=(i%2?-.08:.06);
+  const trunk=box(x+1.18,1.8,z,1.05,.18,1.6,0x353f40,false);trunk.rotation.z=(i%2?.07:-.05);
+  const glass=box(x-.08,2.0,z,1.12,.12,1.35,0x263d43,false);glass.material.transparent=true;glass.material.opacity=.7;
   const wheelMat=new THREE.MeshStandardMaterial({color:0x171b1c,roughness:.98});
   for(const wx of [-1.15,1.15])for(const wz of [-.83,.83]){const wheel=new THREE.Mesh(new THREE.CylinderGeometry(.39,.39,.24,10),wheelMat);wheel.rotation.z=Math.PI/2;wheel.position.set(x*2+wx*2,.38,z*2+wz*2);wheel.rotation.x=(i%2?-.06:.04);wheel.castShadow=true;scene.add(wheel);arenaObjects.push(wheel);}
   const door=box(x+(i%2?.45:-.5),.88,z+(i%2?.9:-.9),1.05,.72,.08,0x4a4037,false);door.rotation.z=i%2?.14:-.12;
@@ -139,7 +139,7 @@ function makeBot(x,z,index){
   const bot={group,torso,head,leftArm,rightArm,leftLeg,rightLeg,targetRing,botMuzzle,botGun,muzzleUntil:0,hp:isBoss?450:100,maxHp:isBoss?450:100,shield:isBoss?220:100,maxShield:isBoss?220:100,isBoss,alive:true,respawn:0,phase:Math.random()*7,fireAt:performance.now()+1000+Math.random()*2200,index,anchorX:x,anchorZ:z,strafe:Math.random()<.5?-1:1,laneAngle,preferredRange:(isBoss?8:10+Math.random()*9)*2,shotSeed:Math.random()};
  group.userData.bot=bot;targets.push(bot);return bot;
 }
-for(let i=0;i<9;i++)makeBot((Math.random()-.5)*74,-5-Math.random()*48,i);
+for(let i=0;i<9;i++)makeBot((Math.random()-.5)*74,(Math.random()-.5)*62,i);
 
 const PROGRESSION_KEY='browserArenaCareerV1';
 const rankNames=['ROOKIE','RECRUIT','CONTENDER','SPECIALIST','VANGUARD','ELITE','CHAMPION','LEGEND'];
