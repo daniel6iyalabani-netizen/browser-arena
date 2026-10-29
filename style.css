@@ -225,3 +225,13 @@ html{background:#081218}
 @media(prefers-reduced-motion:reduce){#crosshair{transition:none}}
 
 @media(prefers-reduced-motion:reduce){#weapon-selector>div{transition:none}}
+
+/* Aim-down-sights polish: responsive focus, compact reticle and a subtle hit-confirmation pop. */
+#crosshair{will-change:width,height,opacity}
+#hud.aiming #crosshair{width:8px!important;height:8px!important;opacity:.38}
+#hud.aiming #crosshair i{background:#f7fff9;box-shadow:0 0 5px #111}
+#hud.aiming #crosshair i:nth-child(1),#hud.aiming #crosshair i:nth-child(2){height:3px}
+#hud.aiming #crosshair i:nth-child(3),#hud.aiming #crosshair i:nth-child(4){width:3px}
+#hitmarker.hit-pop{animation:hit-confirm-pop .17s cubic-bezier(.2,.8,.2,1)}
+@keyframes hit-confirm-pop{0%{opacity:.3;scale:.65}55%{opacity:1;scale:1.18}100%{opacity:1;scale:1}}
+@media(prefers-reduced-motion:reduce){#hitmarker.hit-pop{animation:none}}
