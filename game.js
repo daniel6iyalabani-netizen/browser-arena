@@ -666,7 +666,7 @@ function setLobbyTab(target){
  if(lobbyMain)lobbyMain.classList.toggle('hidden',target==='armory');
  if(target==='armory'){
   const source=$('shop-items');
-  if(source&&lobbyFeatureContent){lobbyFeatureContent.innerHTML=source.innerHTML;lobbyFeatureContent.querySelectorAll('[data-buy]').forEach(button=>button.addEventListener('click',()=>buyWeapon(Number(button.dataset.buy))));}
+  if(source&&lobbyFeatureContent){lobbyFeatureContent.innerHTML='<div id="shop-items">'+source.innerHTML+'</div><small>Purchases update your shared inventory and available cash.</small>';}
   updateShop();
   $('start-screen')?.scrollTo({top:0,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
  }else if(target==='loadout'||target==='operators'){
