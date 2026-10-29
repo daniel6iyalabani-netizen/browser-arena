@@ -390,3 +390,5 @@ html{background:#081218}
  .showcase-foot{grid-template-columns:1fr 1fr}
 }
 @media(prefers-reduced-motion:reduce){.lobby-nav-item{transition:none}}
+
+@media(max-width:760px){.lobby-top-meta{order:2}.lobby-nav{order:3}}
