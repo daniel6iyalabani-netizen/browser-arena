@@ -739,7 +739,8 @@ function initOperatorPreview(){
  box(body,0,1.53,.337,.33,.32,.035,mat(0x515b4d,.82));
  box(body,0,1.82,.21,.35,.13,.12,olive);
  cyl(body,0,1.94,0,.105,.105,.16,tan);
- const skinMat=mat(0x9b765e,.9);const head=new THREE.Mesh(new THREE.SphereGeometry(.19,14,12),skinMat);head.position.set(0,2.16,0);head.scale.set(.86,1.08,.88);head.castShadow=true;body.add(head);\n const hairMat=mat(0x30241e,.95);const hair=new THREE.Mesh(new THREE.SphereGeometry(.17,12,8),hairMat);hair.position.set(0,2.12,-.035);hair.scale.set(.92,.78,.92);hair.castShadow=true;body.add(hair);
+ const skinMat=mat(0x9b765e,.9);const head=new THREE.Mesh(new THREE.SphereGeometry(.19,14,12),skinMat);head.position.set(0,2.16,0);head.scale.set(.86,1.08,.88);head.castShadow=true;body.add(head);
+ const hairMat=mat(0x30241e,.95);const hair=new THREE.Mesh(new THREE.SphereGeometry(.17,12,8),hairMat);hair.position.set(0,2.12,-.035);hair.scale.set(.92,.78,.92);hair.castShadow=true;body.add(hair);
  // helmet, rim, rails, goggles
  const helmet=new THREE.Mesh(new THREE.SphereGeometry(.225,16,10,0,Math.PI*2,0,Math.PI*.62),olive);helmet.position.set(0,2.28,-.015);helmet.scale.set(1.05,.82,1.03);helmet.castShadow=true;body.add(helmet);
  box(body,0,2.21,.185,.35,.045,.08,darkMetal);
