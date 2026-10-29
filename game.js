@@ -698,7 +698,7 @@ let operatorPreview=null;
 function initOperatorPreview(){
  const canvas=$('operator-preview-canvas');if(!canvas||operatorPreview)return;
  const pScene=new THREE.Scene();pScene.background=new THREE.Color(0x242b2b);pScene.fog=new THREE.Fog(0x242b2b,10,29);
- const pCamera=new THREE.PerspectiveCamera(28,1,.1,80);pCamera.position.set(1.55,2.55,4.05);pCamera.lookAt(1.18,1.48,0);
+ const pCamera=new THREE.PerspectiveCamera(30,1,.1,80);pCamera.position.set(1.5,2.72,6.7);pCamera.lookAt(1.2,1.38,0);
  let pRenderer;
  try{pRenderer=new THREE.WebGLRenderer({canvas,antialias:innerWidth>700,alpha:false,powerPreference:'low-power'});}catch(e){canvas.parentElement.classList.add('preview-fallback');return;}
  pRenderer.setPixelRatio(Math.min(devicePixelRatio||1,1.35));pRenderer.shadowMap.enabled=true;pRenderer.shadowMap.type=THREE.PCFSoftShadowMap;pRenderer.outputColorSpace=THREE.SRGBColorSpace;pRenderer.toneMapping=THREE.ACESFilmicToneMapping;pRenderer.toneMappingExposure=1.08;
@@ -729,7 +729,7 @@ function initOperatorPreview(){
  box(pScene,-4.6,.65,-1.7,1.25,1.25,1.15,mat(0x5b5e55,.96),-.12);box(pScene,-4.4,1.38,-1.8,1.45,.16,1.3,darkMetal,-.12);
  box(pScene,4.6,.45,-.2,1.2,.9,1.2,mat(0x5c6258,.94),.08);box(pScene,4.6,.94,-.2,1.3,.1,1.25,darkMetal,.08);
  // Operator rig: original field specialist silhouette, layered gear and a low-ready prop rifle.
- const op=new THREE.Group();op.position.set(1.35,0,.05);op.scale.setScalar(1.28);pScene.add(op);
+ const op=new THREE.Group();op.position.set(1.35,0,.05);op.scale.setScalar(1.45);pScene.add(op);
  const body=new THREE.Group();op.add(body);
  // boots and articulated legs
  box(body,-.19,.12,.015,.31,.22,.47,rubber,-.04);box(body,.19,.12,.015,.31,.22,.47,rubber,-.04);
@@ -744,6 +744,12 @@ function initOperatorPreview(){
  cyl(body,0,1.94,0,.105,.105,.16,tan);
  const skinMat=mat(0x9b765e,.9);const head=new THREE.Mesh(new THREE.SphereGeometry(.19,14,12),skinMat);head.position.set(0,2.16,0);head.scale.set(.86,1.08,.88);head.castShadow=true;body.add(head);
  const hairMat=mat(0x30241e,.95);const hair=new THREE.Mesh(new THREE.SphereGeometry(.17,12,8),hairMat);hair.position.set(0,2.12,-.035);hair.scale.set(.92,.78,.92);hair.castShadow=true;body.add(hair);
+ // Full-face tactical balaclava and dark wraparound goggles give the operator the masked silhouette of the lobby reference.
+ const balaclava=mat(0x171b1a,.98),lens=mat(0x0b1113,.2,.6),lensGlint=mat(0x687b7c,.28,.5);
+ const faceCover=new THREE.Mesh(new THREE.SphereGeometry(.17,14,10),balaclava);faceCover.position.set(0,2.105,.105);faceCover.scale.set(.9,.8,.72);faceCover.castShadow=true;body.add(faceCover);
+ box(body,0,2.205,.166,.285,.075,.075,darkMetal);box(body,0,2.205,.209,.245,.046,.028,lens);
+ box(body,-.073,2.21,.229,.095,.025,.008,lensGlint);box(body,.073,2.21,.229,.095,.025,.008,lensGlint);
+ box(body,0,2.055,.198,.205,.115,.052,balaclava);box(body,0,2.025,.219,.12,.018,.012,darkMetal);
  // helmet, rim, rails, goggles
  const helmet=new THREE.Mesh(new THREE.SphereGeometry(.225,16,10,0,Math.PI*2,0,Math.PI*.62),olive);helmet.position.set(0,2.28,-.015);helmet.scale.set(1.05,.82,1.03);helmet.castShadow=true;body.add(helmet);
  box(body,0,2.21,.185,.35,.045,.08,darkMetal);

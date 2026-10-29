@@ -413,3 +413,127 @@ html{background:#081218}
 @media(max-width:1000px){.operator-stage{height:clamp(340px,52vw,470px)}}
 @media(max-width:760px){.operator-stage{height:clamp(330px,92vw,430px)}#lobby-feature-content #shop-items{grid-template-columns:1fr}.lobby-feature-panel .feature-panel-head{flex-direction:column}#feature-back-play{width:100%}}
 @media(max-width:420px){.operator-stage{height:340px}#lobby-feature-content .shop-item{padding:12px}#lobby-feature-content .shop-item button{min-width:88px;padding:9px}}
+
+
+/* Cinematic operator lobby: the character is the hero, not a small preview card. */
+#start-screen.lobby-screen{position:fixed;inset:0;overflow:auto;background:#111514;color:#eee9dd;isolation:isolate}
+#start-screen.lobby-screen:before{inset:68px 0 0;background:linear-gradient(90deg,#090c0de8 0%,#090c0d8a 24%,#090c0d12 48%,#090c0d35 72%,#090c0de8 100%),linear-gradient(0deg,#090c0df0 0%,transparent 32%,#090c0d1c 100%);z-index:1}
+#start-screen.lobby-screen:after{display:none}
+#start-screen .lobby-shell{width:100%;min-height:100%;padding:0 28px 12px;gap:0;position:relative}
+#start-screen .lobby-topbar{position:relative;z-index:8;min-height:68px;padding:0;border-bottom:1px solid #ffffff2a;gap:24px;background:#080a0be8;backdrop-filter:blur(12px)}
+#start-screen .lobby-mark{font-size:16px;letter-spacing:.12em;white-space:nowrap}
+#start-screen .mark-glyph{display:none}
+#start-screen .lobby-mark small{display:none}
+#start-screen .lobby-nav{justify-content:flex-start;gap:12px}
+#start-screen .lobby-nav-item{font-size:11px;color:#a5aaa8;padding:24px 14px}
+#start-screen .lobby-nav-item.active{color:#f5f0e6;background:#c4a35b15;border-color:transparent}
+#start-screen .lobby-nav-item.active:after{left:12px;right:12px;bottom:0;background:#d7b65e;height:3px;box-shadow:0 0 18px #d7b65e88}
+#start-screen .lobby-top-meta{margin-left:auto;white-space:nowrap}
+#start-screen .lobby-main-grid{display:block;position:static;flex:1;min-height:calc(100vh - 80px)}
+#start-screen .lobby-showcase{position:static;padding:0;min-width:0}
+#start-screen .showcase-kicker,#start-screen .showcase-title,#start-screen .showcase-copy,#start-screen .showcase-foot{display:none!important}
+#start-screen .operator-stage{position:fixed;z-index:0;inset:68px 0 0;height:auto!important;border:0;box-shadow:none;background:#242b2b;overflow:hidden;pointer-events:none}
+#start-screen #operator-preview-canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+#start-screen .operator-stage:after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(90deg,#080b0de8 0%,#080b0d9c 20%,#080b0d10 44%,#080b0d24 65%,#080b0dcf 100%),linear-gradient(0deg,#080b0de8 0%,transparent 25%,#080b0d10 100%)}
+#start-screen .stage-vignette{box-shadow:inset 0 0 130px #0009}
+#start-screen .stage-topline{top:18px;left:24px;right:24px;z-index:3;color:#d9d7cc}
+#start-screen .stage-topline b{font-size:9px;color:#b2b4ae}
+#start-screen .stage-map-label{left:28px;bottom:38px}
+#start-screen .stage-character-label{right:330px;bottom:38px}
+#start-screen .stage-map-label span,#start-screen .stage-character-label span{font-size:9px;color:#c0b99f}
+#start-screen .stage-map-label b,#start-screen .stage-character-label b{font-size:14px;letter-spacing:.12em}
+#start-screen .stage-map-label small,#start-screen .stage-character-label small{font-size:8px}
+#start-screen .stage-bottomline{display:none}
+#start-screen .lobby-console{position:fixed;z-index:6;top:91px;right:24px;width:min(300px,27vw);max-height:calc(100vh - 200px);overflow:auto;padding:18px 16px;border:1px solid #c9c7b53a;background:linear-gradient(145deg,#101414e8,#080a0bf0);backdrop-filter:blur(10px);box-shadow:0 15px 60px #0008}
+#start-screen .console-heading{margin-bottom:18px}
+#start-screen .console-heading h2{font-size:23px}
+#start-screen .callsign-wrap,#start-screen #account-card,#start-screen .progress-card,#start-screen .global-leaderboard,#start-screen .queue-heading,#start-screen .console-options,#start-screen .customize-drawer,#start-screen .console-footer{display:none!important}
+#start-screen .queue-cards{display:grid;grid-template-columns:1fr;gap:8px}
+#start-screen .queue-card{padding:14px 10px;background:#0a0d0de8;border-color:#ffffff25}
+#start-screen .queue-card.selected{background:linear-gradient(100deg,#4a3a1dce,#171714ed);border-color:#d5b45b;box-shadow:inset 3px 0 #d5b45b}
+#start-screen .queue-icon{color:#d5b45b;border-color:#ffffff24}
+#start-screen .queue-card-text b{font-size:11px}
+#start-screen .queue-card-text small{font-size:9px}
+#start-screen .launch-actions{position:fixed;z-index:9;right:24px;bottom:24px;width:min(300px,27vw);display:grid;gap:8px;margin:0}
+#start-screen #open-tutorial{display:none!important}
+#start-screen #play-online{height:72px;justify-content:center;gap:18px;border:1px solid #e4c66c;background:linear-gradient(120deg,#8a6a24,#d8b64e 48%,#b48a2d);color:#fff9e9;box-shadow:0 0 34px #c5a24b35,inset 0 1px #fff7c5;font-size:0}
+#start-screen #play-online span{font-size:0}
+#start-screen #play-online span:after{content:"PLAY";font-size:29px;letter-spacing:.1em}
+#start-screen #play-online b{font-size:24px}
+#start-screen #play-offline{height:42px;background:#111514e8;border-color:#ffffff36;color:#e4e1d7}
+#start-screen .lobby-bottom{position:relative;z-index:5;margin-top:auto;padding-top:8px;font-size:8px;color:#8d9692}
+#start-screen .lobby-feature-panel{position:relative;z-index:10;background:#101414f5}
+#start-screen .lobby-feature-panel:not(.hidden){margin:20px auto;max-height:calc(100vh - 120px);overflow:auto}
+@media(max-width:900px){
+ #start-screen .lobby-shell{padding:0 14px 10px}
+ #start-screen .lobby-topbar{gap:8px;flex-wrap:wrap;padding:10px 0}
+ #start-screen .lobby-mark{font-size:12px}
+ #start-screen .lobby-nav{order:3;flex-basis:100%;justify-content:space-around;gap:2px}
+ #start-screen .lobby-nav-item{padding:12px 7px;font-size:9px}
+ #start-screen .operator-stage{top:100px}
+ #start-screen .lobby-console{top:118px;left:14px;right:auto;width:220px;max-height:calc(100vh - 240px);padding:12px}
+ #start-screen .console-heading h2{font-size:18px}
+ #start-screen .stage-character-label{right:14px}
+ #start-screen .launch-actions{right:14px;bottom:16px;width:220px}
+ #start-screen #play-online{height:58px}
+ #start-screen #play-online span:after{font-size:23px}
+}
+@media(max-width:560px){
+ #start-screen .lobby-top-meta{font-size:7px}
+ #start-screen .lobby-top-meta .audio-toggle{display:none}
+ #start-screen .operator-stage{top:104px;bottom:0}
+ #start-screen .lobby-console{top:auto;left:10px;right:10px;bottom:100px;width:auto;max-height:180px;overflow:auto;padding:10px 12px}
+ #start-screen .console-heading{margin-bottom:8px}
+ #start-screen .console-heading h2{font-size:16px;margin-top:3px}
+ #start-screen .queue-cards{grid-template-columns:1fr 1fr;gap:6px}
+ #start-screen .queue-card{padding:8px 6px;gap:5px}
+ #start-screen .queue-icon{width:23px;height:23px;font-size:13px}
+ #start-screen .queue-card-text b{font-size:8px}
+ #start-screen .queue-card-text small{font-size:7px}
+ #start-screen .launch-actions{left:10px;right:10px;bottom:10px;width:auto;grid-template-columns:1fr 1fr;gap:6px}
+ #start-screen #play-online{grid-column:1/-1;height:54px}
+ #start-screen #play-offline{height:34px}
+ #start-screen .lobby-bottom{display:none}
+ #start-screen .stage-map-label{left:12px;bottom:300px}
+ #start-screen .stage-character-label{right:12px;bottom:300px}
+ #start-screen .stage-map-label b,#start-screen .stage-character-label b{font-size:9px}
+ #start-screen .stage-map-label small,#start-screen .stage-character-label small{display:none}
+}
+
+
+/* Keep the actual queue controls on the left like the reference lobby; preserve operator customization when its tab is selected. */
+#start-screen .lobby-console{background:transparent;border-color:transparent;box-shadow:none;overflow:visible;pointer-events:none}
+#start-screen .lobby-console:before{display:none}
+#start-screen .console-heading{position:fixed;right:24px;top:100px;width:min(300px,27vw);padding:12px 14px;margin:0;border:1px solid #ffffff30;background:#0a0d0de8;pointer-events:auto}
+#start-screen .console-heading h2{font-size:0}
+#start-screen .console-heading h2:after{content:"DAILY MISSIONS";font-size:13px;letter-spacing:.12em;color:#c5b58f}
+#start-screen .console-overline{display:none}
+#start-screen .console-step{font-size:8px}
+#start-screen .queue-cards{position:fixed;left:24px;top:170px;width:min(270px,25vw);z-index:8;pointer-events:auto}
+#start-screen .queue-card{min-height:54px}
+#start-screen .customize-drawer{display:block!important;position:fixed;z-index:9;left:24px;bottom:145px;width:min(270px,25vw);max-height:42vh;overflow:auto;padding:10px 12px;border:1px solid #ffffff2c;background:#0a0d0de8;pointer-events:auto}
+#start-screen .customize-drawer[open]{top:130px;bottom:auto;max-height:calc(100vh - 150px);overflow:auto}
+#start-screen .customize-drawer summary{font-size:9px;color:#d1c6a7}
+#start-screen .customize-grid{display:grid;grid-template-columns:1fr;gap:9px;padding-top:12px}
+#start-screen .customize-grid .option-field label,#start-screen .server-field label{font-size:8px}
+#start-screen .customize-grid select,#start-screen .server-field input{width:100%;max-width:100%}
+#start-screen .console-options{display:none!important}
+#start-screen .console-heading{pointer-events:auto}
+#start-screen .lobby-feature-panel{pointer-events:auto}
+@media(max-width:900px){
+ #start-screen .console-heading{right:14px;top:120px;width:220px}
+ #start-screen .queue-cards{left:14px;top:178px;width:220px}
+ #start-screen .customize-drawer{left:14px;bottom:145px;width:220px}
+}
+@media(max-width:560px){
+ #start-screen .console-heading{top:auto;bottom:240px;left:10px;right:10px;width:auto;padding:7px 10px}
+ #start-screen .console-heading h2:after{font-size:10px}
+ #start-screen .queue-cards{top:auto;left:10px;right:10px;bottom:145px;width:auto;grid-template-columns:1fr 1fr}
+ #start-screen .customize-drawer{left:10px;right:10px;bottom:210px;width:auto;max-height:120px}
+ #start-screen .customize-drawer[open]{top:116px;bottom:auto;max-height:calc(100vh - 130px)}
+ #start-screen .customize-grid{grid-template-columns:1fr 1fr}
+}
+
+#start-screen .lobby-console:after{content:"◈   Get 5 Eliminations                 2/5\A━━━━━━━━━━━━━━━━━━━━━━━━━━━━\A\A◈   Win 2 Matches                        0/2\A━━━━━━━━━━━━━━━━━━━━━━━━━━━━\A\A◈   Deal 500 Damage                 320/500\A━━━━━━━━━━━━━━━━━━━━━━━━━━━━\A\A◇   DAILY REWARDS                        150";white-space:pre-wrap;position:fixed;z-index:6;top:146px;right:24px;width:min(300px,27vw);min-height:210px;padding:16px 14px;border:1px solid #ffffff30;background:#0a0d0de8;color:#c2c5be;font:10px/1.65 Arial,sans-serif;letter-spacing:.025em;pointer-events:none;box-sizing:border-box}
+@media(max-width:900px){#start-screen .lobby-console:after{top:166px;right:14px;width:220px;padding:10px;font-size:8px;min-height:170px}}
+@media(max-width:560px){#start-screen .lobby-console:after{display:none}}
