@@ -11,7 +11,7 @@ const clock=new THREE.Clock(),raycaster=new THREE.Raycaster(),colliders=[],solid
 let running=false,online=false,socket=null,lastShot=0,lastSync=0,recoil=0,flashDuration=65,bob=0,firing=false,health=100,shield=100,kills=0,cash=300,ownedWeapons=new Set([0]),ammo=12,reserve=60,reloading=false,reloadUntil=0,playerName='Rookie',lastHitTime=0,weaponIndex=0,targetBot=0,difficulty='medium',mapIndex=0,matchMode='1v1',hairColor='#30241e',gunColor='#52665f',uniformColor='#477f72',skinColor='#b88d70',shoeColor='#20292b',armorLevel=0,playerRoundScore=0,botRoundScore=0,matchOver=false;
 let jumpVelocity=0,jumpOffset=0,slideRemaining=0,slideCooldown=0,slideDirection=new THREE.Vector3(),slideMessageAt=0,sprintStamina=100,killStreak=0,sprintingNow=false,movementAmount=0;
 const weaponCosts=[0,300,900,400,650,700,1200,500];
-const direction=new THREE.Vector3(),botShotEffects=[];
+const direction=new THREE.Vector3(),botShotEffects=[],movementVelocity=new THREE.Vector3();
 const weapons=[
  {name:'PULSE PISTOL',mag:12,reserve:60,delay:190,reload:900,damage:38,range:38,pellets:1,spread:.01,color:0x72c9ff},
  {name:'HEAVY PISTOL',mag:8,reserve:48,delay:300,reload:1050,damage:54,range:40,pellets:1,spread:.006,color:0xffcf78},
@@ -288,18 +288,26 @@ function movePlayer(dt){
  const sideInput=(keys.has('KeyD')?1:0)-(keys.has('KeyA')?1:0);
  const forward=camera.getWorldDirection(new THREE.Vector3());forward.y=0;forward.normalize();
  const right=new THREE.Vector3().crossVectors(forward,new THREE.Vector3(0,1,0)).normalize();
- const delta=slideRemaining>0?slideDirection.clone():forward.multiplyScalar(forwardInput).add(right.multiplyScalar(sideInput));
- if(delta.lengthSq()>1)delta.normalize();
- delta.multiplyScalar(speed*dt);
+ const desired=slideRemaining>0?slideDirection.clone():forward.multiplyScalar(forwardInput).add(right.multiplyScalar(sideInput));
+ if(desired.lengthSq()>1)desired.normalize();
+ const slideProgress=slideRemaining>0?slideRemaining/.68:0;
+ const targetSpeed=slideRemaining>0?11.2*(.78+.22*slideProgress):(sprinting?8.5:5.4);
+ if(desired.lengthSq()>.001)desired.multiplyScalar(targetSpeed);else desired.set(0,0,0);
+ // Frame-rate-independent acceleration gives starts, stops and direction changes a more deliberate feel.
+ const response=slideRemaining>0?18:(desired.lengthSq()>.001?(sprinting?16:20):24);
+ movementVelocity.x=THREE.MathUtils.damp(movementVelocity.x,desired.x,response,dt);
+ movementVelocity.z=THREE.MathUtils.damp(movementVelocity.z,desired.z,response,dt);
+ const delta=new THREE.Vector3(movementVelocity.x*dt,0,movementVelocity.z*dt);
  if(slideRemaining>0)slideRemaining=Math.max(0,slideRemaining-dt);
  jumpVelocity-=18*dt;jumpOffset=Math.max(0,jumpOffset+jumpVelocity*dt);if(jumpOffset===0)jumpVelocity=0;
  const targetHeight=slideRemaining>0?1.05:1.7;
  p.y=THREE.MathUtils.damp(p.y,targetHeight+jumpOffset,slideRemaining>0?16:12,dt);
  const blocked=(x,z)=>x<-39.1||x>39.1||z<-34.1||z>34.1||colliders.some(c=>c.clone().expandByVector(new THREE.Vector3(.58,1,.58)).containsPoint(new THREE.Vector3(x,1.7,z)));
  // Resolve X and Z separately so the player slides along walls instead of sticking or passing through them.
- const nextX=p.x+delta.x;if(!blocked(nextX,p.z))p.x=nextX;
- const nextZ=p.z+delta.z;if(!blocked(p.x,nextZ))p.z=nextZ;
- bob+=dt*(delta.lengthSq()>.001?speed*.9:1.4);const movingNow=delta.lengthSq()>.001;weapon.position.y=-.3+(slideRemaining>0?-.12:0)+Math.sin(bob*2)*(.006+(sprintingNow?.012:0))*(movingNow?1:0);weapon.position.x=Math.sin(bob)*(.003+(sprintingNow?.012:0))*(movingNow?1:0);
+ const nextX=p.x+delta.x;if(!blocked(nextX,p.z))p.x=nextX;else movementVelocity.x=0;
+ const nextZ=p.z+delta.z;if(!blocked(p.x,nextZ))p.z=nextZ;else movementVelocity.z=0;
+ const actualSpeed=Math.hypot(delta.x,delta.z)/Math.max(dt,.0001);
+ bob+=dt*(actualSpeed>.035?actualSpeed*.9:1.4);const movingNow=actualSpeed>.035;weapon.position.y=-.3+(slideRemaining>0?-.12:0)+Math.sin(bob*2)*(.006+(sprintingNow?.012:0))*(movingNow?1:0);weapon.position.x=Math.sin(bob)*(.003+(sprintingNow?.012:0))*(movingNow?1:0);
  if(online&&socket?.connected&&performance.now()-lastSync>50){lastSync=performance.now();const f=camera.getWorldDirection(new THREE.Vector3());socket.emit('move',{x:p.x,yaw:Math.atan2(f.x,-f.z),z:p.z});}
 }
 function dieAndRestart(){if(!running)return;killStreak=0;health=0;shield=0;firing=false;reloading=false;if(!online){botRoundScore++;$('bot-round-score').textContent=String(botRoundScore);if(botRoundScore>=5){matchOver=true;showMatchResults('DEFEAT','The bots reached five points first. Queue up and try again.');return;}health=100;shield=100*(1+armorLevel*.03);const p=controls.getObject().position;p.set((Math.random()-.5)*10,1.7,Math.random()<.5?-12:12);lastHitTime=performance.now();updateHud();setMessage('RESPAWN · BOTS '+botRoundScore+' / 5',1500);return;}showMatchResults('DEFEAT','You were eliminated. Review your career reward and jump back in.');}
