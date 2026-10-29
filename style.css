@@ -499,3 +499,37 @@ html{background:#081218}
  #start-screen .stage-map-label b,#start-screen .stage-character-label b{font-size:9px}
  #start-screen .stage-map-label small,#start-screen .stage-character-label small{display:none}
 }
+
+
+/* Keep the actual queue controls on the left like the reference lobby; preserve operator customization when its tab is selected. */
+#start-screen .lobby-console{background:transparent;border-color:transparent;box-shadow:none;overflow:visible;pointer-events:none}
+#start-screen .lobby-console:before{display:none}
+#start-screen .console-heading{position:fixed;right:24px;top:100px;width:min(300px,27vw);padding:12px 14px;margin:0;border:1px solid #ffffff30;background:#0a0d0de8;pointer-events:auto}
+#start-screen .console-heading h2{font-size:0}
+#start-screen .console-heading h2:after{content:"DAILY MISSIONS";font-size:13px;letter-spacing:.12em;color:#c5b58f}
+#start-screen .console-overline{display:none}
+#start-screen .console-step{font-size:8px}
+#start-screen .queue-cards{position:fixed;left:24px;top:170px;width:min(270px,25vw);z-index:8;pointer-events:auto}
+#start-screen .queue-card{min-height:54px}
+#start-screen .customize-drawer{display:block!important;position:fixed;z-index:9;left:24px;bottom:145px;width:min(270px,25vw);max-height:42vh;overflow:auto;padding:10px 12px;border:1px solid #ffffff2c;background:#0a0d0de8;pointer-events:auto}
+#start-screen .customize-drawer[open]{top:130px;bottom:auto;max-height:calc(100vh - 150px);overflow:auto}
+#start-screen .customize-drawer summary{font-size:9px;color:#d1c6a7}
+#start-screen .customize-grid{display:grid;grid-template-columns:1fr;gap:9px;padding-top:12px}
+#start-screen .customize-grid .option-field label,#start-screen .server-field label{font-size:8px}
+#start-screen .customize-grid select,#start-screen .server-field input{width:100%;max-width:100%}
+#start-screen .console-options{display:none!important}
+#start-screen .console-heading{pointer-events:auto}
+#start-screen .lobby-feature-panel{pointer-events:auto}
+@media(max-width:900px){
+ #start-screen .console-heading{right:14px;top:120px;width:220px}
+ #start-screen .queue-cards{left:14px;top:178px;width:220px}
+ #start-screen .customize-drawer{left:14px;bottom:145px;width:220px}
+}
+@media(max-width:560px){
+ #start-screen .console-heading{top:auto;bottom:240px;left:10px;right:10px;width:auto;padding:7px 10px}
+ #start-screen .console-heading h2:after{font-size:10px}
+ #start-screen .queue-cards{top:auto;left:10px;right:10px;bottom:145px;width:auto;grid-template-columns:1fr 1fr}
+ #start-screen .customize-drawer{left:10px;right:10px;bottom:210px;width:auto;max-height:120px}
+ #start-screen .customize-drawer[open]{top:116px;bottom:auto;max-height:calc(100vh - 130px)}
+ #start-screen .customize-grid{grid-template-columns:1fr 1fr}
+}
