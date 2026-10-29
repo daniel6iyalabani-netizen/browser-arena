@@ -773,3 +773,12 @@ html{background:#081218}
  #start-screen #reference-custom-hitbox{left:2.15%!important;top:39.6%!important;width:25.8vw!important;height:6.1vh!important}
  #start-screen #reference-private-hitbox{left:2.15%!important;top:45.9%!important;width:25.8vw!important;height:6.1vh!important}
 }
+
+
+/* Crisp the embedded reference artwork without replacing its text or details. */
+#start-screen #reference-lobby-art{
+  filter:url(#lobby-sharpen) contrast(1.05) saturate(1.025)!important;
+  image-rendering:auto!important;
+  transform:translateZ(0);
+  backface-visibility:hidden;
+}
