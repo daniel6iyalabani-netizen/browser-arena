@@ -10,9 +10,78 @@
 <div id="shop-panel"><strong>ARMORY <span>· EARN $150 PER ELIMINATION</span></strong><p>Start with the Pulse Pistol. Earn cash by eliminating bots or players, then buy new weapons.</p><div id="shop-items"><div class="shop-item"><div><b>PULSE PISTOL</b><small>Starter · balanced sidearm</small></div><button data-buy="0">OWNED</button></div><div class="shop-item"><div><b>HEAVY PISTOL</b><small>Hard-hitting sidearm · $300</small></div><button data-buy="1">BUY · $300</button></div><div class="shop-item"><div><b>AK-47</b><small>Rapid automatic fire · $900</small></div><button data-buy="2">BUY · $900</button></div><div class="shop-item"><div><b>ARENA RIFLE</b><small>Automatic rifle · $400</small></div><button data-buy="3">BUY · $400</button></div><div class="shop-item"><div><b>PUMP SHOTGUN</b><small>Close-range spread · $650</small></div><button data-buy="4">BUY · $650</button></div><div class="shop-item"><div><b>BURST SCATTER</b><small>Close range · $700</small></div><button data-buy="5">BUY · $700</button></div><div class="shop-item"><div><b>SNIPER RIFLE</b><small>Precision rifle · headshots eliminate in one hit · $1200</small></div><button data-buy="6">BUY · $1200</button></div><div class="shop-item"><div><b>VOLT SMG</b><small>High fire rate · large magazine · $500</small></div><button data-buy="7">BUY · $500</button></div></div><small>Press B or Esc to close</small></div><div id="score-panel"><strong>ARENA SCOREBOARD</strong><div id="score-list"></div><small>Press TAB to close</small></div>
 <div id="bottom-help">WASD move · Right-click ADS · Click fire · TAB jump · Z slide · CTRL sprint · R reload · 1–8 / mouse wheel weapon · K scoreboard · B armory · Esc unlock mouse</div></div>
 <section id="start-screen" class="overlay lobby-screen">
+  <svg aria-hidden="true" focusable="false" width="0" height="0" style="position:absolute;overflow:hidden">
+    <filter id="lobby-sharpen" x="-5%" y="-5%" width="110%" height="110%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="0.55" result="soft"/>
+      <feComposite in="SourceGraphic" in2="soft" operator="arithmetic" k1="0" k2="1.6" k3="-0.6" k4="0"/>
+    </filter>
+  </svg>
   <img id="reference-lobby-art" src="./assets/reference-lobby.webp" alt="" aria-hidden="true">
   <button id="reference-custom-hitbox" type="button" aria-label="Custom Game"></button>
   <button id="reference-private-hitbox" type="button" aria-label="Private Match"></button>
+
+  <section id="match-setup-overlay" class="match-setup-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="setup-title">
+    <div class="match-setup-panel">
+      <header class="setup-head">
+        <div><span class="setup-kicker">BROWSER ARENA / DEPLOYMENT TERMINAL</span><h2 id="setup-title">Choose your mission</h2><p id="setup-subtitle">Select a mode, tune your operator, and deploy.</p></div>
+        <button id="setup-close" type="button" aria-label="Close setup">✕</button>
+      </header>
+      <nav class="setup-tabs" aria-label="Match setup sections">
+        <button type="button" class="active" data-setup-tab="online">ONLINE MATCH</button>
+        <button type="button" data-setup-tab="bots">PLAY WITH BOTS</button>
+        <button type="button" data-setup-tab="operator">OPERATOR</button>
+      </nav>
+      <section class="setup-page" data-setup-page="online">
+        <div class="setup-section-title"><div><span>01 / MULTIPLAYER</span><h3>Choose team size</h3></div><small>Real players · team deathmatch</small></div>
+        <div class="setup-mode-grid">
+          <button type="button" class="setup-choice selected" data-mode-choice="1v1"><b>1v1</b><span>DUEL</span><small>One against one</small></button>
+          <button type="button" class="setup-choice" data-mode-choice="2v2"><b>2v2</b><span>DUO</span><small>Small-team tactics</small></button>
+          <button type="button" class="setup-choice" data-mode-choice="3v3"><b>3v3</b><span>TRIO</span><small>Fast engagements</small></button>
+          <button type="button" class="setup-choice" data-mode-choice="4v4"><b>4v4</b><span>SQUAD</span><small>Team coordination</small></button>
+          <button type="button" class="setup-choice" data-mode-choice="5v5"><b>5v5</b><span>FULL TEAM</span><small>Maximum team size</small></button>
+        </div>
+        <p class="setup-note"><span>◈</span> Online matches need other players in the queue. If the lobby is quiet, train against bots while you wait.</p>
+        <div class="setup-footer"><div><b>ONLINE TEAM DEATHMATCH</b><small>Map voting opens when your match forms.</small></div><button id="setup-start-online" class="setup-launch" type="button">FIND MATCH <span>↗</span></button></div>
+      </section>
+      <section class="setup-page hidden" data-setup-page="bots">
+        <div class="setup-section-title"><div><span>02 / COMBAT TRAINING</span><h3>Set the challenge</h3></div><small>Solo practice · XP progression</small></div>
+        <div class="setup-difficulty-grid">
+          <button type="button" class="setup-difficulty" data-difficulty="easy"><b>EASY</b><span>Learn the maps</span><small>Relaxed aim and pace</small></button>
+          <button type="button" class="setup-difficulty selected" data-difficulty="medium"><b>MEDIUM</b><span>Field standard</span><small>Balanced practice</small></button>
+          <button type="button" class="setup-difficulty" data-difficulty="hard"><b>HARD</b><span>Elite challenge</span><small>Faster, sharper bots</small></button>
+        </div>
+        <div class="setup-target-row"><label for="setup-bot-target">TRAINING TARGET <small>Optional focus target</small></label><select id="setup-bot-target"><option value="0">ANY BOT</option><option value="1">BOT 1</option><option value="2">BOT 2</option><option value="3">BOT 3</option><option value="4">BOT 4</option><option value="5">BOT 5</option><option value="6">BOT 6</option><option value="7">BOT 7</option><option value="8">BOT 8</option><option value="9">BOT 9</option></select></div>
+        <div class="setup-section-title map-title"><div><span>03 / BATTLEFIELD</span><h3>Choose a map</h3></div><small>Six tactical arenas available</small></div>
+        <div class="setup-map-grid">
+          <button type="button" class="setup-map selected" data-map-choice="0"><span class="map-number">01</span><b>INDUSTRIAL YARD</b><small>Warehouses · burned-out vehicles</small><i>DRY / CONCRETE</i></button>
+          <button type="button" class="setup-map" data-map-choice="1"><span class="map-number">02</span><b>DESERT OUTPOST</b><small>Sand lanes · cover and wrecks</small><i>STORM VARIANT</i></button>
+          <button type="button" class="setup-map" data-map-choice="2"><span class="map-number">03</span><b>FROST DEPOT</b><small>Cold storage · open sightlines</small><i>FROST / STEEL</i></button>
+          <button type="button" class="setup-map" data-map-choice="3"><span class="map-number">04</span><b>ABANDONED WORKS</b><small>Factory blocks · tight alleys</small><i>LOW LIGHT</i></button>
+          <button type="button" class="setup-map" data-map-choice="4"><span class="map-number">05</span><b>OVERGROWN RUINS</b><small>Broken buildings · wet ground</small><i>RAIN VARIANT</i></button>
+          <button type="button" class="setup-map" data-map-choice="5"><span class="map-number">06</span><b>SKYBRIDGE</b><small>Elevated lanes · long approaches</small><i>HIGH GROUND</i></button>
+        </div>
+        <p class="setup-note"><span>✦</span> Earn match XP to level up. Your selected map, difficulty, and operator colours apply to the next training round.</p>
+        <div class="setup-footer"><div><b id="setup-career-level">OPERATOR LEVEL 01</b><small>Progress saves on this device.</small></div><button id="setup-start-bots" class="setup-launch" type="button">DEPLOY VS BOTS <span>↗</span></button></div>
+      </section>
+      <section class="setup-page hidden" data-setup-page="operator">
+        <div class="setup-section-title"><div><span>04 / IDENTITY</span><h3>Build your operator</h3></div><small>Cosmetic choices · saved on this device</small></div>
+        <div class="setup-gender-grid">
+          <button type="button" class="setup-gender selected" data-gender-choice="male"><span class="gender-silhouette">♟</span><b>MALE OPERATOR</b><small>Field specialist</small></button>
+          <button type="button" class="setup-gender" data-gender-choice="female"><span class="gender-silhouette">♟</span><b>FEMALE OPERATOR</b><small>Field specialist</small></button>
+        </div>
+        <div class="setup-customize-grid">
+          <label>UNIFORM COLOUR<select id="setup-uniform"><option value="#477f72">FIELD GREEN</option><option value="#4c75d8">BLUE</option><option value="#995c43">DESERT TAN</option><option value="#30343a">STEALTH BLACK</option><option value="#9b4e5d">CRIMSON</option><option value="#d4cbb5">ARCTIC WHITE</option></select></label>
+          <label>HAIR COLOUR<select id="setup-hair"><option value="#30241e">DARK BROWN</option><option value="#d7b56d">BLONDE</option><option value="#a84b2b">AUBURN</option><option value="#e8e8e8">SILVER</option><option value="#4c75d8">BLUE</option><option value="#b54cc4">PURPLE</option></select></label>
+          <label>SKIN TONE<select id="setup-skin"><option value="#b88d70">WARM TAN</option><option value="#f0c9a5">LIGHT</option><option value="#8b5e43">BROWN</option><option value="#593a2c">DEEP BROWN</option><option value="#d6a17a">GOLDEN</option></select></label>
+          <label>BOOTS<select id="setup-shoes"><option value="#20292b">TACTICAL BLACK</option><option value="#6c5945">DESERT BROWN</option><option value="#3f5d4d">OLIVE</option><option value="#7b8790">GREY</option><option value="#263c72">NAVY</option></select></label>
+          <label>EQUIPMENT COLOUR<select id="setup-gun"><option value="#52665f">TACTICAL GREEN</option><option value="#2b9ce8">BLUE</option><option value="#d44b4b">RED</option><option value="#b6a52f">GOLD</option><option value="#9e69d1">PURPLE</option><option value="#dce5e8">SILVER</option></select></label>
+          <label>ARMOUR CLASS<select id="setup-armor"><option value="0">SCOUT · STANDARD SHIELD</option><option value="1">REINFORCED · +3% SHIELD</option><option value="2">HEAVY · +6% SHIELD</option></select></label>
+        </div>
+        <p class="setup-note"><span>◈</span> Your operator selection affects the in-game player model and saves between sessions. Female and male field operators share the same fair gameplay stats.</p>
+        <div class="setup-footer"><div><b>OPERATOR CUSTOMISATION</b><small>Appearance only — no gameplay advantage.</small></div><button id="setup-save-operator" class="setup-launch" type="button">SAVE OPERATOR <span>✓</span></button></div>
+      </section>
+    </div>
+  </section>
   <div class="lobby-shell">
     <header class="lobby-topbar">
       <a class="lobby-mark" href="#" aria-label="Browser Arena home"><span class="mark-glyph">B</span><span>BROWSER <b>ARENA</b><small>COMPETITIVE PLAY SYSTEMS</small></span></a>
