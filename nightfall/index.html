@@ -12,7 +12,7 @@ button,input{font:inherit}button{background:#172629;border:1px solid #71888a;col
 .top{display:flex;justify-content:space-between;gap:12px;padding:16px 22px;border-bottom:1px solid #34474a;letter-spacing:.15em;font-size:12px;color:var(--ice)}
 .content{padding:clamp(22px,5vw,54px)}.eyebrow{font-size:11px;letter-spacing:.23em;color:var(--ice);font-weight:800}
 h1{font-size:clamp(54px,10vw,104px);line-height:.84;letter-spacing:-.075em;margin:18px 0 22px}h1 span{color:var(--ice)}.sub{max-width:650px;color:#bac7c8;font-size:17px}
-.modes{display:flex;gap:9px;flex-wrap:wrap;margin:22px 0}.maps{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:15px 0 24px}.map{padding:0;text-align:left;overflow:hidden;background:#101b1e;border:1px solid #405457}.map-art{height:112px;display:grid;place-items:center;font-size:42px;background:linear-gradient(145deg,#273a3c,#080d10);filter:saturate(.65)}.map strong{display:block;padding:10px 11px 0;font-size:13px}.map small{display:block;padding:0 11px 11px;color:var(--muted);font-size:11px}.map.selected{border:2px solid var(--ice);box-shadow:0 0 22px #9ddde033}
+.modes{display:flex;gap:9px;flex-wrap:wrap;margin:22px 0}.setting{display:flex;align-items:center;gap:10px;margin:0 0 22px;color:#c5d1d0;font-size:13px}.setting input{min-width:0;width:18px;height:18px;accent-color:#b8e1e2}.maps{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:15px 0 24px}.map{padding:0;text-align:left;overflow:hidden;background:#101b1e;border:1px solid #405457}.map-art{height:112px;display:grid;place-items:center;font-size:42px;background:linear-gradient(145deg,#273a3c,#080d10);filter:saturate(.65)}.map strong{display:block;padding:10px 11px 0;font-size:13px}.map small{display:block;padding:0 11px 11px;color:var(--muted);font-size:11px}.map.selected{border:2px solid var(--ice);box-shadow:0 0 22px #9ddde033}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}#room{display:none;border:1px solid #41575a;background:#0d171a;padding:14px;margin:14px 0;max-width:520px}input{background:#050b0d;border:1px solid #627679;color:white;padding:12px;min-width:190px}#note{color:var(--muted);font-size:12px;margin-top:12px;min-height:20px}
 #game{position:fixed;inset:0;display:none}#renderCanvas{width:100%;height:100%;display:block;touch-action:none;outline:none}
 #hud{position:absolute;inset:0;pointer-events:none;text-shadow:0 2px 5px #000}.bar{position:absolute;top:14px;left:14px;right:14px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}.pill{background:#071013bb;border:1px solid #60747788;padding:8px 11px;font-size:11px;letter-spacing:.1em}.center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:22px;color:#e8f4f1}.dot{width:5px;height:5px;border-radius:50%;background:#d8eeee;box-shadow:0 0 5px white}.bottom{position:absolute;bottom:16px;left:0;right:0;text-align:center;font-size:12px;color:#d0dddd}.toast{position:absolute;bottom:55px;left:50%;transform:translateX(-50%);background:#071013dd;padding:10px 16px;border:1px solid #637477;max-width:90%;text-align:center}.exit{position:absolute;right:14px;bottom:14px;pointer-events:auto}
@@ -27,7 +27,7 @@ h1{font-size:clamp(54px,10vw,104px);line-height:.84;letter-spacing:-.075em;margi
 <p class="sub">Explore four abandoned places in first-person 3D. Find the scattered records, keep your bearings, and don't trust every sound you hear.</p>
 <div class="eyebrow">1 — CHOOSE A MODE</div><div class="modes"><button id="solo" class="selected">SOLO</button><button id="friends">PLAY WITH A FRIEND</button></div>
 <div id="room"><div class="row"><button id="host">CREATE ROOM</button><input id="code" maxlength="6" inputmode="numeric" placeholder="6-digit room code"><button id="join">JOIN</button></div><p id="netnote">Create a private room and share its code with a friend.</p></div>
-<div class="eyebrow">2 — CHOOSE YOUR LOCATION</div>
+<div class="eyebrow">2 — HORROR SETTINGS</div><label class="setting"><input id="monsterToggle" type="checkbox" checked><span>MONSTER ENABLED — turn off for exploration mode</span></label><div class="eyebrow">3 — CHOOSE YOUR LOCATION</div>
 <div class="maps">
 <button class="map selected" data-map="hospital"><div class="map-art">✚</div><strong>ABANDONED HOSPITAL</strong><small>Silent wards. Flickering lights.</small></button>
 <button class="map" data-map="school"><div class="map-art">▤</div><strong>HAUNTED SCHOOL</strong><small>Empty classrooms. Distant bells.</small></button>
@@ -41,9 +41,9 @@ h1{font-size:clamp(54px,10vw,104px);line-height:.84;letter-spacing:-.075em;margi
 <script>
 (() => {
 const $=s=>document.querySelector(s);
-let mode='solo',mapName='hospital',engine,scene,camera,peer=null,conn=null,isHost=false,roomId='',records=0,recordMeshes=[],friendMesh=null,keys={},lastSync=0,started=false;
+let mode='solo',mapName='hospital',engine,scene,camera,peer=null,conn=null,isHost=false,roomId='',records=0,recordMeshes=[],friendMesh=null,keys={},lastSync=0,started=false,monsterEnabled=true,monsterParts=[],monsterRoot=null;
 const mapNames={hospital:'ABANDONED HOSPITAL',school:'HAUNTED SCHOOL',facility:'UNDERGROUND FACILITY',forest:'CURSED FOREST'};
-const note=t=>$('#note').textContent=t;
+const note=t=>$('#note').textContent=t;\n$('#monsterToggle').addEventListener('change',e=>{monsterEnabled=e.target.checked;});
 $('#solo').onclick=()=>{mode='solo';$('#solo').classList.add('selected');$('#friends').classList.remove('selected');$('#room').style.display='none';note('Solo mode selected. Choose a place and enter.');};
 $('#friends').onclick=()=>{mode='friends';$('#friends').classList.add('selected');$('#solo').classList.remove('selected');$('#room').style.display='block';note('Private multiplayer selected. Create or join a room.');};
 document.querySelectorAll('.map').forEach(b=>b.onclick=()=>{mapName=b.dataset.map;document.querySelectorAll('.map').forEach(x=>x.classList.toggle('selected',x===b));});
@@ -51,7 +51,7 @@ function netnote(t){$('#netnote').textContent=t;}
 function closePeer(){if(peer){peer.destroy();peer=null;}conn=null;isHost=false;roomId='';}
 $('#host').onclick=()=>{if(!window.Peer){netnote('Connection service did not load. Reload and try again.');return;}closePeer();isHost=true;roomId=String(Math.floor(100000+Math.random()*900000));peer=new Peer('nightfall-'+roomId);peer.on('open',()=>{netnote('Room '+roomId+' ready. Share this code with your friend.');$('#code').value=roomId;note('Room created. Enter the selected location when ready.');});peer.on('connection',c=>{conn=c;wireConnection(c);});peer.on('error',e=>netnote('Room error: '+e.type+'. Try creating another room.'));};
 $('#join').onclick=()=>{let code=$('#code').value.trim();if(!/^\d{6}$/.test(code)){netnote('Enter the six-digit room code.');return;}if(!window.Peer){netnote('Connection service did not load. Reload and try again.');return;}closePeer();peer=new Peer();peer.on('open',()=>{conn=peer.connect('nightfall-'+code);wireConnection(conn);conn.on('open',()=>{netnote('Connected. Waiting for the host to start the selected map.');});});peer.on('error',e=>netnote('Could not join: '+e.type+'. Check the code.'));};
-function wireConnection(c){c.on('open',()=>{netnote('Friend connected. Start the selected location.');$('#players').textContent='PLAYERS: 2';if(isHost)c.send({type:'start',map:mapName});});c.on('data',d=>{if(d.type==='start'&&!isHost){mapName=d.map;startGame();}if(d.type==='pos'&&friendMesh){friendMesh.position.set(d.x,d.y,d.z);friendMesh.rotation.y=d.r;}if(d.type==='record'&&!isHost){records=Math.max(records,d.count);$('#records').textContent='RECORDS: '+records+' / 3';}if(d.type==='hello'&&isHost){c.send({type:'start',map:mapName});}});}
+function wireConnection(c){c.on('open',()=>{netnote('Friend connected. Start the selected location.');$('#players').textContent='PLAYERS: 2';if(isHost)c.send({type:'start',map:mapName,monster:monsterEnabled});});c.on('data',d=>{if(d.type==='start'&&!isHost){mapName=d.map;monsterEnabled=d.monster!==false;$('#monsterToggle').checked=monsterEnabled;startGame();}if(d.type==='pos'&&friendMesh){friendMesh.position.set(d.x,d.y,d.z);friendMesh.rotation.y=d.r;}if(d.type==='record'&&!isHost){records=Math.max(records,d.count);$('#records').textContent='RECORDS: '+records+' / 3';}if(d.type==='hello'&&isHost){c.send({type:'start',map:mapName,monster:monsterEnabled});}});}
 $('#enter').onclick=()=>{if(mode==='friends'&&conn&&conn.open){if(isHost){conn.send({type:'start',map:mapName});startGame();}else netnote('The room host chooses when to start.');return;}if(mode==='friends'&&!conn){note('Create a room or join your friend first. You can still test solo by selecting SOLO.');return;}startGame();};
 function mat(name,color,rough=1,metal=0){let m=new BABYLON.StandardMaterial(name,scene);m.diffuseColor=BABYLON.Color3.FromHexString(color);m.specularColor=new BABYLON.Color3(.12,.12,.12);m.roughness=rough;m.metallic=metal;return m;}
 
@@ -124,20 +124,33 @@ function startGame(){
  }
  // scattered discoverable records
  records=0;recordMeshes=[];for(let i=0;i<3;i++){let z=2+i*7,x=[-3.5,3.5,0][i];let orb=BABYLON.MeshBuilder.CreateTorus('record',{diameter:.55,thickness:.07},scene);orb.position.set(x,.9,z);orb.rotation.x=Math.PI/2;let em=mat('recordglow'+i,'#9ac8c2');em.emissiveColor=new BABYLON.Color3(.22,.55,.5);orb.material=em;recordMeshes.push(orb);let glow=new BABYLON.PointLight('recordlight'+i,orb.position,scene);glow.parent=orb;glow.intensity=.25;glow.range=3;}
- // No monster or creature models: the environments are the focus.\n let exit=box('exit',0,1.5,25,3,3,.3,metal);makeLabel('EXIT',0,3.4,24.7);
+ // Optional roaming creature: enabled by default, with a menu switch for exploration-only play.
+ monsterParts=[];monsterRoot=null;
+ if(monsterEnabled){
+  monsterRoot=new BABYLON.TransformNode('roaming_presence',scene);
+  let hide=mat('creature_shadow','#080d0e');hide.emissiveColor=new BABYLON.Color3(.006,.009,.01);
+  const part=(name,shape,pos,scale)=>{let m=shape==='sphere'?BABYLON.MeshBuilder.CreateSphere(name,{diameter:1,segments:10},scene):BABYLON.MeshBuilder.CreateCylinder(name,{height:1,diameterTop:.22,diameterBottom:.48,tessellation:9},scene);m.parent=monsterRoot;m.position.set(pos[0],pos[1],pos[2]);m.scaling.set(scale[0],scale[1],scale[2]);m.material=hide;monsterParts.push(m);return m;};
+  part('creature_torso','cylinder',[0,1.35,0],[.78,1.55,.48]);
+  part('creature_head','sphere',[0,2.35,.02],[.55,.72,.48]);
+  part('creature_shoulder','sphere',[0,1.92,0],[1.12,.48,.55]);
+  for(let side of [-1,1]){part('creature_arm','cylinder',[side*.62,1.15,.02],[.24,1.55,.25]).rotation.z=side*.13;part('creature_hand','sphere',[side*.67,.32,.04],[.28,.34,.28]);part('creature_leg','cylinder',[side*.23,.05,0],[.3,1.05,.32]);}
+  monsterRoot.position.set(2,0,17);monsterRoot.rotation.y=Math.PI;
+  monsterRoot.setEnabled(true);
+ }
+ let exit=box('exit',0,1.5,25,3,3,.3,metal);makeLabel('EXIT',0,3.4,24.7);
  if(mode==='friends'){friendMesh=BABYLON.MeshBuilder.CreateCapsule('friend',{height:1.7,radius:.35},scene);friendMesh.position.set(1,0,-7);friendMesh.material=mat('friendmat','#789b98');if(conn&&conn.open&&isHost)conn.send({type:'start',map:mapName});}
  canvas.addEventListener('click',()=>{if(document.pointerLockElement!==canvas)canvas.requestPointerLock?.();});
  scene.onBeforeRenderObservable.add(()=>{let now=performance.now();if(mode==='friends'&&conn&&conn.open&&now-lastSync>90){lastSync=now;if(isHost)conn.send({type:'pos',x:camera.position.x,y:camera.position.y-0.8,z:camera.position.z,r:camera.rotation.y});else conn.send({type:'pos',x:camera.position.x,y:camera.position.y-0.8,z:camera.position.z,r:camera.rotation.y});}
   // Softly pulse the lamps to keep the scene unsettling.
   let pulse=.9+Math.sin(now*.0013)*.09+(Math.sin(now*.017)>.985?-.45:0);ambient.intensity=Math.max(.08,.27*pulse);
-  recordMeshes.forEach((m,i)=>{if(m.isVisible)m.rotation.y+=.008;});
+  recordMeshes.forEach((m,i)=>{if(m.isVisible)m.rotation.y+=.008;});\n  if(monsterRoot&&monsterEnabled){let t=now*.00022;monsterRoot.position.x=2+Math.sin(t)*1.4;monsterRoot.position.z=17+Math.sin(t*.7)*2.2;monsterRoot.rotation.y=Math.PI+Math.sin(t)*.18;}
  });
  engine.runRenderLoop(()=>{if(scene)scene.render();});window.addEventListener('resize',()=>engine&&engine.resize());
- $('#toast').textContent='Search for the glowing records. Press E when close to one.';
+ $('#toast').textContent=monsterEnabled?'Search for the glowing records. Something is moving in the distance.':'Exploration mode: the monster is disabled. Find the records.';
 }
 function inspect(){if(!scene||!camera)return;let nearest=-1,dist=99;recordMeshes.forEach((m,i)=>{if(m.isVisible){let d=BABYLON.Vector3.Distance(camera.position,m.position);if(d<dist){dist=d;nearest=i;}}});if(nearest>=0&&dist<2.8){recordMeshes[nearest].isVisible=false;records++;$('#records').textContent='RECORDS: '+records+' / 3';$('#toast').textContent=['A water-damaged note. Someone left in a hurry.','A maintenance record. The same warning appears again and again.','The final record is stamped with today’s date. The exit is ahead.'][records-1];if(conn&&conn.open)conn.send({type:'record',count:records});}else $('#toast').textContent='Nothing close enough. Listen carefully and keep moving.';}
 window.addEventListener('keydown',e=>{keys[e.code]=true;if(e.code==='KeyE')inspect();});window.addEventListener('keyup',e=>keys[e.code]=false);
-$('#back').onclick=()=>{if(engine){engine.stopRenderLoop();engine.dispose();engine=null;}started=false;scene=null;camera=null;$('#game').style.display='none';$('#menu').style.display='grid';document.exitPointerLock?.();};
+$('#back').onclick=()=>{if(engine){engine.stopRenderLoop();engine.dispose();engine=null;}started=false;scene=null;camera=null;monsterRoot=null;monsterParts=[];$('#game').style.display='none';$('#menu').style.display='grid';document.exitPointerLock?.();};
 })();
 </script>
 </body></html>
