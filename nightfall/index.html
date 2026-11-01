@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NIGHTFALL — 3D Horror</title>
+<style>
+:root{color-scheme:dark;--ice:#b8e1e2;--muted:#9ba9ad;--panel:#0a1114}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#05090b;color:#edf4f2;font:15px/1.5 system-ui, sans-serif}
+button,input{font:inherit}button{background:#172629;border:1px solid #71888a;color:#edf4f2;padding:12px 17px;cursor:pointer;letter-spacing:.08em;font-weight:750}button:hover,button.selected{background:#294448;border-color:var(--ice)}button:disabled{opacity:.4;cursor:not-allowed}
+#menu{position:fixed;inset:0;z-index:5;overflow:auto;background:radial-gradient(ellipse at 50% 0,#25383b 0,#0b1418 55%,#05090b 100%);display:grid;place-items:center;padding:24px}
+.shell{width:min(1050px,100%);border:1px solid #607477;background:#091114ed;box-shadow:0 25px 100px #000c}
+.top{display:flex;justify-content:space-between;gap:12px;padding:16px 22px;border-bottom:1px solid #34474a;letter-spacing:.15em;font-size:12px;color:var(--ice)}
+.content{padding:clamp(22px,5vw,54px)}.eyebrow{font-size:11px;letter-spacing:.23em;color:var(--ice);font-weight:800}
+h1{font-size:clamp(54px,10vw,104px);line-height:.84;letter-spacing:-.075em;margin:18px 0 22px}h1 span{color:var(--ice)}.sub{max-width:650px;color:#bac7c8;font-size:17px}
+.modes{display:flex;gap:9px;flex-wrap:wrap;margin:22px 0}.maps{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:15px 0 24px}.map{padding:0;text-align:left;overflow:hidden;background:#101b1e;border:1px solid #405457}.map-art{height:112px;display:grid;place-items:center;font-size:42px;background:linear-gradient(145deg,#273a3c,#080d10);filter:saturate(.65)}.map strong{display:block;padding:10px 11px 0;font-size:13px}.map small{display:block;padding:0 11px 11px;color:var(--muted);font-size:11px}.map.selected{border:2px solid var(--ice);box-shadow:0 0 22px #9ddde033}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}#room{display:none;border:1px solid #41575a;background:#0d171a;padding:14px;margin:14px 0;max-width:520px}input{background:#050b0d;border:1px solid #627679;color:white;padding:12px;min-width:190px}#note{color:var(--muted);font-size:12px;margin-top:12px;min-height:20px}
+#game{position:fixed;inset:0;display:none}#renderCanvas{width:100%;height:100%;display:block;touch-action:none;outline:none}
+#hud{position:absolute;inset:0;pointer-events:none;text-shadow:0 2px 5px #000}.bar{position:absolute;top:14px;left:14px;right:14px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}.pill{background:#071013bb;border:1px solid #60747788;padding:8px 11px;font-size:11px;letter-spacing:.1em}.center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:22px;color:#e8f4f1}.dot{width:5px;height:5px;border-radius:50%;background:#d8eeee;box-shadow:0 0 5px white}.bottom{position:absolute;bottom:16px;left:0;right:0;text-align:center;font-size:12px;color:#d0dddd}.toast{position:absolute;bottom:55px;left:50%;transform:translateX(-50%);background:#071013dd;padding:10px 16px;border:1px solid #637477;max-width:90%;text-align:center}.exit{position:absolute;right:14px;bottom:14px;pointer-events:auto}
+@media(max-width:720px){.maps{grid-template-columns:repeat(2,1fr)}.map-art{height:85px}.bar{font-size:10px}.content{padding:22px}}
+</style>
+<script src="https://cdn.babylonjs.com/babylon.js"></script>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+</head>
+<body>
+<div id="menu"><div class="shell"><div class="top"><b>NIGHTFALL</b><span>FIRST-PERSON HORROR / WEB 3D</span></div><div class="content">
+<div class="eyebrow">SOME PLACES SHOULD STAY FORGOTTEN</div><h1>DON'T<br><span>LOOK BACK.</span></h1>
+<p class="sub">Explore four abandoned places in first-person 3D. Find the scattered records, keep your bearings, and don't trust every sound you hear.</p>
+<div class="eyebrow">1 — CHOOSE A MODE</div><div class="modes"><button id="solo" class="selected">SOLO</button><button id="friends">PLAY WITH A FRIEND</button></div>
+<div id="room"><div class="row"><button id="host">CREATE ROOM</button><input id="code" maxlength="6" inputmode="numeric" placeholder="6-digit room code"><button id="join">JOIN</button></div><p id="netnote">Create a private room and share its code with a friend.</p></div>
+<div class="eyebrow">2 — CHOOSE YOUR LOCATION</div>
+<div class="maps">
+<button class="map selected" data-map="hospital"><div class="map-art">✚</div><strong>ABANDONED HOSPITAL</strong><small>Silent wards. Flickering lights.</small></button>
+<button class="map" data-map="school"><div class="map-art">▤</div><strong>HAUNTED SCHOOL</strong><small>Empty classrooms. Distant bells.</small></button>
+<button class="map" data-map="facility"><div class="map-art">⌁</div><strong>UNDERGROUND FACILITY</strong><small>Cold steel. Sealed experiments.</small></button>
+<button class="map" data-map="forest"><div class="map-art">♠</div><strong>CURSED FOREST</strong><small>Thick fog. A house in the trees.</small></button>
+</div>
+<div class="row"><button id="enter">ENTER NIGHTFALL ↗</button><span style="color:#9ba9ad;font-size:12px">WASD move · Mouse look · E inspect · Esc release mouse</span></div>
+<div id="note">Solo mode selected. Choose a place and enter.</div>
+</div></div></div>
+<div id="game"><canvas id="renderCanvas"></canvas><div id="hud"><div class="bar"><span class="pill" id="place">LOCATION: HOSPITAL</span><span class="pill" id="records">RECORDS: 0 / 3</span><span class="pill" id="players">PLAYERS: 1</span><span class="pill">WASD · MOUSE · E</span></div><div class="center"><div class="dot"></div></div><div class="bottom">Find 3 records. The exit is somewhere beyond the darkness.</div><div class="toast" id="toast">Click the world to capture your mouse. Find the first record.</div><button class="exit" id="back">MENU</button></div></div>
+<script>
+(() => {
+const $=s=>document.querySelector(s);
+let mode='solo',mapName='hospital',engine,scene,camera,peer=null,conn=null,isHost=false,roomId='',records=0,recordMeshes=[],friendMesh=null,keys={},lastSync=0,started=false;
+const mapNames={hospital:'ABANDONED HOSPITAL',school:'HAUNTED SCHOOL',facility:'UNDERGROUND FACILITY',forest:'CURSED FOREST'};
+const note=t=>$('#note').textContent=t;
+$('#solo').onclick=()=>{mode='solo';$('#solo').classList.add('selected');$('#friends').classList.remove('selected');$('#room').style.display='none';note('Solo mode selected. Choose a place and enter.');};
+$('#friends').onclick=()=>{mode='friends';$('#friends').classList.add('selected');$('#solo').classList.remove('selected');$('#room').style.display='block';note('Private multiplayer selected. Create or join a room.');};
+document.querySelectorAll('.map').forEach(b=>b.onclick=()=>{mapName=b.dataset.map;document.querySelectorAll('.map').forEach(x=>x.classList.toggle('selected',x===b));});
+function netnote(t){$('#netnote').textContent=t;}
+function closePeer(){if(peer){peer.destroy();peer=null;}conn=null;isHost=false;roomId='';}
+$('#host').onclick=()=>{if(!window.Peer){netnote('Connection service did not load. Reload and try again.');return;}closePeer();isHost=true;roomId=String(Math.floor(100000+Math.random()*900000));peer=new Peer('nightfall-'+roomId);peer.on('open',()=>{netnote('Room '+roomId+' ready. Share this code with your friend.');$('#code').value=roomId;note('Room created. Enter the selected location when ready.');});peer.on('connection',c=>{conn=c;wireConnection(c);});peer.on('error',e=>netnote('Room error: '+e.type+'. Try creating another room.'));};
+$('#join').onclick=()=>{let code=$('#code').value.trim();if(!/^\d{6}$/.test(code)){netnote('Enter the six-digit room code.');return;}if(!window.Peer){netnote('Connection service did not load. Reload and try again.');return;}closePeer();peer=new Peer();peer.on('open',()=>{conn=peer.connect('nightfall-'+code);wireConnection(conn);conn.on('open',()=>{netnote('Connected. Waiting for the host to start the selected map.');});});peer.on('error',e=>netnote('Could not join: '+e.type+'. Check the code.'));};
+function wireConnection(c){c.on('open',()=>{netnote('Friend connected. Start the selected location.');$('#players').textContent='PLAYERS: 2';if(isHost)c.send({type:'start',map:mapName});});c.on('data',d=>{if(d.type==='start'&&!isHost){mapName=d.map;startGame();}if(d.type==='pos'&&friendMesh){friendMesh.position.set(d.x,d.y,d.z);friendMesh.rotation.y=d.r;}if(d.type==='record'&&!isHost){records=Math.max(records,d.count);$('#records').textContent='RECORDS: '+records+' / 3';}if(d.type==='hello'&&isHost){c.send({type:'start',map:mapName});}});}
+$('#enter').onclick=()=>{if(mode==='friends'&&conn&&conn.open){if(isHost){conn.send({type:'start',map:mapName});startGame();}else netnote('The room host chooses when to start.');return;}if(mode==='friends'&&!conn){note('Create a room or join your friend first. You can still test solo by selecting SOLO.');return;}startGame();};
+function mat(name,color,rough=1,metal=0){let m=new BABYLON.StandardMaterial(name,scene);m.diffuseColor=BABYLON.Color3.FromHexString(color);m.specularColor=new BABYLON.Color3(.12,.12,.12);m.roughness=rough;m.metallic=metal;return m;}
+function box(name,x,y,z,w,h,d,m){let o=BABYLON.MeshBuilder.CreateBox(name,{width:w,height:h,depth:d},scene);o.position.set(x,y,z);o.material=m;o.checkCollisions=true;return o;}
+function makeLabel(text,x,y,z){let p=BABYLON.MeshBuilder.CreatePlane('sign',{width:3,height:.7},scene);p.position.set(x,y,z);let t=new BABYLON.DynamicTexture('signtex',{width:512,height:128},scene);t.drawText(text,18,82,'bold 44px Arial','#d4e0db','transparent',true);let m=new BABYLON.StandardMaterial('signmat',scene);m.diffuseTexture=t;m.emissiveColor=new BABYLON.Color3(.28,.34,.32);m.backFaceCulling=false;p.material=m;}
+function startGame(){
+ if(started){$('#menu').style.display='none';$('#game').style.display='block';return;}
+ if(!window.BABYLON){note('3D engine failed to load. Check your internet connection.');return;}
+ started=true;$('#menu').style.display='none';$('#game').style.display='block';$('#place').textContent='LOCATION: '+mapNames[mapName];
+ const canvas=$('#renderCanvas');engine=new BABYLON.Engine(canvas,true,{preserveDrawingBuffer:false,stencil:true,disableWebGL2Support:false});scene=new BABYLON.Scene(engine);scene.clearColor=new BABYLON.Color4(.012,.02,.024,1);scene.collisionsEnabled=true;scene.fogMode=BABYLON.Scene.FOGMODE_EXP2;scene.fogDensity=mapName==='forest'?.045:.025;scene.fogColor=new BABYLON.Color3(.08,.12,.13);
+ camera=new BABYLON.UniversalCamera('player',new BABYLON.Vector3(0,1.7,-7),scene);camera.attachControl(canvas,true);camera.speed=.22;camera.angularSensibility=3500;camera.minZ=.08;camera.checkCollisions=true;camera.applyGravity=true;camera.ellipsoid=new BABYLON.Vector3(.38,.85,.38);scene.gravity=new BABYLON.Vector3(0,-.18,0);
+ let ambient=new BABYLON.HemisphericLight('ambient',new BABYLON.Vector3(0,1,0),scene);ambient.intensity=.27;ambient.diffuse=new BABYLON.Color3(.55,.67,.7);
+ let lamp=new BABYLON.PointLight('handlight',new BABYLON.Vector3(0,2,0),scene);lamp.intensity=mapName==='forest'?1.5:1.15;lamp.range=13;lamp.diffuse=new BABYLON.Color3(.75,.86,.83);lamp.parent=camera;lamp.position=new BABYLON.Vector3(0,.1,1.5);
+ let floor=mat('floor','#303b3a'),wall=mat('wall','#58605b'),dark=mat('dark','#101719'),trim=mat('trim','#252f30'),metal=mat('metal','#4b5857',.35,.55),wood=mat('wood','#51463a'),glass=mat('glass','#243a3b',.2,.1);
+ box('ground',0,-.18,7,18,.35,38,floor);box('ceiling',0,4.3,7,18,.3,38,dark);
+ box('leftwall',-9,2,7,.35,4.5,38,wall);box('rightwall',9,2,7,.35,4.5,38,wall);
+ for(let z=-10;z<26;z+=5){box('beam',0,4.05,z,18,.22,.25,trim);box('lampfixture',0,3.98,z,1.1,.08,.35,glass);}
+ if(mapName==='hospital'||mapName==='school'||mapName==='facility'){
+  for(let z=-7;z<24;z+=6){for(let side of [-1,1]){box('doorframe',side*7.9,1.45,z,1.8,2.9,.22,trim);box('door',side*7.85,1.4,z,1.45,2.65,.12,mapName==='school'?wood:dark);}}
+ } else {
+  for(let z=-9;z<27;z+=2.7){for(let s of [-1,1]){let trunk=BABYLON.MeshBuilder.CreateCylinder('tree',{height:5+Math.random()*3,diameter:.45+Math.random()*.5},scene);trunk.position.set(s*(8+Math.random()*5),2,z+Math.random()*2);trunk.material=wood;let crown=BABYLON.MeshBuilder.CreateSphere('canopy',{diameter:3+Math.random()*2,segments:5},scene);crown.position.set(trunk.position.x,5.1,trunk.position.z);crown.scaling.y=1.4;crown.material=dark;}}}
+ if(mapName==='hospital'){makeLabel('NORTH WARD',0,2.7,12);for(let z=1;z<20;z+=6){box('bedframe',-5,.55,z,2.5,.18,1.1,metal);box('mattress',-5,.78,z,2.3,.25,1,glass);box('cabinet',5,1,z,1,.95,.8,wood);}}
+ if(mapName==='school'){makeLabel('ROOM 09',0,2.7,12);for(let z=0;z<20;z+=5){for(let x of [-5,5]){box('desk',x,.9,z,1.8,.18,1.1,wood);box('deskleg',x,.43,z,.12,.85,.12,metal);}}}
+ if(mapName==='facility'){makeLabel('SECTOR C — RESTRICTED',0,2.7,12);for(let z=0;z<22;z+=5){box('pipe',-7,3.45,z,.18,.18,5,metal);box('cabinet',6,1.3,z,1.4,2.4,.7,metal);}}
+ if(mapName==='forest'){makeLabel('KEEP OUT',0,2.7,12);box('house',0,1.7,18,7,3.5,5,wood);let roof=box('roof',0,3.9,18,8,.25,6,dark);roof.rotation.z=.18;box('door',0,1.1,15.45,1.3,2.2,.15,dark);}
+ // scattered discoverable records
+ records=0;recordMeshes=[];for(let i=0;i<3;i++){let z=2+i*7,x=[-3.5,3.5,0][i];let orb=BABYLON.MeshBuilder.CreateTorus('record',{diameter:.55,thickness:.07},scene);orb.position.set(x,.9,z);orb.rotation.x=Math.PI/2;let em=mat('recordglow'+i,'#9ac8c2');em.emissiveColor=new BABYLON.Color3(.22,.55,.5);orb.material=em;recordMeshes.push(orb);let glow=new BABYLON.PointLight('recordlight'+i,orb.position,scene);glow.parent=orb;glow.intensity=.25;glow.range=3;}
+ // distant, non-graphic shadow presence
+ let shade=mat('presence','#020405');let body=BABYLON.MeshBuilder.CreateCylinder('distant_presence',{height:2.5,diameter:.55,tessellation:7},scene);body.position.set(1.8,1.25,19);body.material=shade;let head=BABYLON.MeshBuilder.CreateSphere('presence_head',{diameter:.62,segments:7},scene);head.position.set(1.8,2.8,19);head.material=shade;
+ let exit=box('exit',0,1.5,25,3,3,.3,metal);makeLabel('EXIT',0,3.4,24.7);
+ if(mode==='friends'){friendMesh=BABYLON.MeshBuilder.CreateCapsule('friend',{height:1.7,radius:.35},scene);friendMesh.position.set(1,0,-7);friendMesh.material=mat('friendmat','#789b98');if(conn&&conn.open&&isHost)conn.send({type:'start',map:mapName});}
+ canvas.addEventListener('click',()=>{if(document.pointerLockElement!==canvas)canvas.requestPointerLock?.();});
+ scene.onBeforeRenderObservable.add(()=>{let now=performance.now();if(mode==='friends'&&conn&&conn.open&&now-lastSync>90){lastSync=now;if(isHost)conn.send({type:'pos',x:camera.position.x,y:camera.position.y-0.8,z:camera.position.z,r:camera.rotation.y});else conn.send({type:'pos',x:camera.position.x,y:camera.position.y-0.8,z:camera.position.z,r:camera.rotation.y});}
+  // Softly pulse the lamps to keep the scene unsettling.
+  let pulse=.9+Math.sin(now*.0013)*.09+(Math.sin(now*.017)>.985?-.45:0);ambient.intensity=Math.max(.08,.27*pulse);
+  recordMeshes.forEach((m,i)=>{if(m.isVisible)m.rotation.y+=.008;});
+ });
+ engine.runRenderLoop(()=>{if(scene)scene.render();});window.addEventListener('resize',()=>engine&&engine.resize());
+ $('#toast').textContent='Search for the glowing records. Press E when close to one.';
+}
+function inspect(){if(!scene||!camera)return;let nearest=-1,dist=99;recordMeshes.forEach((m,i)=>{if(m.isVisible){let d=BABYLON.Vector3.Distance(camera.position,m.position);if(d<dist){dist=d;nearest=i;}}});if(nearest>=0&&dist<2.8){recordMeshes[nearest].isVisible=false;records++;$('#records').textContent='RECORDS: '+records+' / 3';$('#toast').textContent=['A water-damaged note. Someone left in a hurry.','A maintenance record. The same warning appears again and again.','The final record is stamped with today’s date. The exit is ahead.'][records-1];if(conn&&conn.open)conn.send({type:'record',count:records});}else $('#toast').textContent='Nothing close enough. Listen carefully and keep moving.';}
+window.addEventListener('keydown',e=>{keys[e.code]=true;if(e.code==='KeyE')inspect();});window.addEventListener('keyup',e=>keys[e.code]=false);
+$('#back').onclick=()=>{if(engine){engine.stopRenderLoop();engine.dispose();engine=null;}started=false;scene=null;camera=null;$('#game').style.display='none';$('#menu').style.display='grid';document.exitPointerLock?.();};
+})();
+</script>
+</body></html>
