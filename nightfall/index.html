@@ -37,13 +37,14 @@ h1{font-size:clamp(54px,10vw,104px);line-height:.84;letter-spacing:-.075em;margi
 <div class="row"><button id="enter">ENTER NIGHTFALL ↗</button><span style="color:#9ba9ad;font-size:12px">WASD move · Mouse look · E inspect · Esc release mouse</span></div>
 <div id="note">Solo mode selected. Choose a place and enter.</div>
 </div></div></div>
-<div id="game"><canvas id="renderCanvas"></canvas><div id="hud"><div class="bar"><span class="pill" id="place">LOCATION: HOSPITAL</span><span class="pill" id="records">RECORDS: 0 / 3</span><span class="pill" id="players">PLAYERS: 1</span><span class="pill">WASD · MOUSE · E</span></div><div class="center"><div class="dot"></div></div><div class="bottom">Find 3 records. The exit is somewhere beyond the darkness.</div><div class="toast" id="toast">Click the world to capture your mouse. Find the first record.</div><button class="exit" id="back">MENU</button></div></div>
+<div id="game"><canvas id="renderCanvas"></canvas><div id="hud"><div class="bar"><span class="pill" id="place">LOCATION: HOSPITAL</span><span class="pill" id="records">RECORDS: 0 / 3</span><span class="pill" id="players">PLAYERS: 1</span><span class="pill" id="lives">LIVES: 3</span><span class="pill" id="quest">QUEST: FIND FUEL</span><span class="pill">WASD · MOUSE · E</span></div><div class="center"><div class="dot"></div></div><div class="bottom">Find 3 records. The exit is somewhere beyond the darkness.</div><div class="toast" id="toast">Click the world to capture your mouse. Find the first record.</div><button class="exit" id="back">MENU</button></div></div>
 <script>
 (() => {
 const $=s=>document.querySelector(s);
-let mode='solo',mapName='hospital',engine,scene,camera,peer=null,conn=null,isHost=false,roomId='',records=0,recordMeshes=[],friendMesh=null,keys={},lastSync=0,started=false,monsterEnabled=true,monsterParts=[],monsterRoot=null;
+let mode='solo',mapName='hospital',engine,scene,camera,peer=null,conn=null,isHost=false,roomId='',records=0,recordMeshes=[],friendMesh=null,keys={},lastSync=0,started=false,monsterEnabled=true,monsterParts=[],monsterRoot=null,lives=3,questStep=0,questObjects=[],lastHit=0,gameEnded=false;
 const mapNames={hospital:'ABANDONED HOSPITAL',school:'HAUNTED SCHOOL',facility:'UNDERGROUND FACILITY',forest:'CURSED FOREST'};
-const note=t=>$('#note').textContent=t;\n$('#monsterToggle').addEventListener('change',e=>{monsterEnabled=e.target.checked;});
+const note=t=>$('#note').textContent=t;
+$('#monsterToggle').addEventListener('change',e=>{monsterEnabled=e.target.checked;});
 $('#solo').onclick=()=>{mode='solo';$('#solo').classList.add('selected');$('#friends').classList.remove('selected');$('#room').style.display='none';note('Solo mode selected. Choose a place and enter.');};
 $('#friends').onclick=()=>{mode='friends';$('#friends').classList.add('selected');$('#solo').classList.remove('selected');$('#room').style.display='block';note('Private multiplayer selected. Create or join a room.');};
 document.querySelectorAll('.map').forEach(b=>b.onclick=()=>{mapName=b.dataset.map;document.querySelectorAll('.map').forEach(x=>x.classList.toggle('selected',x===b));});
@@ -78,6 +79,7 @@ function locker(x,z){box('locker_body',x,1.15,z,.72,2.25,.58,metal);for(let y of
 function box(name,x,y,z,w,h,d,m){let o=BABYLON.MeshBuilder.CreateBox(name,{width:w,height:h,depth:d},scene);o.position.set(x,y,z);o.material=m;o.checkCollisions=true;return o;}
 function makeLabel(text,x,y,z){let p=BABYLON.MeshBuilder.CreatePlane('sign',{width:3,height:.7},scene);p.position.set(x,y,z);let t=new BABYLON.DynamicTexture('signtex',{width:512,height:128},scene);t.drawText(text,18,82,'bold 44px Arial','#d4e0db','transparent',true);let m=new BABYLON.StandardMaterial('signmat',scene);m.diffuseTexture=t;m.emissiveColor=new BABYLON.Color3(.28,.34,.32);m.backFaceCulling=false;p.material=m;}
 function startGame(){
+ lives=3;questStep=0;questObjects=[];lastHit=0;gameEnded=false;$('#lives').textContent='LIVES: 3';
  if(started){$('#menu').style.display='none';$('#game').style.display='block';return;}
  if(!window.BABYLON){note('3D engine failed to load. Check your internet connection.');return;}
  started=true;$('#menu').style.display='none';$('#game').style.display='block';$('#place').textContent='LOCATION: '+mapNames[mapName];
@@ -122,6 +124,23 @@ function startGame(){
   for(let i=0;i<18;i++){let rock=BABYLON.MeshBuilder.CreateSphere('forest_rock',{diameter:.5+Math.random()*.8,segments:5},scene);rock.position.set((Math.random()-.5)*15,.05,Math.random()*29-7);rock.scaling.y=.35;rock.material=dark;}
   for(let z=-8;z<27;z+=3){for(let side of [-1,1]){let bush=BABYLON.MeshBuilder.CreateSphere('undergrowth',{diameter:2.2,segments:5},scene);bush.position.set(side*(6+Math.random()*3),.5,z+Math.random()*2);bush.material=dark;}}
  }
+
+ // Escape mission objectives for each location.
+ const questDefs = mapName==='hospital' ? [
+  ['FUEL CAN','Find fuel for the backup generator',-5,.7,5],
+  ['TOOL KIT','Find tools to repair the generator',5,.7,9],
+  ['GENERATOR','Refuel and repair the generator',0,.8,19],
+  ['RADIO','Send the emergency rescue signal',-6,1,22]
+ ] : mapName==='school' ? [
+  ['FUSE','Find a replacement fuse',-5,.7,5],['KEY','Find the security office key',5,.7,9],['SWITCHBOARD','Restore the school power',0,.8,19],['RADIO','Call for rescue',-6,1,22]
+ ] : mapName==='facility' ? [
+  ['BATTERY','Find an auxiliary battery',-5,.7,5],['ACCESS CARD','Find an access card',5,.7,9],['CONTROL PANEL','Restore the facility systems',0,.8,19],['BEACON','Activate the emergency beacon',-6,1,22]
+ ] : [
+  ['FUEL','Find fuel for the abandoned truck',-5,.7,5],['SPARK PLUG','Find a replacement part',5,.7,9],['TRUCK','Get the truck running',0,.8,19],['RADIO','Send a distress signal',-6,1,22]
+ ];
+ questDefs.forEach((q,i)=>{let marker=BABYLON.MeshBuilder.CreateTorus('quest_marker',{diameter:.7,thickness:.08},scene);marker.position.set(q[2],q[3],q[4]);marker.rotation.x=Math.PI/2;let mm=mat('quest_marker_mat'+i,'#d2ad65');mm.emissiveColor=new BABYLON.Color3(.42,.24,.06);marker.material=mm;questObjects.push({name:q[0],description:q[1],mesh:marker,done:false});});
+ $('#quest').textContent='QUEST: '+questObjects[0].description.toUpperCase();
+
  // scattered discoverable records
  records=0;recordMeshes=[];for(let i=0;i<3;i++){let z=2+i*7,x=[-3.5,3.5,0][i];let orb=BABYLON.MeshBuilder.CreateTorus('record',{diameter:.55,thickness:.07},scene);orb.position.set(x,.9,z);orb.rotation.x=Math.PI/2;let em=mat('recordglow'+i,'#9ac8c2');em.emissiveColor=new BABYLON.Color3(.22,.55,.5);orb.material=em;recordMeshes.push(orb);let glow=new BABYLON.PointLight('recordlight'+i,orb.position,scene);glow.parent=orb;glow.intensity=.25;glow.range=3;}
  // Optional roaming creature: enabled by default, with a menu switch for exploration-only play.
@@ -143,12 +162,39 @@ function startGame(){
  scene.onBeforeRenderObservable.add(()=>{let now=performance.now();if(mode==='friends'&&conn&&conn.open&&now-lastSync>90){lastSync=now;if(isHost)conn.send({type:'pos',x:camera.position.x,y:camera.position.y-0.8,z:camera.position.z,r:camera.rotation.y});else conn.send({type:'pos',x:camera.position.x,y:camera.position.y-0.8,z:camera.position.z,r:camera.rotation.y});}
   // Softly pulse the lamps to keep the scene unsettling.
   let pulse=.9+Math.sin(now*.0013)*.09+(Math.sin(now*.017)>.985?-.45:0);ambient.intensity=Math.max(.08,.27*pulse);
-  recordMeshes.forEach((m,i)=>{if(m.isVisible)m.rotation.y+=.008;});\n  if(monsterRoot&&monsterEnabled){let t=now*.00022;monsterRoot.position.x=2+Math.sin(t)*1.4;monsterRoot.position.z=17+Math.sin(t*.7)*2.2;monsterRoot.rotation.y=Math.PI+Math.sin(t)*.18;}
+  recordMeshes.forEach((m,i)=>{if(m.isVisible)m.rotation.y+=.008;});
+  
+  if(monsterRoot&&monsterEnabled&&!gameEnded){
+   let dx=camera.position.x-monsterRoot.position.x,dz=camera.position.z-monsterRoot.position.z,dist=Math.hypot(dx,dz);
+   if(dist<13){monsterRoot.position.x+=dx/(dist||1)*.012;monsterRoot.position.z+=dz/(dist||1)*.012;monsterRoot.rotation.y=Math.atan2(dx,dz);}
+   else {let t=now*.00022;monsterRoot.position.x=2+Math.sin(t)*1.4;monsterRoot.position.z=17+Math.sin(t*.7)*2.2;}
+   if(dist<1.35&&now-lastHit>2200){lastHit=now;lives--;$('#lives').textContent='LIVES: '+lives;camera.position.set(0,1.7,-7);$('#toast').textContent=lives>0?'The creature caught you. You have been sent back to the entrance.':'You have no lives left. Mission failed.';if(lives<=0){gameEnded=true;$('#quest').textContent='MISSION FAILED';monsterRoot.setEnabled(false);}}
+  }
  });
  engine.runRenderLoop(()=>{if(scene)scene.render();});window.addEventListener('resize',()=>engine&&engine.resize());
  $('#toast').textContent=monsterEnabled?'Search for the glowing records. Something is moving in the distance.':'Exploration mode: the monster is disabled. Find the records.';
 }
-function inspect(){if(!scene||!camera)return;let nearest=-1,dist=99;recordMeshes.forEach((m,i)=>{if(m.isVisible){let d=BABYLON.Vector3.Distance(camera.position,m.position);if(d<dist){dist=d;nearest=i;}}});if(nearest>=0&&dist<2.8){recordMeshes[nearest].isVisible=false;records++;$('#records').textContent='RECORDS: '+records+' / 3';$('#toast').textContent=['A water-damaged note. Someone left in a hurry.','A maintenance record. The same warning appears again and again.','The final record is stamped with today’s date. The exit is ahead.'][records-1];if(conn&&conn.open)conn.send({type:'record',count:records});}else $('#toast').textContent='Nothing close enough. Listen carefully and keep moving.';}
+
+function inspect(){
+ if(!scene||!camera||gameEnded)return;
+ let target=null,dist=99;
+ questObjects.forEach(o=>{if(!o.done){let d=BABYLON.Vector3.Distance(camera.position,o.mesh.position);if(d<dist){dist=d;target=o;}}});
+ if(target&&dist<2.8){
+  target.done=true;target.mesh.setEnabled(false);questStep++;
+  if(questStep<questObjects.length){$('#quest').textContent='QUEST: '+questObjects[questStep].description.toUpperCase();$('#toast').textContent=target.name+' secured. '+questObjects[questStep].description+'.';}
+  else{
+   $('#quest').textContent='RESCUE HELICOPTER INBOUND';$('#toast').textContent='Emergency signal sent. Rescue is on its way. Head to the exit!';
+   let heli=BABYLON.MeshBuilder.CreateBox('rescue_helicopter',{width:3,height:.7,depth:1.2},scene);heli.position.set(0,7,25);
+   let rotor=BABYLON.MeshBuilder.CreateBox('heli_rotor',{width:5,height:.06,depth:.12},scene);rotor.parent=heli;
+   scene.onBeforeRenderObservable.add(()=>{if(heli.position.y>2.7)heli.position.y-=.012;});
+  }
+  return;
+ }
+ let exitDist=BABYLON.Vector3.Distance(camera.position,new BABYLON.Vector3(0,1.5,25));
+ if(questStep>=questObjects.length&&exitDist<4){$('#quest').textContent='MISSION COMPLETE';$('#toast').textContent='Rescue complete. You escaped NIGHTFALL!';gameEnded=true;return;}
+ $('#toast').textContent=target?'Get closer to '+target.name+' and press E.':'Find the next marked quest item. Press E when close.';
+}
+
 window.addEventListener('keydown',e=>{keys[e.code]=true;if(e.code==='KeyE')inspect();});window.addEventListener('keyup',e=>keys[e.code]=false);
 $('#back').onclick=()=>{if(engine){engine.stopRenderLoop();engine.dispose();engine=null;}started=false;scene=null;camera=null;monsterRoot=null;monsterParts=[];$('#game').style.display='none';$('#menu').style.display='grid';document.exitPointerLock?.();};
 })();
