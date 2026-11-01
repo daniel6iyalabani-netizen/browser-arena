@@ -1,5 +1,6 @@
 name: Deploy horror prototype to GitHub Pages
 
+# Publishes only the standalone non-combat horror prototype.
 on:
   push:
     branches:
