@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Browser Arena — The Quiet Ward</title>
+<style>
+:root{color-scheme:dark;--cyan:#9ddde0;--ink:#dce8e8;--muted:#8a9b9d;--panel:#10191de8}
+*{box-sizing:border-box}body{margin:0;background:#080e12;color:var(--ink);font:15px/1.5 Inter,system-ui,sans-serif;min-height:100vh}
+button{font:inherit;color:inherit;cursor:pointer;border:1px solid #537074;background:#152328;padding:12px 17px;letter-spacing:.08em;font-weight:700}button:hover{background:#233b40;border-color:var(--cyan)}button:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
+#app{min-height:100vh;display:grid;place-items:center;padding:24px;background:radial-gradient(ellipse at 50% 15%,#263b3d 0,#101b20 42%,#080e12 78%)}
+.panel{width:min(1050px,100%);border:1px solid #526568;background:#0c1518eF;box-shadow:0 30px 100px #000a}
+header{display:flex;justify-content:space-between;align-items:center;padding:18px 24px;border-bottom:1px solid #34474a;gap:12px}.brand{font-weight:900;letter-spacing:.18em}.brand span{color:var(--cyan)}.status{font-size:11px;color:var(--cyan);letter-spacing:.15em}
+.menu{padding:clamp(24px,6vw,64px);background:linear-gradient(90deg,#0b1418f5,#0b1418a8),radial-gradient(ellipse at 75% 60%,#526366,#10191d 65%)}
+.eyebrow{color:var(--cyan);font-size:11px;letter-spacing:.22em;font-weight:800}.menu h1{font-size:clamp(42px,8vw,86px);line-height:.95;letter-spacing:-.06em;margin:16px 0}.menu h1 span{color:var(--cyan)}.intro{max-width:580px;color:#b3c1c2;font-size:17px}.modes{display:flex;gap:10px;flex-wrap:wrap;margin:30px 0 18px}.mode.active{border-color:var(--cyan);background:#254146}.hint{color:var(--muted);font-size:12px;max-width:650px}
+#game{display:none}.hud{display:flex;justify-content:space-between;padding:13px 18px;border-bottom:1px solid #34474a;color:var(--muted);font-size:12px;letter-spacing:.1em;gap:10px;flex-wrap:wrap}
+.scene{height:min(58vh,530px);min-height:330px;position:relative;overflow:hidden;background:linear-gradient(#17282b 0%,#253538 42%,#101719 100%);perspective:650px}
+.ceiling{position:absolute;inset:0 0 48%;background:linear-gradient(#172326,#405052);clip-path:polygon(0 0,100% 0,76% 100%,24% 100%)}
+.floor{position:absolute;inset:52% 0 0;background:repeating-linear-gradient(0deg,#182326 0 22px,#1e2c2e 23px 25px);clip-path:polygon(24% 0,76% 0,100% 100%,0 100%)}
+.wall{position:absolute;top:0;bottom:0;width:26%;background:linear-gradient(90deg,#29383a,#111a1d);border-inline:1px solid #66747755}.left{left:0;clip-path:polygon(0 0,100% 25%,100% 75%,0 100%)}.right{right:0;clip-path:polygon(0 25%,100% 0,100% 100%,0 75%)}
+.vanish{position:absolute;left:50%;top:16%;width:19%;height:68%;transform:translateX(-50%);border:8px solid #73818455;background:linear-gradient(90deg,#182326,#39494b,#182326);box-shadow:0 0 35px #b9d8d822}
+.light{position:absolute;top:7%;left:50%;width:90px;height:10px;transform:translateX(-50%);background:#d7eeee;box-shadow:0 0 35px 15px #c2eeee55}
+.figure{position:absolute;left:50%;top:36%;height:32%;width:9%;transform:translateX(-50%);opacity:0;transition:opacity 2s;background:linear-gradient(90deg,#080c0e,#273437 45%,#080c0e);clip-path:polygon(35% 0,65% 0,78% 18%,100% 100%,0 100%,22% 18%);filter:drop-shadow(0 0 15px #000)}
+.figure.reveal{opacity:.9}
+.scene:after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 38%,#020608b8 100%);box-shadow:inset 0 0 90px #0009}.scene:before{content:"";position:absolute;inset:-30%;pointer-events:none;background:radial-gradient(ellipse at 50% 48%,#d6eeee18,transparent 42%);animation:breath 7s ease-in-out infinite alternate}@keyframes breath{from{opacity:.35;transform:scale(.96)}to{opacity:1;transform:scale(1.04)}}.light{animation:flicker 6s infinite}@keyframes flicker{0%,92%,96%,100%{opacity:1}93%,95%{opacity:.35}}.scene-label{position:absolute;left:18px;bottom:16px;color:#c5d4d4;text-shadow:0 2px 6px #000;font-size:12px;letter-spacing:.12em}
+.controls{padding:18px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}.message{padding:0 18px 20px;color:#b6c6c7;min-height:48px}.progress{margin-left:auto;color:var(--cyan);font-size:12px}
+@media(max-width:600px){header{padding:14px}.scene{min-height:300px}.menu{padding:25px}.progress{width:100%;margin:0}}
+</style><script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+</head>
+<body><main id="app"><section class="panel">
+<header><div class="brand">BROWSER <span>ARENA</span></div><div class="status">HORROR PROTOTYPE / 01</div></header>
+<section class="menu" id="menu"><div class="eyebrow">A FIRST-PERSON ATMOSPHERIC ADVENTURE</div><h1>THE QUIET<br><span>WARD.</span></h1><p class="intro">The hospital has been empty for years. The lights still work. Something is moving beyond the patient rooms. Find three clues and reach the exit.</p>
+<div class="eyebrow">CHOOSE HOW YOU WANT TO PLAY</div><div class="modes"><button class="mode active" data-mode="solo">SOLO</button><button class="mode" data-mode="friends">PRIVATE ROOM</button><button class="mode" data-mode="public">PUBLIC LOBBY</button></div>
+<p class="hint" id="mode-note">Solo exploration is playable. Choose Private Room to host or join a friend using a room code.</p>
+<div id="room-tools" style="display:none;max-width:480px;margin:18px 0;padding:16px;border:1px solid #526568;background:#10191d">
+  <button id="host-room">CREATE PRIVATE ROOM</button> <button id="copy-code" disabled>COPY INVITE CODE</button>
+  <div style="margin:12px 0;color:#9ddde0" id="room-code" aria-live="polite"></div>
+  <input id="join-code" inputmode="numeric" maxlength="6" placeholder="Enter 6-digit room code" style="width:100%;padding:12px;background:#081014;color:#dce8e8;border:1px solid #537074;margin:8px 0">
+  <button id="join-room">JOIN ROOM</button>
+  <p class="hint" id="net-status">Private rooms use a peer-to-peer connection. Share the code only with people you know.</p>
+</div>
+<div style="margin-top:28px"><button id="start">ENTER SOLO ↗</button></div></section>
+<section id="game"><div class="hud"><span>LOCATION: NORTH WING</span><span id="clues">CLUES FOUND: 0 / 3</span><span id="players">PLAYERS: 1</span><span>OBJECTIVE: FIND THE EXIT</span></div>
+<div class="scene" aria-label="Stylised first-person view down a dim hospital corridor"><div class="ceiling"></div><div class="floor"></div><div class="wall left"></div><div class="wall right"></div><div class="vanish"></div><div class="light"></div><div class="figure" id="figure"></div><div class="scene-label" id="scene-label">NORTH WING — RECEPTION</div></div>
+<div class="controls"><button id="inspect">INSPECT AREA</button><button id="move">MOVE FORWARD</button><button id="light-toggle" aria-pressed="true">FLASHLIGHT: ON</button><button id="reset">RESTART</button><span class="progress" id="progress">0 / 3 CLUES</span></div><div class="message" id="message" aria-live="polite">The corridor is quiet. A desk lamp flickers near reception.</div></section>
+</section></main>
+<script>
+const menu=document.querySelector('#menu'),game=document.querySelector('#game'),note=document.querySelector('#mode-note');
+let mode='solo',step=0,clues=0,flashOn=true,audioCtx=null,peer=null,connections=[],isHost=false,roomCode='';
+function networkStatus(s){document.querySelector('#net-status').textContent=s;}
+function paintState(s){
+ step=s.step; clues=s.clues;
+ document.querySelector('#move').disabled=!!s.complete;
+ document.querySelector('#move').textContent=s.complete?'CHAPTER COMPLETE':'MOVE FORWARD';
+ document.querySelector('#scene-label').textContent=s.label;
+ document.querySelector('#message').textContent=s.message;
+ document.querySelector('#figure').classList.toggle('reveal',clues>=2);
+ update();
+}
+function statePacket(){
+ return {type:'state',step,clues,complete:step>=3&&clues===3,
+ label:document.querySelector('#scene-label').textContent,
+ message:document.querySelector('#message').textContent};
+}
+function broadcast(){
+ const packet=statePacket();
+ connections.forEach(conn=>{if(conn.open)conn.send(packet);});
+}
+function handleAction(action){
+ if(action==='inspect'&&clues<3){
+  document.querySelector('#message').textContent=messages[0][clues];clues++;
+  if(clues===2)document.querySelector('#figure').classList.add('reveal');
+  if(clues===3)document.querySelector('#message').textContent=messages[1][2]+' The exit sign is now visible — find the way out.';
+  update();
+ } else if(action==='move'){
+  step++;const labels=['PATIENT CORRIDOR','WARD B — ROOM 12','SECURITY CHECKPOINT','EXIT HALL'];
+  document.querySelector('#scene-label').textContent=labels[Math.min(step-1,3)];
+  if(step>=3&&clues===3){document.querySelector('#message').textContent='The exit doors slide open. You escaped the hospital. Chapter complete.';document.querySelector('#move').textContent='CHAPTER COMPLETE';document.querySelector('#move').disabled=true;}
+  else if(step>=3)document.querySelector('#message').textContent='The exit is locked. Search the area for all three clues first.';
+  else document.querySelector('#message').textContent='You move deeper into the hospital. The emergency lights hum overhead.';
+ }
+ broadcast();
+}
+function openGame(){menu.style.display='none';game.style.display='block';document.querySelector('#players').textContent='PLAYERS: '+(connections.length+1);}
+function setupConnection(conn){
+ connections.push(conn);
+ conn.on('open',()=>{networkStatus('Friend connected. Shared exploration is live.');document.querySelector('#players').textContent='PLAYERS: '+(connections.length+1);if(isHost){conn.send(statePacket());networkStatus('Friend connected. You are exploring together.');}});
+ conn.on('data',data=>{if(isHost&&data&&data.type==='action')handleAction(data.action);else if(!isHost&&data&&data.type==='state')paintState(data);});
+ conn.on('close',()=>{connections=connections.filter(x=>x!==conn);document.querySelector('#players').textContent='PLAYERS: '+(connections.length+1);networkStatus('A player disconnected.');});
+}
+function closeNetwork(){if(peer){peer.destroy();peer=null;}connections=[];isHost=false;roomCode='';document.querySelector('#copy-code').disabled=true;document.querySelector('#room-code').textContent='';}
+document.querySelectorAll('.mode').forEach(b=>b.addEventListener('click',()=>{
+ mode=b.dataset.mode;document.querySelectorAll('.mode').forEach(x=>x.classList.toggle('active',x===b));
+ document.querySelector('#room-tools').style.display=mode==='friends'?'block':'none';
+ document.querySelector('#start').textContent=mode==='solo'?'ENTER SOLO ↗':'ENTER OFFLINE PRACTICE ↗';
+ note.textContent=mode==='solo'?'Explore the ward alone.':mode==='friends'?'Create a private room or join a friend with their six-digit code.':'Public matchmaking is not enabled in this prototype.';
+}));
+const messages=[
+['A visitor badge lies on the reception desk. The name has been scratched away.','You find a maintenance note: “Do not use the east stairwell after lights-out.”','A security log mentions movement on the ward after the building was sealed.'],
+['The noticeboard has a faded map. A shape crosses the far doorway, then disappears.','A low sound travels through the ventilation. The corridor lights dim for a moment.','At the end of the hall, a tall silhouette stands perfectly still. It vanishes when the lights return.']
+];
+function update(){document.querySelector('#clues').textContent='CLUES FOUND: '+clues+' / 3';document.querySelector('#progress').textContent=clues+' / 3 CLUES';}
+document.querySelector('#start').addEventListener('click',()=>{closeNetwork();openGame();});
+document.querySelector('#copy-code').addEventListener('click',async()=>{
+ if(!roomCode)return;
+ try{await navigator.clipboard.writeText(roomCode);networkStatus('Invite code copied. Send it to your friend.');}
+ catch{networkStatus('Your invite code is '+roomCode+'. Select and copy it manually.');}
+});
+document.querySelector('#host-room').addEventListener('click',()=>{
+ if(!window.Peer){networkStatus('Could not load the connection library. Check your internet and reload.');return;}
+ closeNetwork();isHost=true;roomCode=String(Math.floor(100000+Math.random()*900000));
+ peer=new Peer('quietward-'+roomCode);
+ peer.on('open',()=>{document.querySelector('#room-code').textContent='YOUR ROOM CODE: '+roomCode+' — share with your friend';document.querySelector('#copy-code').disabled=false;networkStatus('Room ready. Waiting for your friend to join…');openGame();});
+ peer.on('connection',conn=>setupConnection(conn));
+ peer.on('error',err=>networkStatus('Connection error: '+err.type+'. Try creating a new room.'));
+});
+document.querySelector('#join-room').addEventListener('click',()=>{
+ const code=document.querySelector('#join-code').value.trim();
+ if(!/^\\d{6}$/.test(code)){networkStatus('Enter a valid six-digit room code.');return;}
+ if(!window.Peer){networkStatus('Could not load the connection library. Check your internet and reload.');return;}
+ closeNetwork();peer=new Peer();
+ peer.on('open',()=>{const conn=peer.connect('quietward-'+code);setupConnection(conn);conn.on('open',()=>{openGame();networkStatus('Connected to private room.');});});
+ peer.on('error',err=>networkStatus('Could not join: '+err.type+'. Check the code and try again.'));
+});
+document.querySelector('#inspect').addEventListener('click',()=>{
+ if(connections.length&&!isHost){connections[0].send({type:'action',action:'inspect'});return;}
+ if(clues<3){document.querySelector('#message').textContent=messages[0][clues];clues++;if(clues===2)document.querySelector('#figure').classList.add('reveal');if(clues===3)document.querySelector('#message').textContent=messages[1][2]+' The exit sign is now visible — find the way out.';update();broadcast();}
+ else document.querySelector('#message').textContent='You have all three clues. The exit is unlocked. You made it out of the north wing.';
+});
+document.querySelector('#light-toggle').addEventListener('click',e=>{flashOn=!flashOn;e.currentTarget.textContent='FLASHLIGHT: '+(flashOn?'ON':'OFF');e.currentTarget.setAttribute('aria-pressed',String(flashOn));document.querySelector('.scene').style.filter=flashOn?'brightness(1)':'brightness(.48)';document.querySelector('#message').textContent=flashOn?'The flashlight cuts through the dust.':'The corridor falls into deeper darkness.';});
+document.querySelector('#move').addEventListener('click',()=>{
+ if(connections.length&&!isHost){connections[0].send({type:'action',action:'move'});return;}
+ handleAction('move');
+});
+document.querySelector('#reset').addEventListener('click',()=>{if(connections.length&&!isHost){networkStatus('Ask the room host to restart the chapter.');return;}step=0;clues=0;document.querySelector('#move').disabled=false;document.querySelector('#move').textContent='MOVE FORWARD';flashOn=true;document.querySelector('#light-toggle').textContent='FLASHLIGHT: ON';document.querySelector('#light-toggle').setAttribute('aria-pressed','true');document.querySelector('.scene').style.filter='brightness(1)';document.querySelector('#figure').classList.remove('reveal');document.querySelector('#scene-label').textContent='NORTH WING — RECEPTION';document.querySelector('#message').textContent='The corridor is quiet. A desk lamp flickers near reception.';update();broadcast();});
+</script></body></html>
