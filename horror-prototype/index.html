@@ -32,7 +32,7 @@ header{display:flex;justify-content:space-between;align-items:center;padding:18p
 <div class="eyebrow">CHOOSE HOW YOU WANT TO PLAY</div><div class="modes"><button class="mode active" data-mode="solo">SOLO</button><button class="mode" data-mode="friends">PRIVATE ROOM</button><button class="mode" data-mode="public">PUBLIC LOBBY</button></div>
 <p class="hint" id="mode-note">Solo exploration is playable. Choose Private Room to host or join a friend using a room code.</p>
 <div id="room-tools" style="display:none;max-width:480px;margin:18px 0;padding:16px;border:1px solid #526568;background:#10191d">
-  <button id="host-room">CREATE PRIVATE ROOM</button>
+  <button id="host-room">CREATE PRIVATE ROOM</button> <button id="copy-code" disabled>COPY INVITE CODE</button>
   <div style="margin:12px 0;color:#9ddde0" id="room-code" aria-live="polite"></div>
   <input id="join-code" inputmode="numeric" maxlength="6" placeholder="Enter 6-digit room code" style="width:100%;padding:12px;background:#081014;color:#dce8e8;border:1px solid #537074;margin:8px 0">
   <button id="join-room">JOIN ROOM</button>
@@ -83,11 +83,11 @@ function handleAction(action){
 function openGame(){menu.style.display='none';game.style.display='block';document.querySelector('#players').textContent='PLAYERS: '+(connections.length+1);}
 function setupConnection(conn){
  connections.push(conn);
- conn.on('open',()=>{networkStatus('Friend connected. Shared exploration is live.');document.querySelector('#players').textContent='PLAYERS: '+(connections.length+1);if(isHost)conn.send(statePacket());});
+ conn.on('open',()=>{networkStatus('Friend connected. Shared exploration is live.');document.querySelector('#players').textContent='PLAYERS: '+(connections.length+1);if(isHost){conn.send(statePacket());networkStatus('Friend connected. You are exploring together.');}});
  conn.on('data',data=>{if(isHost&&data&&data.type==='action')handleAction(data.action);else if(!isHost&&data&&data.type==='state')paintState(data);});
  conn.on('close',()=>{connections=connections.filter(x=>x!==conn);document.querySelector('#players').textContent='PLAYERS: '+(connections.length+1);networkStatus('A player disconnected.');});
 }
-function closeNetwork(){if(peer){peer.destroy();peer=null;}connections=[];isHost=false;roomCode='';}
+function closeNetwork(){if(peer){peer.destroy();peer=null;}connections=[];isHost=false;roomCode='';document.querySelector('#copy-code').disabled=true;document.querySelector('#room-code').textContent='';}
 document.querySelectorAll('.mode').forEach(b=>b.addEventListener('click',()=>{
  mode=b.dataset.mode;document.querySelectorAll('.mode').forEach(x=>x.classList.toggle('active',x===b));
  document.querySelector('#room-tools').style.display=mode==='friends'?'block':'none';
@@ -100,11 +100,16 @@ const messages=[
 ];
 function update(){document.querySelector('#clues').textContent='CLUES FOUND: '+clues+' / 3';document.querySelector('#progress').textContent=clues+' / 3 CLUES';}
 document.querySelector('#start').addEventListener('click',()=>{closeNetwork();openGame();});
+document.querySelector('#copy-code').addEventListener('click',async()=>{
+ if(!roomCode)return;
+ try{await navigator.clipboard.writeText(roomCode);networkStatus('Invite code copied. Send it to your friend.');}
+ catch{networkStatus('Your invite code is '+roomCode+'. Select and copy it manually.');}
+});
 document.querySelector('#host-room').addEventListener('click',()=>{
  if(!window.Peer){networkStatus('Could not load the connection library. Check your internet and reload.');return;}
  closeNetwork();isHost=true;roomCode=String(Math.floor(100000+Math.random()*900000));
  peer=new Peer('quietward-'+roomCode);
- peer.on('open',()=>{document.querySelector('#room-code').textContent='YOUR ROOM CODE: '+roomCode+' — share with your friend';networkStatus('Room ready. Waiting for your friend to join…');openGame();});
+ peer.on('open',()=>{document.querySelector('#room-code').textContent='YOUR ROOM CODE: '+roomCode+' — share with your friend';document.querySelector('#copy-code').disabled=false;networkStatus('Room ready. Waiting for your friend to join…');openGame();});
  peer.on('connection',conn=>setupConnection(conn));
  peer.on('error',err=>networkStatus('Connection error: '+err.type+'. Try creating a new room.'));
 });
