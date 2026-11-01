@@ -24,29 +24,107 @@ header{display:flex;justify-content:space-between;align-items:center;padding:18p
 .scene:after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 38%,#020608b8 100%);box-shadow:inset 0 0 90px #0009}.scene:before{content:"";position:absolute;inset:-30%;pointer-events:none;background:radial-gradient(ellipse at 50% 48%,#d6eeee18,transparent 42%);animation:breath 7s ease-in-out infinite alternate}@keyframes breath{from{opacity:.35;transform:scale(.96)}to{opacity:1;transform:scale(1.04)}}.light{animation:flicker 6s infinite}@keyframes flicker{0%,92%,96%,100%{opacity:1}93%,95%{opacity:.35}}.scene-label{position:absolute;left:18px;bottom:16px;color:#c5d4d4;text-shadow:0 2px 6px #000;font-size:12px;letter-spacing:.12em}
 .controls{padding:18px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}.message{padding:0 18px 20px;color:#b6c6c7;min-height:48px}.progress{margin-left:auto;color:var(--cyan);font-size:12px}
 @media(max-width:600px){header{padding:14px}.scene{min-height:300px}.menu{padding:25px}.progress{width:100%;margin:0}}
-</style></head>
+</style><script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+</head>
 <body><main id="app"><section class="panel">
 <header><div class="brand">BROWSER <span>ARENA</span></div><div class="status">HORROR PROTOTYPE / 01</div></header>
 <section class="menu" id="menu"><div class="eyebrow">A FIRST-PERSON ATMOSPHERIC ADVENTURE</div><h1>THE QUIET<br><span>WARD.</span></h1><p class="intro">The hospital has been empty for years. The lights still work. Something is moving beyond the patient rooms. Find three clues and reach the exit.</p>
 <div class="eyebrow">CHOOSE HOW YOU WANT TO PLAY</div><div class="modes"><button class="mode active" data-mode="solo">SOLO</button><button class="mode" data-mode="friends">PRIVATE ROOM</button><button class="mode" data-mode="public">PUBLIC LOBBY</button></div>
-<p class="hint" id="mode-note">Solo exploration is playable in this prototype. Private rooms and public matchmaking are shown as planned modes and need a multiplayer server before they can work online.</p>
-<div style="margin-top:28px"><button id="start">ENTER THE HOSPITAL ↗</button></div></section>
-<section id="game"><div class="hud"><span>LOCATION: NORTH WING</span><span id="clues">CLUES FOUND: 0 / 3</span><span>OBJECTIVE: FIND THE EXIT</span></div>
+<p class="hint" id="mode-note">Solo exploration is playable. Choose Private Room to host or join a friend using a room code.</p>
+<div id="room-tools" style="display:none;max-width:480px;margin:18px 0;padding:16px;border:1px solid #526568;background:#10191d">
+  <button id="host-room">CREATE PRIVATE ROOM</button>
+  <div style="margin:12px 0;color:#9ddde0" id="room-code" aria-live="polite"></div>
+  <input id="join-code" inputmode="numeric" maxlength="6" placeholder="Enter 6-digit room code" style="width:100%;padding:12px;background:#081014;color:#dce8e8;border:1px solid #537074;margin:8px 0">
+  <button id="join-room">JOIN ROOM</button>
+  <p class="hint" id="net-status">Private rooms use a peer-to-peer connection. Share the code only with people you know.</p>
+</div>
+<div style="margin-top:28px"><button id="start">ENTER SOLO ↗</button></div></section>
+<section id="game"><div class="hud"><span>LOCATION: NORTH WING</span><span id="clues">CLUES FOUND: 0 / 3</span><span id="players">PLAYERS: 1</span><span>OBJECTIVE: FIND THE EXIT</span></div>
 <div class="scene" aria-label="Stylised first-person view down a dim hospital corridor"><div class="ceiling"></div><div class="floor"></div><div class="wall left"></div><div class="wall right"></div><div class="vanish"></div><div class="light"></div><div class="figure" id="figure"></div><div class="scene-label" id="scene-label">NORTH WING — RECEPTION</div></div>
 <div class="controls"><button id="inspect">INSPECT AREA</button><button id="move">MOVE FORWARD</button><button id="light-toggle" aria-pressed="true">FLASHLIGHT: ON</button><button id="reset">RESTART</button><span class="progress" id="progress">0 / 3 CLUES</span></div><div class="message" id="message" aria-live="polite">The corridor is quiet. A desk lamp flickers near reception.</div></section>
 </section></main>
 <script>
 const menu=document.querySelector('#menu'),game=document.querySelector('#game'),note=document.querySelector('#mode-note');
-let mode='solo',step=0,clues=0,flashOn=true,audioCtx=null;
-document.querySelectorAll('.mode').forEach(b=>b.addEventListener('click',()=>{mode=b.dataset.mode;document.querySelectorAll('.mode').forEach(x=>x.classList.toggle('active',x===b));note.textContent=mode==='solo'?'Solo exploration is playable in this prototype.':mode==='friends'?'Private friend rooms are planned; online invites need a multiplayer server.':'Public matchmaking is planned; live players need a multiplayer server.';}));
+let mode='solo',step=0,clues=0,flashOn=true,audioCtx=null,peer=null,connections=[],isHost=false,roomCode='';
+function networkStatus(s){document.querySelector('#net-status').textContent=s;}
+function paintState(s){
+ step=s.step; clues=s.clues;
+ document.querySelector('#move').disabled=!!s.complete;
+ document.querySelector('#move').textContent=s.complete?'CHAPTER COMPLETE':'MOVE FORWARD';
+ document.querySelector('#scene-label').textContent=s.label;
+ document.querySelector('#message').textContent=s.message;
+ document.querySelector('#figure').classList.toggle('reveal',clues>=2);
+ update();
+}
+function statePacket(){
+ return {type:'state',step,clues,complete:step>=3&&clues===3,
+ label:document.querySelector('#scene-label').textContent,
+ message:document.querySelector('#message').textContent};
+}
+function broadcast(){
+ const packet=statePacket();
+ connections.forEach(conn=>{if(conn.open)conn.send(packet);});
+}
+function handleAction(action){
+ if(action==='inspect'&&clues<3){
+  document.querySelector('#message').textContent=messages[0][clues];clues++;
+  if(clues===2)document.querySelector('#figure').classList.add('reveal');
+  if(clues===3)document.querySelector('#message').textContent=messages[1][2]+' The exit sign is now visible — find the way out.';
+  update();
+ } else if(action==='move'){
+  step++;const labels=['PATIENT CORRIDOR','WARD B — ROOM 12','SECURITY CHECKPOINT','EXIT HALL'];
+  document.querySelector('#scene-label').textContent=labels[Math.min(step-1,3)];
+  if(step>=3&&clues===3){document.querySelector('#message').textContent='The exit doors slide open. You escaped the hospital. Chapter complete.';document.querySelector('#move').textContent='CHAPTER COMPLETE';document.querySelector('#move').disabled=true;}
+  else if(step>=3)document.querySelector('#message').textContent='The exit is locked. Search the area for all three clues first.';
+  else document.querySelector('#message').textContent='You move deeper into the hospital. The emergency lights hum overhead.';
+ }
+ broadcast();
+}
+function openGame(){menu.style.display='none';game.style.display='block';document.querySelector('#players').textContent='PLAYERS: '+(connections.length+1);}
+function setupConnection(conn){
+ connections.push(conn);
+ conn.on('open',()=>{networkStatus('Friend connected. Shared exploration is live.');document.querySelector('#players').textContent='PLAYERS: '+(connections.length+1);if(isHost)conn.send(statePacket());});
+ conn.on('data',data=>{if(isHost&&data&&data.type==='action')handleAction(data.action);else if(!isHost&&data&&data.type==='state')paintState(data);});
+ conn.on('close',()=>{connections=connections.filter(x=>x!==conn);document.querySelector('#players').textContent='PLAYERS: '+(connections.length+1);networkStatus('A player disconnected.');});
+}
+function closeNetwork(){if(peer){peer.destroy();peer=null;}connections=[];isHost=false;roomCode='';}
+document.querySelectorAll('.mode').forEach(b=>b.addEventListener('click',()=>{
+ mode=b.dataset.mode;document.querySelectorAll('.mode').forEach(x=>x.classList.toggle('active',x===b));
+ document.querySelector('#room-tools').style.display=mode==='friends'?'block':'none';
+ document.querySelector('#start').textContent=mode==='solo'?'ENTER SOLO ↗':'ENTER OFFLINE PRACTICE ↗';
+ note.textContent=mode==='solo'?'Explore the ward alone.':mode==='friends'?'Create a private room or join a friend with their six-digit code.':'Public matchmaking is not enabled in this prototype.';
+}));
 const messages=[
 ['A visitor badge lies on the reception desk. The name has been scratched away.','You find a maintenance note: “Do not use the east stairwell after lights-out.”','A security log mentions movement on the ward after the building was sealed.'],
 ['The noticeboard has a faded map. A shape crosses the far doorway, then disappears.','A low sound travels through the ventilation. The corridor lights dim for a moment.','At the end of the hall, a tall silhouette stands perfectly still. It vanishes when the lights return.']
 ];
 function update(){document.querySelector('#clues').textContent='CLUES FOUND: '+clues+' / 3';document.querySelector('#progress').textContent=clues+' / 3 CLUES';}
-document.querySelector('#start').addEventListener('click',()=>{menu.style.display='none';game.style.display='block';});
-document.querySelector('#inspect').addEventListener('click',()=>{if(clues<3){document.querySelector('#message').textContent=messages[0][clues];clues++;if(clues===2)document.querySelector('#figure').classList.add('reveal');if(clues===3)document.querySelector('#message').textContent=messages[1][2]+' The exit sign is now visible — find the way out.';update();}else{document.querySelector('#message').textContent='You have all three clues. The exit is unlocked. You made it out of the north wing.';}});
+document.querySelector('#start').addEventListener('click',()=>{closeNetwork();openGame();});
+document.querySelector('#host-room').addEventListener('click',()=>{
+ if(!window.Peer){networkStatus('Could not load the connection library. Check your internet and reload.');return;}
+ closeNetwork();isHost=true;roomCode=String(Math.floor(100000+Math.random()*900000));
+ peer=new Peer('quietward-'+roomCode);
+ peer.on('open',()=>{document.querySelector('#room-code').textContent='YOUR ROOM CODE: '+roomCode+' — share with your friend';networkStatus('Room ready. Waiting for your friend to join…');openGame();});
+ peer.on('connection',conn=>setupConnection(conn));
+ peer.on('error',err=>networkStatus('Connection error: '+err.type+'. Try creating a new room.'));
+});
+document.querySelector('#join-room').addEventListener('click',()=>{
+ const code=document.querySelector('#join-code').value.trim();
+ if(!/^\\d{6}$/.test(code)){networkStatus('Enter a valid six-digit room code.');return;}
+ if(!window.Peer){networkStatus('Could not load the connection library. Check your internet and reload.');return;}
+ closeNetwork();peer=new Peer();
+ peer.on('open',()=>{const conn=peer.connect('quietward-'+code);setupConnection(conn);conn.on('open',()=>{openGame();networkStatus('Connected to private room.');});});
+ peer.on('error',err=>networkStatus('Could not join: '+err.type+'. Check the code and try again.'));
+});
+document.querySelector('#inspect').addEventListener('click',()=>{
+ if(connections.length&&!isHost){connections[0].send({type:'action',action:'inspect'});return;}
+ if(clues<3){document.querySelector('#message').textContent=messages[0][clues];clues++;if(clues===2)document.querySelector('#figure').classList.add('reveal');if(clues===3)document.querySelector('#message').textContent=messages[1][2]+' The exit sign is now visible — find the way out.';update();broadcast();}
+ else document.querySelector('#message').textContent='You have all three clues. The exit is unlocked. You made it out of the north wing.';
+});
 document.querySelector('#light-toggle').addEventListener('click',e=>{flashOn=!flashOn;e.currentTarget.textContent='FLASHLIGHT: '+(flashOn?'ON':'OFF');e.currentTarget.setAttribute('aria-pressed',String(flashOn));document.querySelector('.scene').style.filter=flashOn?'brightness(1)':'brightness(.48)';document.querySelector('#message').textContent=flashOn?'The flashlight cuts through the dust.':'The corridor falls into deeper darkness.';});
-document.querySelector('#move').addEventListener('click',()=>{step++;const labels=['PATIENT CORRIDOR','WARD B — ROOM 12','SECURITY CHECKPOINT','EXIT HALL'];document.querySelector('#scene-label').textContent=labels[Math.min(step-1,3)];if(step>=3&&clues===3){document.querySelector('#message').textContent='The exit doors slide open. You escaped the hospital. Prototype chapter complete.';document.querySelector('#move').textContent='CHAPTER COMPLETE';document.querySelector('#move').disabled=true;}else if(step>=3)document.querySelector('#message').textContent='The exit is locked. Search the area for all three clues first.';else document.querySelector('#message').textContent='You move deeper into the hospital. The emergency lights hum overhead.';});
-document.querySelector('#reset').addEventListener('click',()=>{step=0;clues=0;document.querySelector('#move').disabled=false;document.querySelector('#move').textContent='MOVE FORWARD';flashOn=true;document.querySelector('#light-toggle').textContent='FLASHLIGHT: ON';document.querySelector('#light-toggle').setAttribute('aria-pressed','true');document.querySelector('.scene').style.filter='brightness(1)';document.querySelector('#figure').classList.remove('reveal');document.querySelector('#scene-label').textContent='NORTH WING — RECEPTION';document.querySelector('#message').textContent='The corridor is quiet. A desk lamp flickers near reception.';update();});
+document.querySelector('#move').addEventListener('click',()=>{
+ if(connections.length&&!isHost){connections[0].send({type:'action',action:'move'});return;}
+ handleAction('move');
+});
+document.querySelector('#reset').addEventListener('click',()=>{if(connections.length&&!isHost){networkStatus('Ask the room host to restart the chapter.');return;}step=0;clues=0;document.querySelector('#move').disabled=false;document.querySelector('#move').textContent='MOVE FORWARD';flashOn=true;document.querySelector('#light-toggle').textContent='FLASHLIGHT: ON';document.querySelector('#light-toggle').setAttribute('aria-pressed','true');document.querySelector('.scene').style.filter='brightness(1)';document.querySelector('#figure').classList.remove('reveal');document.querySelector('#scene-label').textContent='NORTH WING — RECEPTION';document.querySelector('#message').textContent='The corridor is quiet. A desk lamp flickers near reception.';update();broadcast();});
 </script></body></html>
